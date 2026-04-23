@@ -26,11 +26,16 @@ async def run_code(code: str, stdin: str = "", language: str = _LANGUAGE) -> Pis
         "run_timeout": int(_TIMEOUT * 1000),
     }
 
+    # PISTON_API_URL peut être self-hosted (http://piston:2000)
+    # ou l'API publique (https://emkc.org/api/v2/piston)
+    base = settings.PISTON_API_URL.rstrip("/")
+    if base.endswith("/piston"):
+        execute_url = f"{base}/execute"
+    else:
+        execute_url = f"{base}/api/v2/execute"
+
     async with httpx.AsyncClient(timeout=_TIMEOUT + 2) as client:
-        response = await client.post(
-            f"{settings.PISTON_API_URL}/api/v2/execute",
-            json=payload,
-        )
+        response = await client.post(execute_url, json=payload)
         response.raise_for_status()
         data = response.json()
 
