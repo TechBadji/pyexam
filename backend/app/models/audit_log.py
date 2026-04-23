@@ -18,7 +18,7 @@ class AuditLog(Base):
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
     )
     action: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    metadata: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    extra_data: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
     )

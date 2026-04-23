@@ -11,13 +11,13 @@ async def log(
     user_id: uuid.UUID,
     action: str,
     db: AsyncSession,
-    metadata: dict[str, Any] | None = None,
+    extra_data: dict[str, Any] | None = None,
 ) -> None:
     """Fire-and-forget audit log. Never raises — swallows all errors."""
 
     async def _insert() -> None:
         try:
-            entry = AuditLog(user_id=user_id, action=action, metadata=metadata)
+            entry = AuditLog(user_id=user_id, action=action, extra_data=extra_data)
             db.add(entry)
             await db.flush()
         except Exception:

@@ -157,7 +157,7 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("action", sa.String(50), nullable=False),
-        sa.Column("metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("extra_data", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),

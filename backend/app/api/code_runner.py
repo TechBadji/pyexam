@@ -32,7 +32,7 @@ async def run_code(
         user_id=current_user.id,
         action="CODE_RUN",
         db=db,
-        metadata={"exit_code": result.exit_code},
+        extra_data={"exit_code": result.exit_code},
     )
 
     return CodeRunResponse(

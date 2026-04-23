@@ -122,7 +122,7 @@ async def start_exam(
         user_id=current_user.id,
         action="EXAM_START",
         db=db,
-        metadata={"exam_id": str(exam_id), "submission_id": str(submission.id)},
+        extra_data={"exam_id": str(exam_id), "submission_id": str(submission.id)},
     )
 
     return {"submission_id": str(submission.id)}
@@ -171,7 +171,7 @@ async def upsert_answer(
         user_id=current_user.id,
         action="ANSWER_SAVE",
         db=db,
-        metadata={"submission_id": str(submission_id), "question_id": str(question_id)},
+        extra_data={"submission_id": str(submission_id), "question_id": str(question_id)},
     )
 
     return answer
@@ -200,7 +200,7 @@ async def tab_switch(
         user_id=current_user.id,
         action="TAB_SWITCH",
         db=db,
-        metadata={"submission_id": str(submission_id), "count": submission.tab_switch_count},
+        extra_data={"submission_id": str(submission_id), "count": submission.tab_switch_count},
     )
 
 
@@ -234,7 +234,7 @@ async def submit_exam(
         user_id=current_user.id,
         action="EXAM_SUBMIT",
         db=db,
-        metadata={"submission_id": str(submission_id), "exam_id": str(submission.exam_id)},
+        extra_data={"submission_id": str(submission_id), "exam_id": str(submission.exam_id)},
     )
 
     return {"message": "Submitted successfully"}

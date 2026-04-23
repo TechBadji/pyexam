@@ -54,7 +54,7 @@ async def login(
         user_id=user.id,
         action="LOGIN",
         db=db,
-        metadata={"email": user.email},
+        extra_data={"email": user.email},
     )
 
     access_token = auth_service.create_access_token(str(user.id))

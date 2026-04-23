@@ -11,7 +11,7 @@ class AuditLogResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
     action: str
-    metadata: dict[str, Any] | None
+    extra_data: dict[str, Any] | None
     created_at: datetime
 
 

@@ -238,7 +238,7 @@ async def launch_correction(
         user_id=current_user.id,
         action="CORRECTION_LAUNCH",
         db=db,
-        metadata={"exam_id": str(exam_id), "task_id": task.id},
+        extra_data={"exam_id": str(exam_id), "task_id": task.id},
     )
 
     return {"task_id": task.id, "message": "Correction lancée / Correction started"}
@@ -434,7 +434,7 @@ async def list_audit_logs(
         query = query.where(AuditLog.action == action)
     if exam_id is not None:
         query = query.where(
-            AuditLog.metadata["exam_id"].astext == str(exam_id)
+            AuditLog.extra_data["exam_id"].astext == str(exam_id)
         )
 
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
@@ -449,7 +449,7 @@ async def list_audit_logs(
                 "id": str(log.id),
                 "user_id": str(log.user_id),
                 "action": log.action,
-                "metadata": log.metadata,
+                "extra_data": log.extra_data,
                 "created_at": log.created_at.isoformat(),
             }
             for log in logs
