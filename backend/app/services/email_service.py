@@ -1,0 +1,160 @@
+import uuid
+from datetime import datetime, timezone
+
+import resend
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.config import settings
+from app.i18n.utils import get_translation
+from app.models.answer import Answer
+from app.models.exam import Exam
+from app.models.question import Question
+from app.models.submission import Submission
+from app.models.user import User
+
+resend.api_key = settings.RESEND_API_KEY
+
+
+def _fmt_date(dt: datetime, lang: str) -> str:
+    if lang == "en":
+        return dt.strftime("%m/%d/%Y %I:%M %p")
+    return dt.strftime("%d/%m/%Y %H:%M")
+
+
+def _fmt_score(value: float, lang: str) -> str:
+    if lang == "en":
+        return f"{value:.1f}"
+    return f"{value:.1f}".replace(".", ",")
+
+
+async def _load_submission_data(
+    submission_id: uuid.UUID, db: AsyncSession
+) -> tuple[Submission, User, Exam]:
+    result = await db.execute(
+        select(Submission)
+        .options(
+            selectinload(Submission.student),
+            selectinload(Submission.exam),
+            selectinload(Submission.answers)
+            .selectinload(Answer.question)
+            .selectinload(Question.options),
+        )
+        .where(Submission.id == submission_id)
+    )
+    submission = result.scalar_one_or_none()
+    if submission is None:
+        raise ValueError(f"Submission {submission_id} not found")
+    return submission, submission.student, submission.exam
+
+
+async def send_receipt_email(submission_id: uuid.UUID, db: AsyncSession) -> None:
+    submission, student, exam = await _load_submission_data(submission_id, db)
+    lang = student.preferred_language.value
+    submitted_at = submission.submitted_at or datetime.now(timezone.utc)
+
+    subject = get_translation(
+        "email.receipt_subject", lang, exam_title=exam.title
+    )
+    body_text = get_translation(
+        "email.receipt_body",
+        lang,
+        exam_title=exam.title,
+        submitted_at=_fmt_date(submitted_at, lang),
+    )
+    greeting = get_translation("email.greeting", lang, full_name=student.full_name)
+    footer = get_translation(
+        "email.footer", lang, institution_name=settings.INSTITUTION_NAME
+    )
+
+    html = f"""
+    <html><body style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px">
+    <p>{greeting}</p>
+    <p>{body_text}</p>
+    <hr style="margin:32px 0">
+    <p style="color:#888;font-size:12px">{footer}</p>
+    </body></html>
+    """
+
+    resend.Emails.send({
+        "from": settings.FROM_EMAIL,
+        "to": [student.email],
+        "subject": subject,
+        "html": html,
+    })
+
+
+async def send_result_email(submission_id: uuid.UUID, db: AsyncSession) -> None:
+    submission, student, exam = await _load_submission_data(submission_id, db)
+    lang = student.preferred_language.value
+
+    total = submission.total_score or 0.0
+    max_score = sum(a.question.points for a in submission.answers)
+    pass_threshold = settings.PASSING_GRADE_PERCENT / 100
+    passed = (total / max_score >= pass_threshold) if max_score > 0 else False
+
+    subject = get_translation("email.subject", lang, exam_title=exam.title)
+    greeting = get_translation("email.greeting", lang, full_name=student.full_name)
+    announcement = get_translation(
+        "email.results_announcement", lang, exam_title=exam.title
+    )
+    score_label = get_translation("email.total_score_label", lang)
+    pts_label = get_translation("email.points_label", lang)
+    status_msg = get_translation(
+        "email.pass_message" if passed else "email.fail_message", lang
+    )
+    breakdown_header = get_translation("email.breakdown_header", lang)
+    feedback_label = get_translation("email.feedback_label", lang)
+    footer = get_translation(
+        "email.footer", lang, institution_name=settings.INSTITUTION_NAME
+    )
+
+    rows = ""
+    for answer in sorted(submission.answers, key=lambda a: a.question.order_index):
+        q = answer.question
+        earned = answer.score or 0.0
+        feedback = answer.feedback or ""
+        rows += f"""
+        <tr>
+          <td style="padding:8px;border-bottom:1px solid #eee">{q.statement[:120]}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;text-align:center">
+            {_fmt_score(earned, lang)} / {_fmt_score(q.points, lang)} {pts_label}
+          </td>
+          <td style="padding:8px;border-bottom:1px solid #eee;color:#555">{feedback}</td>
+        </tr>
+        """
+
+    status_color = "#16a34a" if passed else "#dc2626"
+    html = f"""
+    <html><body style="font-family:Arial,sans-serif;max-width:640px;margin:auto;padding:24px">
+    <p>{greeting}</p>
+    <p>{announcement}</p>
+    <p><strong>{score_label} :</strong>
+       <span style="font-size:1.4em;color:{status_color}">
+         {_fmt_score(total, lang)} / {_fmt_score(max_score, lang)} {pts_label}
+       </span>
+    </p>
+    <p style="color:{status_color};font-weight:bold">{status_msg}</p>
+    <h3>{breakdown_header}</h3>
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:#f3f4f6">
+          <th style="padding:8px;text-align:left">Question</th>
+          <th style="padding:8px">Score</th>
+          <th style="padding:8px;text-align:left">{feedback_label}</th>
+        </tr>
+      </thead>
+      <tbody>{rows}</tbody>
+    </table>
+    <hr style="margin:32px 0">
+    <p style="color:#888;font-size:12px">{footer}</p>
+    </body></html>
+    """
+
+    resend.Emails.send({
+        "from": settings.FROM_EMAIL,
+        "to": [student.email],
+        "subject": subject,
+        "html": html,
+    })

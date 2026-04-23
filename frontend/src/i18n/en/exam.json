@@ -1,0 +1,46 @@
+{
+  "dashboard": {
+    "welcome": "Welcome, {{name}}!",
+    "available_exams": "Available Exams",
+    "no_exams": "No exams available at the moment.",
+    "starts_in": "Starts in",
+    "started": "In progress",
+    "closed": "Closed",
+    "enter_exam": "Enter exam",
+    "results_ready": "View results"
+  },
+  "interface": {
+    "time_remaining": "Time remaining",
+    "question_nav_title": "Questions",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "run_code": "Run",
+    "output": "Output",
+    "submit_exam": "Submit exam",
+    "confirm_submit_title": "Confirm submission",
+    "confirm_submit_body": "Are you sure you want to submit your exam? This action cannot be undone.",
+    "auto_submitted": "Your exam was automatically submitted when time expired.",
+    "already_submitted": "This exam has already been submitted.",
+    "tab_switch_warning": "Warning: tab switch detected!",
+    "offline_banner": "Offline — your answers are saved locally.",
+    "reconnected_banner": "Back online — syncing..."
+  },
+  "timer": {
+    "warning_30": "30 minutes remaining.",
+    "warning_15": "15 minutes remaining.",
+    "warning_5": "Warning: only 5 minutes left!",
+    "expired": "Time is up. Your exam is being submitted."
+  },
+  "results": {
+    "title": "Exam Results",
+    "total_score": "Total score",
+    "passed": "Passed",
+    "failed": "Failed",
+    "breakdown": "Question breakdown",
+    "your_answer": "Your answer",
+    "correct_answer": "Correct answer",
+    "feedback": "Feedback",
+    "points_earned": "Points earned",
+    "tab_switches": "Tab switches"
+  }
+}

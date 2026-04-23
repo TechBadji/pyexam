@@ -1,0 +1,46 @@
+{
+  "dashboard": {
+    "welcome": "Bienvenue, {{name}} !",
+    "available_exams": "Examens disponibles",
+    "no_exams": "Aucun examen disponible pour le moment.",
+    "starts_in": "Commence dans",
+    "started": "En cours",
+    "closed": "Terminé",
+    "enter_exam": "Accéder à l'examen",
+    "results_ready": "Voir les résultats"
+  },
+  "interface": {
+    "time_remaining": "Temps restant",
+    "question_nav_title": "Questions",
+    "saving": "Enregistrement...",
+    "saved": "Enregistré",
+    "run_code": "Exécuter",
+    "output": "Sortie",
+    "submit_exam": "Terminer l'examen",
+    "confirm_submit_title": "Confirmer la soumission",
+    "confirm_submit_body": "Êtes-vous sûr de vouloir soumettre votre examen ? Cette action est irréversible.",
+    "auto_submitted": "Votre examen a été soumis automatiquement à la fin du temps imparti.",
+    "already_submitted": "Cet examen a déjà été soumis.",
+    "tab_switch_warning": "Attention : changement d'onglet détecté !",
+    "offline_banner": "Hors ligne — vos réponses sont sauvegardées localement.",
+    "reconnected_banner": "Reconnecté — synchronisation en cours..."
+  },
+  "timer": {
+    "warning_30": "Il vous reste 30 minutes.",
+    "warning_15": "Il vous reste 15 minutes.",
+    "warning_5": "Attention : il vous reste seulement 5 minutes !",
+    "expired": "Le temps est écoulé. Votre examen est en cours de soumission."
+  },
+  "results": {
+    "title": "Résultats de l'examen",
+    "total_score": "Score total",
+    "passed": "Réussi",
+    "failed": "Échoué",
+    "breakdown": "Détail par question",
+    "your_answer": "Votre réponse",
+    "correct_answer": "Réponse correcte",
+    "feedback": "Commentaire",
+    "points_earned": "Points obtenus",
+    "tab_switches": "Changements d'onglet"
+  }
+}

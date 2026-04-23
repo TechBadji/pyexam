@@ -1,0 +1,16 @@
+{
+  "email": {
+    "subject": "Your results — {exam_title}",
+    "greeting": "Hello {full_name},",
+    "results_announcement": "The results for the exam \"{exam_title}\" are now available.",
+    "total_score_label": "Total score",
+    "pass_message": "Congratulations! You have passed this exam.",
+    "fail_message": "You did not reach the passing threshold for this exam.",
+    "breakdown_header": "Question breakdown",
+    "points_label": "pts",
+    "feedback_label": "Feedback",
+    "receipt_subject": "Submission confirmation — {exam_title}",
+    "receipt_body": "Your exam \"{exam_title}\" was successfully submitted on {submitted_at}. You will receive your results once grading is complete.",
+    "footer": "This email was sent automatically by {institution_name}. Please do not reply."
+  }
+}

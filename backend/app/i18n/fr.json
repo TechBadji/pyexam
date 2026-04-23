@@ -1,0 +1,16 @@
+{
+  "email": {
+    "subject": "Vos résultats — {exam_title}",
+    "greeting": "Bonjour {full_name},",
+    "results_announcement": "Les résultats de l'examen \"{exam_title}\" sont maintenant disponibles.",
+    "total_score_label": "Score total",
+    "pass_message": "Félicitations ! Vous avez réussi cet examen.",
+    "fail_message": "Vous n'avez pas atteint le seuil de réussite pour cet examen.",
+    "breakdown_header": "Détail par question",
+    "points_label": "pts",
+    "feedback_label": "Commentaire",
+    "receipt_subject": "Confirmation de soumission — {exam_title}",
+    "receipt_body": "Votre examen \"{exam_title}\" a bien été soumis le {submitted_at}. Vous recevrez vos résultats dès que la correction sera terminée.",
+    "footer": "Cet email a été envoyé automatiquement par {institution_name}. Merci de ne pas y répondre."
+  }
+}

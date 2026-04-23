@@ -1,0 +1,39 @@
+{
+  "buttons": {
+    "save": "Enregistrer",
+    "submit": "Soumettre",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "logout": "Déconnexion",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "loading": "Chargement..."
+  },
+  "status": {
+    "draft": "Brouillon",
+    "active": "Actif",
+    "closed": "Terminé",
+    "corrected": "Corrigé",
+    "in_progress": "En cours",
+    "submitted": "Soumis"
+  },
+  "labels": {
+    "score": "Score",
+    "points": "points",
+    "pass": "Réussi",
+    "fail": "Échoué",
+    "duration": "Durée",
+    "question": "Question",
+    "of": "sur",
+    "minutes": "minutes",
+    "seconds": "secondes",
+    "hours": "heures"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "exam": "Examen",
+    "results": "Résultats",
+    "admin": "Administration"
+  }
+}

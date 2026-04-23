@@ -1,0 +1,59 @@
+{
+  "dashboard": {
+    "title": "Administration",
+    "create_exam": "Créer un examen",
+    "exam_list": "Liste des examens",
+    "students_enrolled": "Étudiants inscrits",
+    "launch_correction": "Lancer la correction",
+    "correction_in_progress": "Correction en cours...",
+    "correction_done": "Correction terminée",
+    "view_report": "Voir le rapport",
+    "view_stats": "Voir les statistiques"
+  },
+  "exam_form": {
+    "exam_title": "Titre de l'examen",
+    "description": "Description",
+    "duration": "Durée (minutes)",
+    "start_time": "Date de début",
+    "end_time": "Date de fin",
+    "add_mcq": "Ajouter une question QCM",
+    "add_coding": "Ajouter une question de code",
+    "statement": "Énoncé",
+    "points": "Points",
+    "option_a": "Option A",
+    "option_b": "Option B",
+    "option_c": "Option C",
+    "option_d": "Option D",
+    "mark_correct": "Marquer comme correcte",
+    "add_test_case": "Ajouter un cas de test",
+    "input": "Entrée (stdin)",
+    "expected_output": "Sortie attendue",
+    "weight": "Poids"
+  },
+  "report": {
+    "title": "Rapport de l'examen",
+    "student_name": "Nom de l'étudiant",
+    "student_number": "N° étudiant",
+    "score": "Score",
+    "status": "Statut",
+    "tab_switches": "Changements d'onglet",
+    "export_csv": "Exporter CSV",
+    "export_pdf": "Exporter PDF",
+    "back": "Retour"
+  },
+  "stats": {
+    "title": "Statistiques",
+    "mean": "Moyenne",
+    "median": "Médiane",
+    "pass_rate": "Taux de réussite",
+    "distribution": "Distribution des scores",
+    "hardest_questions": "Questions les plus difficiles"
+  },
+  "audit": {
+    "title": "Journal d'audit",
+    "action": "Action",
+    "user": "Utilisateur",
+    "date": "Date",
+    "details": "Détails"
+  }
+}

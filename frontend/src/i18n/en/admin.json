@@ -1,0 +1,59 @@
+{
+  "dashboard": {
+    "title": "Administration",
+    "create_exam": "Create exam",
+    "exam_list": "Exam list",
+    "students_enrolled": "Students enrolled",
+    "launch_correction": "Launch grading",
+    "correction_in_progress": "Grading in progress...",
+    "correction_done": "Grading complete",
+    "view_report": "View report",
+    "view_stats": "View statistics"
+  },
+  "exam_form": {
+    "exam_title": "Exam title",
+    "description": "Description",
+    "duration": "Duration (minutes)",
+    "start_time": "Start time",
+    "end_time": "End time",
+    "add_mcq": "Add MCQ question",
+    "add_coding": "Add coding question",
+    "statement": "Statement",
+    "points": "Points",
+    "option_a": "Option A",
+    "option_b": "Option B",
+    "option_c": "Option C",
+    "option_d": "Option D",
+    "mark_correct": "Mark as correct",
+    "add_test_case": "Add test case",
+    "input": "Input (stdin)",
+    "expected_output": "Expected output",
+    "weight": "Weight"
+  },
+  "report": {
+    "title": "Exam report",
+    "student_name": "Student name",
+    "student_number": "Student ID",
+    "score": "Score",
+    "status": "Status",
+    "tab_switches": "Tab switches",
+    "export_csv": "Export CSV",
+    "export_pdf": "Export PDF",
+    "back": "Back"
+  },
+  "stats": {
+    "title": "Statistics",
+    "mean": "Mean",
+    "median": "Median",
+    "pass_rate": "Pass rate",
+    "distribution": "Score distribution",
+    "hardest_questions": "Hardest questions"
+  },
+  "audit": {
+    "title": "Audit log",
+    "action": "Action",
+    "user": "User",
+    "date": "Date",
+    "details": "Details"
+  }
+}

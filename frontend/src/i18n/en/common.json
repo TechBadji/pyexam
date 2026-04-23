@@ -1,0 +1,39 @@
+{
+  "buttons": {
+    "save": "Save",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "logout": "Logout",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "loading": "Loading..."
+  },
+  "status": {
+    "draft": "Draft",
+    "active": "Active",
+    "closed": "Closed",
+    "corrected": "Graded",
+    "in_progress": "In progress",
+    "submitted": "Submitted"
+  },
+  "labels": {
+    "score": "Score",
+    "points": "points",
+    "pass": "Pass",
+    "fail": "Fail",
+    "duration": "Duration",
+    "question": "Question",
+    "of": "of",
+    "minutes": "minutes",
+    "seconds": "seconds",
+    "hours": "hours"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "exam": "Exam",
+    "results": "Results",
+    "admin": "Admin"
+  }
+}
