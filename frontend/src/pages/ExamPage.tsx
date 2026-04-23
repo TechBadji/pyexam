@@ -17,7 +17,7 @@ export default function ExamPage() {
   const { examId } = useParams<{ examId: string }>();
   const { t } = useTranslation("exam");
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  useAuthStore();
   const {
     currentExam, submissionId, startedAt, answers, isSubmitted,
     setExam, setSubmissionId, setStartedAt, setAnswer, markSubmitted,
