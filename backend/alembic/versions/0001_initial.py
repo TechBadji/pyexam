@@ -7,9 +7,7 @@ Create Date: 2026-01-01 00:00:00.000000
 
 from collections.abc import Sequence
 
-import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 revision: str = "0001"
 down_revision: str | None = None
@@ -18,181 +16,103 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # Drop any partial state from previous failed migrations (safe — no real data yet)
+    # Drop any partial state from previous failed migrations
     op.execute("DROP TABLE IF EXISTS audit_logs, answers, submissions, mcq_options, questions, exams, users CASCADE")
     op.execute("DROP TYPE IF EXISTS userrole, preferredlanguage, examstatus, questiontype, submissionstatus CASCADE")
 
-    # Create enum types
-    op.execute("CREATE TYPE userrole AS ENUM ('student', 'admin')")
-    op.execute("CREATE TYPE preferredlanguage AS ENUM ('fr', 'en')")
-    op.execute("CREATE TYPE examstatus AS ENUM ('draft', 'active', 'closed', 'corrected')")
-    op.execute("CREATE TYPE questiontype AS ENUM ('mcq', 'coding')")
-    op.execute("CREATE TYPE submissionstatus AS ENUM ('in_progress', 'submitted', 'corrected')")
+    op.execute("""
+        CREATE TYPE userrole AS ENUM ('student', 'admin');
+        CREATE TYPE preferredlanguage AS ENUM ('fr', 'en');
+        CREATE TYPE examstatus AS ENUM ('draft', 'active', 'closed', 'corrected');
+        CREATE TYPE questiontype AS ENUM ('mcq', 'coding');
+        CREATE TYPE submissionstatus AS ENUM ('in_progress', 'submitted', 'corrected');
 
-    op.create_table(
-        "users",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("email", sa.String(255), nullable=False),
-        sa.Column("full_name", sa.String(255), nullable=False),
-        sa.Column("hashed_password", sa.String(255), nullable=False),
-        sa.Column(
-            "role",
-            sa.Enum("student", "admin", name="userrole", create_type=False),
-            nullable=False,
-        ),
-        sa.Column("student_number", sa.String(50), nullable=True),
-        sa.Column(
-            "preferred_language",
-            sa.Enum("fr", "en", name="preferredlanguage", create_type=False),
-            nullable=False,
-        ),
-        sa.Column(
-            "created_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index("ix_users_email", "users", ["email"], unique=True)
+        CREATE TABLE users (
+            id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            email       VARCHAR(255) NOT NULL,
+            full_name   VARCHAR(255) NOT NULL,
+            hashed_password VARCHAR(255) NOT NULL,
+            role        userrole NOT NULL,
+            student_number VARCHAR(50),
+            preferred_language preferredlanguage NOT NULL,
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
+        CREATE UNIQUE INDEX ix_users_email ON users (email);
 
-    op.create_table(
-        "exams",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("title", sa.String(255), nullable=False),
-        sa.Column("description", sa.Text(), nullable=False),
-        sa.Column("duration_minutes", sa.Integer(), nullable=False),
-        sa.Column("start_time", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("end_time", sa.DateTime(timezone=True), nullable=False),
-        sa.Column(
-            "status",
-            sa.Enum("draft", "active", "closed", "corrected", name="examstatus", create_type=False),
-            nullable=False,
-        ),
-        sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.ForeignKeyConstraint(["created_by"], ["users.id"]),
-        sa.PrimaryKeyConstraint("id"),
-    )
+        CREATE TABLE exams (
+            id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            title            VARCHAR(255) NOT NULL,
+            description      TEXT NOT NULL,
+            duration_minutes INTEGER NOT NULL,
+            start_time       TIMESTAMPTZ NOT NULL,
+            end_time         TIMESTAMPTZ NOT NULL,
+            status           examstatus NOT NULL,
+            created_by       UUID NOT NULL REFERENCES users(id),
+            created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
 
-    op.create_table(
-        "questions",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("exam_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column(
-            "type",
-            sa.Enum("mcq", "coding", name="questiontype", create_type=False),
-            nullable=False,
-        ),
-        sa.Column("order_index", sa.Integer(), nullable=False),
-        sa.Column("points", sa.Float(), nullable=False),
-        sa.Column("statement", sa.Text(), nullable=False),
-        sa.Column("test_cases", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-        sa.ForeignKeyConstraint(["exam_id"], ["exams.id"]),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index("ix_questions_exam_id", "questions", ["exam_id"])
+        CREATE TABLE questions (
+            id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            exam_id     UUID NOT NULL REFERENCES exams(id),
+            type        questiontype NOT NULL,
+            order_index INTEGER NOT NULL,
+            points      FLOAT NOT NULL,
+            statement   TEXT NOT NULL,
+            test_cases  JSONB
+        );
+        CREATE INDEX ix_questions_exam_id ON questions (exam_id);
 
-    op.create_table(
-        "mcq_options",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("question_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("label", sa.String(1), nullable=False),
-        sa.Column("text", sa.Text(), nullable=False),
-        sa.Column("is_correct", sa.Boolean(), nullable=False),
-        sa.ForeignKeyConstraint(["question_id"], ["questions.id"]),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index("ix_mcq_options_question_id", "mcq_options", ["question_id"])
+        CREATE TABLE mcq_options (
+            id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            question_id UUID NOT NULL REFERENCES questions(id),
+            label       VARCHAR(1) NOT NULL,
+            text        TEXT NOT NULL,
+            is_correct  BOOLEAN NOT NULL
+        );
+        CREATE INDEX ix_mcq_options_question_id ON mcq_options (question_id);
 
-    op.create_table(
-        "submissions",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("student_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("exam_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column(
-            "started_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column("submitted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column(
-            "status",
-            sa.Enum("in_progress", "submitted", "corrected", name="submissionstatus", create_type=False),
-            nullable=False,
-        ),
-        sa.Column("total_score", sa.Float(), nullable=True),
-        sa.Column("submission_token", sa.String(255), nullable=False),
-        sa.Column("tab_switch_count", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(["exam_id"], ["exams.id"]),
-        sa.ForeignKeyConstraint(["student_id"], ["users.id"]),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("submission_token"),
-    )
-    op.create_index("ix_submissions_student_id", "submissions", ["student_id"])
-    op.create_index("ix_submissions_exam_id", "submissions", ["exam_id"])
-    op.create_index("ix_submissions_token", "submissions", ["submission_token"])
+        CREATE TABLE submissions (
+            id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            student_id       UUID NOT NULL REFERENCES users(id),
+            exam_id          UUID NOT NULL REFERENCES exams(id),
+            started_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+            submitted_at     TIMESTAMPTZ,
+            status           submissionstatus NOT NULL,
+            total_score      FLOAT,
+            submission_token VARCHAR(255) NOT NULL UNIQUE,
+            tab_switch_count INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE INDEX ix_submissions_student_id ON submissions (student_id);
+        CREATE INDEX ix_submissions_exam_id    ON submissions (exam_id);
+        CREATE INDEX ix_submissions_token      ON submissions (submission_token);
 
-    op.create_table(
-        "answers",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("submission_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("question_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("selected_option_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("code_written", sa.Text(), nullable=True),
-        sa.Column("score", sa.Float(), nullable=True),
-        sa.Column("feedback", sa.Text(), nullable=True),
-        sa.Column("execution_output", sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(["question_id"], ["questions.id"]),
-        sa.ForeignKeyConstraint(["selected_option_id"], ["mcq_options.id"]),
-        sa.ForeignKeyConstraint(["submission_id"], ["submissions.id"]),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index("ix_answers_submission_id", "answers", ["submission_id"])
-    op.create_index("ix_answers_question_id", "answers", ["question_id"])
+        CREATE TABLE answers (
+            id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            submission_id     UUID NOT NULL REFERENCES submissions(id),
+            question_id       UUID NOT NULL REFERENCES questions(id),
+            selected_option_id UUID REFERENCES mcq_options(id),
+            code_written      TEXT,
+            score             FLOAT,
+            feedback          TEXT,
+            execution_output  TEXT
+        );
+        CREATE INDEX ix_answers_submission_id ON answers (submission_id);
+        CREATE INDEX ix_answers_question_id   ON answers (question_id);
 
-    op.create_table(
-        "audit_logs",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("action", sa.String(50), nullable=False),
-        sa.Column("extra_data", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-        sa.Column(
-            "created_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index("ix_audit_logs_user_id", "audit_logs", ["user_id"])
-    op.create_index("ix_audit_logs_action", "audit_logs", ["action"])
-    op.create_index("ix_audit_logs_created_at", "audit_logs", ["created_at"])
+        CREATE TABLE audit_logs (
+            id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id    UUID NOT NULL REFERENCES users(id),
+            action     VARCHAR(50) NOT NULL,
+            extra_data JSONB,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
+        CREATE INDEX ix_audit_logs_user_id    ON audit_logs (user_id);
+        CREATE INDEX ix_audit_logs_action     ON audit_logs (action);
+        CREATE INDEX ix_audit_logs_created_at ON audit_logs (created_at);
+    """)
 
 
 def downgrade() -> None:
-    op.drop_table("audit_logs")
-    op.drop_table("answers")
-    op.drop_table("submissions")
-    op.drop_table("mcq_options")
-    op.drop_table("questions")
-    op.drop_table("exams")
-    op.drop_table("users")
-    op.execute("DROP TYPE IF EXISTS userrole")
-    op.execute("DROP TYPE IF EXISTS preferredlanguage")
-    op.execute("DROP TYPE IF EXISTS examstatus")
-    op.execute("DROP TYPE IF EXISTS questiontype")
-    op.execute("DROP TYPE IF EXISTS submissionstatus")
+    op.execute("DROP TABLE IF EXISTS audit_logs, answers, submissions, mcq_options, questions, exams, users CASCADE")
+    op.execute("DROP TYPE IF EXISTS userrole, preferredlanguage, examstatus, questiontype, submissionstatus CASCADE")
