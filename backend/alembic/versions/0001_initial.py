@@ -18,12 +18,16 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # Create enum types safely (idempotent)
-    op.execute("DO $$ BEGIN CREATE TYPE userrole AS ENUM ('student', 'admin'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;")
-    op.execute("DO $$ BEGIN CREATE TYPE preferredlanguage AS ENUM ('fr', 'en'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;")
-    op.execute("DO $$ BEGIN CREATE TYPE examstatus AS ENUM ('draft', 'active', 'closed', 'corrected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;")
-    op.execute("DO $$ BEGIN CREATE TYPE questiontype AS ENUM ('mcq', 'coding'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;")
-    op.execute("DO $$ BEGIN CREATE TYPE submissionstatus AS ENUM ('in_progress', 'submitted', 'corrected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;")
+    # Drop any partial state from previous failed migrations (safe — no real data yet)
+    op.execute("DROP TABLE IF EXISTS audit_logs, answers, submissions, mcq_options, questions, exams, users CASCADE")
+    op.execute("DROP TYPE IF EXISTS userrole, preferredlanguage, examstatus, questiontype, submissionstatus CASCADE")
+
+    # Create enum types
+    op.execute("CREATE TYPE userrole AS ENUM ('student', 'admin')")
+    op.execute("CREATE TYPE preferredlanguage AS ENUM ('fr', 'en')")
+    op.execute("CREATE TYPE examstatus AS ENUM ('draft', 'active', 'closed', 'corrected')")
+    op.execute("CREATE TYPE questiontype AS ENUM ('mcq', 'coding')")
+    op.execute("CREATE TYPE submissionstatus AS ENUM ('in_progress', 'submitted', 'corrected')")
 
     op.create_table(
         "users",
