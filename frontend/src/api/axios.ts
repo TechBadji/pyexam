@@ -1,7 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
 const api = axios.create({
-  baseURL: "/",
+  baseURL: import.meta.env.VITE_API_URL ?? "/",
   headers: { "Content-Type": "application/json" },
 });
 
@@ -66,7 +66,7 @@ api.interceptors.response.use(
 
       try {
         const { data } = await axios.post<{ access_token: string }>(
-          "/auth/refresh",
+          `${import.meta.env.VITE_API_URL ?? ""}/auth/refresh`,
           { refresh_token: refreshToken }
         );
         localStorage.setItem("pyexam_access_token", data.access_token);
