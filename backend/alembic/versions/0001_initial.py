@@ -18,6 +18,13 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    # Create enum types safely (idempotent)
+    op.execute("DO $$ BEGIN CREATE TYPE userrole AS ENUM ('student', 'admin'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;")
+    op.execute("DO $$ BEGIN CREATE TYPE preferredlanguage AS ENUM ('fr', 'en'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;")
+    op.execute("DO $$ BEGIN CREATE TYPE examstatus AS ENUM ('draft', 'active', 'closed', 'corrected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;")
+    op.execute("DO $$ BEGIN CREATE TYPE questiontype AS ENUM ('mcq', 'coding'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;")
+    op.execute("DO $$ BEGIN CREATE TYPE submissionstatus AS ENUM ('in_progress', 'submitted', 'corrected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;")
+
     op.create_table(
         "users",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
@@ -26,13 +33,13 @@ def upgrade() -> None:
         sa.Column("hashed_password", sa.String(255), nullable=False),
         sa.Column(
             "role",
-            sa.Enum("student", "admin", name="userrole"),
+            sa.Enum("student", "admin", name="userrole", create_type=False),
             nullable=False,
         ),
         sa.Column("student_number", sa.String(50), nullable=True),
         sa.Column(
             "preferred_language",
-            sa.Enum("fr", "en", name="preferredlanguage"),
+            sa.Enum("fr", "en", name="preferredlanguage", create_type=False),
             nullable=False,
         ),
         sa.Column(
@@ -61,7 +68,7 @@ def upgrade() -> None:
         sa.Column("end_time", sa.DateTime(timezone=True), nullable=False),
         sa.Column(
             "status",
-            sa.Enum("draft", "active", "closed", "corrected", name="examstatus"),
+            sa.Enum("draft", "active", "closed", "corrected", name="examstatus", create_type=False),
             nullable=False,
         ),
         sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=False),
@@ -81,7 +88,7 @@ def upgrade() -> None:
         sa.Column("exam_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column(
             "type",
-            sa.Enum("mcq", "coding", name="questiontype"),
+            sa.Enum("mcq", "coding", name="questiontype", create_type=False),
             nullable=False,
         ),
         sa.Column("order_index", sa.Integer(), nullable=False),
@@ -119,7 +126,7 @@ def upgrade() -> None:
         sa.Column("submitted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
             "status",
-            sa.Enum("in_progress", "submitted", "corrected", name="submissionstatus"),
+            sa.Enum("in_progress", "submitted", "corrected", name="submissionstatus", create_type=False),
             nullable=False,
         ),
         sa.Column("total_score", sa.Float(), nullable=True),
