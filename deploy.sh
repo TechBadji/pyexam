@@ -1,6 +1,7 @@
 #!/bin/bash
 # PyExam — script de déploiement pour AWS Bitnami Apache
 # Appelé par le webhook GitHub (deploy_pyexam.php) ou manuellement
+# Les images sont pré-buildées par GitHub Actions — aucun build sur le serveur
 set -e
 
 PYEXAM_DIR=/opt/pyexam
@@ -32,19 +33,24 @@ cd "$PYEXAM_DIR"
 # ── 3. Vérification du .env ──────────────────────────────────────────────────
 if [ ! -f ".env" ]; then
     log "ERREUR : fichier .env manquant dans $PYEXAM_DIR"
-    log "Copie le .env.example et remplis les valeurs :"
     log "  cp $PYEXAM_DIR/.env.example $PYEXAM_DIR/.env && nano $PYEXAM_DIR/.env"
     exit 1
 fi
 
-# ── 4. Build et démarrage des containers ────────────────────────────────────
-log "Build et démarrage des containers..."
-$COMPOSE_CMD pull --quiet 2>/dev/null || true
-$COMPOSE_CMD up -d --build
+# ── 4. Pull des images pré-buildées (pas de build sur le serveur) ────────────
+log "Pull des images depuis GitHub Container Registry..."
+$COMPOSE_CMD pull backend frontend celery_worker celery_beat
 
-log "Attente du health check backend..."
+# ── 5. Démarrage sans rebuild ─────────────────────────────────────────────────
+log "Démarrage des containers..."
+$COMPOSE_CMD up -d --no-build
+
+# ── 6. Nettoyage des anciennes images ────────────────────────────────────────
+sudo docker image prune -f
+
+log "Attente du health check..."
 for i in $(seq 1 30); do
-    if curl -sf http://localhost:8888/health | grep -q '"db":"ok"'; then
+    if curl -sf http://localhost:8888/health | grep -q 'ok'; then
         log "PyExam opérationnel sur http://localhost:8888"
         break
     fi

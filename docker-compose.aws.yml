@@ -1,12 +1,16 @@
 # Overlay pour le déploiement AWS — www.digitalmatis.com/pyexam/
-# Usage: docker compose -f docker-compose.yml -f docker-compose.aws.yml up -d --build
-# Note: set NGINX_PORT=8888 in .env to avoid conflict with host Apache on port 80
+# Usage: docker compose -f docker-compose.yml -f docker-compose.aws.yml up -d --no-build
+# Images pré-buildées par GitHub Actions et poussées sur GHCR
 
 services:
+  backend:
+    image: ghcr.io/techbadji/pyexam-backend:latest
+
+  celery_worker:
+    image: ghcr.io/techbadji/pyexam-backend:latest
+
+  celery_beat:
+    image: ghcr.io/techbadji/pyexam-backend:latest
+
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_BASE_PATH: /pyexam/
-        VITE_API_URL: /pyexam
+    image: ghcr.io/techbadji/pyexam-frontend:latest
