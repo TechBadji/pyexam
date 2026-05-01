@@ -1,0 +1,15 @@
+# Overlay pour le déploiement AWS — www.digitalmatis.com/pyexam/
+# Usage: docker compose -f docker-compose.yml -f docker-compose.aws.yml up -d --build
+
+services:
+  nginx:
+    ports:
+      - "8888:80"   # Port 80 déjà occupé par nginx AWS — on utilise 8888 en interne
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_BASE_PATH: /pyexam/
+        VITE_API_URL: /pyexam

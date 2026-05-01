@@ -27,6 +27,10 @@ class Question(Base):
     points: Mapped[float] = mapped_column(Float, nullable=False)
     statement: Mapped[str] = mapped_column(Text, nullable=False)
     test_cases: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    source_bank_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("bank_questions.id", ondelete="SET NULL"), nullable=True
+    )
+    source_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     exam: Mapped["Exam"] = relationship("Exam", back_populates="questions")
     options: Mapped[list["MCQOption"]] = relationship(

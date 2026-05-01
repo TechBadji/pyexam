@@ -4,7 +4,11 @@ import { persist } from "zustand/middleware";
 export interface AuthUser {
   id: string;
   full_name: string;
+  email: string;
   role: "student" | "admin";
+  student_number: string | null;
+  preferred_language: "fr" | "en";
+  avatar_url: string | null;
 }
 
 interface AuthState {
@@ -13,6 +17,7 @@ interface AuthState {
   refreshToken: string | null;
   login: (user: AuthUser, accessToken: string, refreshToken: string) => void;
   logout: () => void;
+  updateUser: (patch: Partial<AuthUser>) => void;
   isAuthenticated: () => boolean;
 }
 
@@ -33,6 +38,11 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem("pyexam_access_token");
         localStorage.removeItem("pyexam_refresh_token");
         set({ user: null, accessToken: null, refreshToken: null });
+      },
+
+      updateUser: (patch) => {
+        const current = get().user;
+        if (current) set({ user: { ...current, ...patch } });
       },
 
       isAuthenticated: () => get().user !== null && get().accessToken !== null,

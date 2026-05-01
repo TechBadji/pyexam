@@ -41,3 +41,19 @@ class UserPublic(BaseModel):
     role: UserRole
     student_number: str | None
     preferred_language: PreferredLanguage
+    avatar_url: str | None = None
+
+
+class ProfileUpdate(BaseModel):
+    full_name: str | None = None
+    student_number: str | None = None
+    preferred_language: PreferredLanguage | None = None
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class AvatarUpdate(BaseModel):
+    avatar_url: str

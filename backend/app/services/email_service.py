@@ -17,6 +17,42 @@ from app.models.user import User
 resend.api_key = settings.RESEND_API_KEY
 
 
+async def send_verification_email(email: str, full_name: str, code: str, lang: str) -> None:
+    if lang == "fr":
+        subject = "Votre code de vérification PyExam"
+        heading = "Vérifiez votre adresse e-mail"
+        body_text = f"Bonjour {full_name}, votre code de vérification est :"
+        expiry = "Ce code expire dans 15 minutes."
+    else:
+        subject = "Your PyExam verification code"
+        heading = "Verify your email address"
+        body_text = f"Hello {full_name}, your verification code is:"
+        expiry = "This code expires in 15 minutes."
+
+    html = f"""
+    <html><body style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px">
+      <h2 style="color:#4f46e5">{heading}</h2>
+      <p>{body_text}</p>
+      <div style="font-size:36px;font-weight:bold;letter-spacing:12px;text-align:center;
+                  padding:24px;background:#f5f3ff;border-radius:12px;color:#4f46e5;margin:24px 0">
+        {code}
+      </div>
+      <p style="color:#888;font-size:12px">{expiry}</p>
+    </body></html>
+    """
+
+    if settings.RESEND_API_KEY == "re_placeholder":
+        print(f"[DEV EMAIL] Verification code for {email}: {code}", flush=True)
+        return
+
+    resend.Emails.send({
+        "from": settings.FROM_EMAIL,
+        "to": [email],
+        "subject": subject,
+        "html": html,
+    })
+
+
 def _fmt_date(dt: datetime, lang: str) -> str:
     if lang == "en":
         return dt.strftime("%m/%d/%Y %I:%M %p")

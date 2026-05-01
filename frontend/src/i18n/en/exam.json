@@ -7,7 +7,46 @@
     "started": "In progress",
     "closed": "Closed",
     "enter_exam": "Enter exam",
-    "results_ready": "View results"
+    "results_ready": "View results",
+    "tabs": {
+      "exams": "Exams",
+      "sessions": "Sessions",
+      "history": "History",
+      "stats": "Stats"
+    },
+    "sessions": {
+      "title": "Available Sessions",
+      "no_sessions": "No sessions available for enrollment.",
+      "draw_info": "Random draw: {{n_mcq}} MCQ + {{n_coding}} coding",
+      "enroll": "Enroll",
+      "enrolling": "Enrolling…",
+      "enrolled": "Enrolled",
+      "enter": "Enter exam",
+      "enroll_success": "Enrolled! Your questions have been drawn.",
+      "starts_in": "Starts in",
+      "closed": "Closed"
+    },
+    "history": {
+      "title": "Exam History",
+      "no_history": "No exams taken yet.",
+      "exam": "Exam",
+      "submitted_at": "Submitted",
+      "score": "Score",
+      "status": "Status",
+      "duration": "Duration",
+      "tab_switches": "Tab switches",
+      "view_results": "View results",
+      "pending": "Awaiting correction"
+    },
+    "stats": {
+      "title": "Your Stats",
+      "total_exams": "Exams taken",
+      "average_score": "Average score",
+      "best_score": "Best score",
+      "no_stats": "No statistics yet. Take an exam to see your progress.",
+      "progression": "Score progression",
+      "no_progression": "No graded exams yet."
+    }
   },
   "interface": {
     "time_remaining": "Time remaining",

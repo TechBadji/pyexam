@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from app.models.exam import ExamStatus
 
@@ -13,6 +13,14 @@ class ExamCreate(BaseModel):
     start_time: datetime
     end_time: datetime
     status: ExamStatus = ExamStatus.draft
+
+    @model_validator(mode="after")
+    def validate_dates_and_duration(self) -> "ExamCreate":
+        if self.duration_minutes <= 0:
+            raise ValueError("duration_minutes must be greater than 0")
+        if self.start_time >= self.end_time:
+            raise ValueError("start_time must be before end_time")
+        return self
 
 
 class ExamUpdate(BaseModel):

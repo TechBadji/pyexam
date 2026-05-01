@@ -3,8 +3,11 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom
 import { useAuthStore } from "./store/authStore";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminExamReport from "./pages/AdminExamReport";
+import QuestionBankPage from "./pages/QuestionBankPage";
 import ExamPage from "./pages/ExamPage";
 import LoginPage from "./pages/LoginPage";
+import ProfilePage from "./pages/ProfilePage";
+import RegisterPage from "./pages/RegisterPage";
 import ResultsPage from "./pages/ResultsPage";
 import StudentDashboard from "./pages/StudentDashboard";
 
@@ -31,23 +34,30 @@ function Spinner() {
   );
 }
 
+// BASE_URL is set by Vite from the `base` config (/pyexam/ in production, / in dev)
+// React Router wants no trailing slash: /pyexam/ → /pyexam
+const basename = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
+
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <Suspense fallback={<Spinner />}>
         <Routes>
           <Route element={<RedirectIfAuth />}>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
           </Route>
 
           <Route element={<RequireAuth role="student" />}>
             <Route path="/dashboard" element={<StudentDashboard />} />
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/exam/:examId" element={<ExamPage />} />
             <Route path="/results/:submissionId" element={<ResultsPage />} />
           </Route>
 
           <Route element={<RequireAuth role="admin" />}>
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/bank" element={<QuestionBankPage />} />
             <Route path="/admin/exams/:examId/report" element={<AdminExamReport />} />
             <Route path="/admin/exams/:examId/stats" element={<AdminExamReport />} />
           </Route>

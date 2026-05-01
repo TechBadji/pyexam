@@ -7,7 +7,46 @@
     "started": "En cours",
     "closed": "Terminé",
     "enter_exam": "Accéder à l'examen",
-    "results_ready": "Voir les résultats"
+    "results_ready": "Voir les résultats",
+    "tabs": {
+      "exams": "Examens",
+      "sessions": "Sessions",
+      "history": "Historique",
+      "stats": "Statistiques"
+    },
+    "sessions": {
+      "title": "Sessions disponibles",
+      "no_sessions": "Aucune session disponible pour l'inscription.",
+      "draw_info": "Tirage : {{n_mcq}} QCM + {{n_coding}} code",
+      "enroll": "S'inscrire",
+      "enrolling": "Inscription…",
+      "enrolled": "Inscrit(e)",
+      "enter": "Accéder à l'examen",
+      "enroll_success": "Inscrit(e) ! Vos questions ont été tirées au sort.",
+      "starts_in": "Commence dans",
+      "closed": "Terminé"
+    },
+    "history": {
+      "title": "Historique des examens",
+      "no_history": "Aucun examen passé pour le moment.",
+      "exam": "Examen",
+      "submitted_at": "Soumis le",
+      "score": "Score",
+      "status": "Statut",
+      "duration": "Durée",
+      "tab_switches": "Changements d'onglet",
+      "view_results": "Voir les résultats",
+      "pending": "En attente de correction"
+    },
+    "stats": {
+      "title": "Vos statistiques",
+      "total_exams": "Examens passés",
+      "average_score": "Score moyen",
+      "best_score": "Meilleur score",
+      "no_stats": "Aucune statistique pour le moment. Passez un examen pour voir vos progrès.",
+      "progression": "Progression des scores",
+      "no_progression": "Aucun examen corrigé pour le moment."
+    }
   },
   "interface": {
     "time_remaining": "Temps restant",

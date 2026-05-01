@@ -1,0 +1,39 @@
+{
+  "title": "My Profile",
+  "avatar": {
+    "title": "Profile Picture",
+    "subtitle": "Enter an image URL, or leave empty to use your initials.",
+    "label": "Image URL",
+    "placeholder": "https://example.com/avatar.jpg",
+    "save": "Save picture",
+    "saving": "Saving…",
+    "saved": "Picture updated!"
+  },
+  "info": {
+    "title": "Personal Information",
+    "full_name": "Full name",
+    "student_number": "Student number",
+    "preferred_language": "Preferred language",
+    "lang_fr": "French",
+    "lang_en": "English",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "saved": "Profile updated!"
+  },
+  "password": {
+    "title": "Change Password",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "hint": "Minimum 6 characters",
+    "save": "Change password",
+    "saving": "Saving…",
+    "saved": "Password changed!",
+    "mismatch": "New passwords do not match.",
+    "too_short": "Password must be at least 6 characters.",
+    "wrong_current": "Current password is incorrect."
+  },
+  "errors": {
+    "server_error": "An error occurred. Please try again."
+  }
+}

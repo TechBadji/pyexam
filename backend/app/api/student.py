@@ -3,13 +3,14 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.middleware.auth_middleware import get_current_user, require_role
+from app.middleware.auth_middleware import require_role
 from app.models.answer import Answer
+from app.models.enrollment import ExamEnrollment
 from app.models.exam import Exam, ExamStatus
 from app.models.question import Question
 from app.models.submission import Submission, SubmissionStatus
@@ -17,14 +18,283 @@ from app.models.user import User, UserRole
 from app.schemas.answer import AnswerResponse, AnswerUpsert
 from app.schemas.exam import ExamWithCountdown
 from app.schemas.question import QuestionResponse, MCQOptionResponse
-from app.schemas.submission import SubmissionResponse, SubmissionStart
+from app.schemas.submission import SubmissionStart
+from app.schemas.user import AvatarUpdate, PasswordChange, ProfileUpdate
 from app.services import audit_service
+from app.services.auth_service import hash_password, verify_password
+from app.services.draw_service import draw_questions
 
 router = APIRouter(tags=["student"])
 
 _StudentUser = Annotated[User, Depends(require_role(UserRole.student))]
 _DB = Annotated[AsyncSession, Depends(get_db)]
 
+
+# ── Profile ────────────────────────────────────────────────────────────────────
+
+@router.get("/student/me")
+async def get_me(current_user: _StudentUser, db: _DB) -> dict:
+    return {
+        "id": str(current_user.id),
+        "full_name": current_user.full_name,
+        "email": current_user.email,
+        "role": current_user.role.value,
+        "student_number": current_user.student_number,
+        "preferred_language": current_user.preferred_language.value,
+        "avatar_url": current_user.avatar_url,
+    }
+
+
+@router.put("/student/profile")
+async def update_profile(body: ProfileUpdate, current_user: _StudentUser, db: _DB) -> dict:
+    if body.full_name is not None:
+        current_user.full_name = body.full_name
+    if body.student_number is not None:
+        current_user.student_number = body.student_number
+    if body.preferred_language is not None:
+        current_user.preferred_language = body.preferred_language
+    await db.flush()
+    return {
+        "id": str(current_user.id),
+        "full_name": current_user.full_name,
+        "email": current_user.email,
+        "role": current_user.role.value,
+        "student_number": current_user.student_number,
+        "preferred_language": current_user.preferred_language.value,
+        "avatar_url": current_user.avatar_url,
+    }
+
+
+@router.put("/student/password", status_code=status.HTTP_204_NO_CONTENT)
+async def change_password(body: PasswordChange, current_user: _StudentUser, db: _DB) -> None:
+    if not verify_password(body.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
+        )
+    if len(body.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters",
+        )
+    current_user.hashed_password = hash_password(body.new_password)
+    await db.flush()
+
+
+@router.put("/student/avatar")
+async def update_avatar(body: AvatarUpdate, current_user: _StudentUser, db: _DB) -> dict:
+    current_user.avatar_url = body.avatar_url
+    await db.flush()
+    return {"avatar_url": current_user.avatar_url}
+
+
+# ── History & Stats ────────────────────────────────────────────────────────────
+
+@router.get("/student/stats")
+async def get_stats(current_user: _StudentUser, db: _DB) -> dict:
+    max_score_subq = (
+        select(func.coalesce(func.sum(Question.points), 0.0))
+        .where(Question.exam_id == Submission.exam_id)
+        .correlate(Submission)
+        .scalar_subquery()
+    )
+
+    result = await db.execute(
+        select(
+            Submission.id,
+            Exam.title,
+            Submission.submitted_at,
+            Submission.status,
+            Submission.total_score,
+            max_score_subq.label("max_score"),
+        )
+        .join(Exam, Submission.exam_id == Exam.id)
+        .where(Submission.student_id == current_user.id)
+        .where(Submission.status.in_([SubmissionStatus.submitted, SubmissionStatus.corrected]))
+        .order_by(Submission.submitted_at.asc())
+    )
+    rows = result.all()
+
+    total_exams = len(rows)
+    corrected = [r for r in rows if r.status == SubmissionStatus.corrected and r.total_score is not None and r.max_score > 0]
+
+    avg_pct = None
+    best_pct = None
+    progression = []
+
+    if corrected:
+        pcts = [r.total_score / r.max_score * 100 for r in corrected]
+        avg_pct = round(sum(pcts) / len(pcts), 1)
+        best_pct = round(max(pcts), 1)
+        progression = [
+            {
+                "exam_title": r.title,
+                "submitted_at": r.submitted_at.isoformat() if r.submitted_at else None,
+                "score_pct": round(r.total_score / r.max_score * 100, 1),
+            }
+            for r in corrected[-6:]
+        ]
+
+    return {
+        "total_exams": total_exams,
+        "average_score_pct": avg_pct,
+        "best_score_pct": best_pct,
+        "progression": progression,
+    }
+
+
+@router.get("/student/history")
+async def get_history(current_user: _StudentUser, db: _DB) -> list[dict]:
+    max_score_subq = (
+        select(func.coalesce(func.sum(Question.points), 0.0))
+        .where(Question.exam_id == Submission.exam_id)
+        .correlate(Submission)
+        .scalar_subquery()
+    )
+
+    result = await db.execute(
+        select(
+            Submission.id,
+            Submission.exam_id,
+            Exam.title,
+            Exam.duration_minutes,
+            Submission.submitted_at,
+            Submission.status,
+            Submission.total_score,
+            Submission.tab_switch_count,
+            max_score_subq.label("max_score"),
+        )
+        .join(Exam, Submission.exam_id == Exam.id)
+        .where(Submission.student_id == current_user.id)
+        .where(Submission.status.in_([SubmissionStatus.submitted, SubmissionStatus.corrected]))
+        .order_by(Submission.submitted_at.desc())
+    )
+    rows = result.all()
+
+    return [
+        {
+            "id": str(r.id),
+            "exam_id": str(r.exam_id),
+            "exam_title": r.title,
+            "duration_minutes": r.duration_minutes,
+            "submitted_at": r.submitted_at.isoformat() if r.submitted_at else None,
+            "status": r.status.value,
+            "total_score": r.total_score,
+            "max_score": float(r.max_score) if r.max_score else None,
+            "score_pct": round(r.total_score / r.max_score * 100, 1) if r.total_score is not None and r.max_score else None,
+            "tab_switch_count": r.tab_switch_count,
+        }
+        for r in rows
+    ]
+
+
+# ── Sessions & Enrollment ──────────────────────────────────────────────────────
+
+@router.get("/student/sessions")
+async def list_sessions(current_user: _StudentUser, db: _DB) -> list[dict]:
+    """
+    Return active exams that use random draw (draw_config set).
+    Includes enrollment status for the current student.
+    """
+    result = await db.execute(
+        select(Exam).where(
+            Exam.status == ExamStatus.active,
+            Exam.draw_config.is_not(None),
+        )
+    )
+    exams = result.scalars().all()
+
+    if not exams:
+        return []
+
+    exam_ids = [e.id for e in exams]
+    enroll_result = await db.execute(
+        select(ExamEnrollment.exam_id).where(
+            ExamEnrollment.student_id == current_user.id,
+            ExamEnrollment.exam_id.in_(exam_ids),
+        )
+    )
+    enrolled_ids = {row[0] for row in enroll_result.all()}
+
+    now = datetime.now(timezone.utc)
+    out = []
+    for exam in exams:
+        start = exam.start_time.replace(tzinfo=timezone.utc) if exam.start_time.tzinfo is None else exam.start_time
+        end = exam.end_time.replace(tzinfo=timezone.utc) if exam.end_time.tzinfo is None else exam.end_time
+        out.append({
+            "id": str(exam.id),
+            "title": exam.title,
+            "description": exam.description,
+            "duration_minutes": exam.duration_minutes,
+            "start_time": exam.start_time.isoformat(),
+            "end_time": exam.end_time.isoformat(),
+            "seconds_until_start": max(0, int((start - now).total_seconds())),
+            "seconds_until_end": max(0, int((end - now).total_seconds())),
+            "draw_config": exam.draw_config,
+            "enrolled": exam.id in enrolled_ids,
+        })
+    return out
+
+
+@router.post("/student/exams/{exam_id}/enroll", status_code=status.HTTP_201_CREATED)
+async def enroll_in_session(
+    exam_id: uuid.UUID,
+    current_user: _StudentUser,
+    db: _DB,
+) -> dict:
+    """
+    Register the student in a session exam and run the random draw.
+    Returns the list of drawn question IDs.
+    Idempotent: returns existing enrollment if already enrolled.
+    """
+    exam_result = await db.execute(select(Exam).where(Exam.id == exam_id))
+    exam = exam_result.scalar_one_or_none()
+    if exam is None:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    if exam.draw_config is None:
+        raise HTTPException(status_code=400, detail="This exam does not use random draw")
+    if exam.status != ExamStatus.active:
+        raise HTTPException(status_code=400, detail="Exam is not open for enrollment")
+
+    existing = await db.execute(
+        select(ExamEnrollment).where(
+            ExamEnrollment.exam_id == exam_id,
+            ExamEnrollment.student_id == current_user.id,
+        )
+    )
+    enrollment = existing.scalar_one_or_none()
+    if enrollment is not None:
+        return {
+            "exam_id": str(exam_id),
+            "drawn_question_ids": [str(q) for q in enrollment.drawn_question_ids],
+            "already_enrolled": True,
+        }
+
+    drawn_ids = await draw_questions(exam_id, exam.draw_config, db)
+
+    enrollment = ExamEnrollment(
+        exam_id=exam_id,
+        student_id=current_user.id,
+        drawn_question_ids=[str(q) for q in drawn_ids],
+    )
+    db.add(enrollment)
+    await db.flush()
+
+    await audit_service.log(
+        user_id=current_user.id,
+        action="SESSION_ENROLL",
+        db=db,
+        extra_data={"exam_id": str(exam_id), "n_questions": len(drawn_ids)},
+    )
+
+    return {
+        "exam_id": str(exam_id),
+        "drawn_question_ids": [str(q) for q in drawn_ids],
+        "already_enrolled": False,
+    }
+
+
+# ── Exams ──────────────────────────────────────────────────────────────────────
 
 @router.get("/exams/available", response_model=list[ExamWithCountdown])
 async def list_available_exams(current_user: _StudentUser, db: _DB) -> list[ExamWithCountdown]:
@@ -60,6 +330,25 @@ async def get_exam_detail(
     if exam is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exam not found")
 
+    all_questions = exam.questions
+
+    # For session exams with draw_config, filter to the student's drawn subset
+    if exam.draw_config is not None:
+        enroll_result = await db.execute(
+            select(ExamEnrollment).where(
+                ExamEnrollment.exam_id == exam_id,
+                ExamEnrollment.student_id == current_user.id,
+            )
+        )
+        enrollment = enroll_result.scalar_one_or_none()
+        if enrollment is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must enroll in this session before accessing it",
+            )
+        drawn_set = {uuid.UUID(qid) for qid in enrollment.drawn_question_ids}
+        all_questions = [q for q in all_questions if q.id in drawn_set]
+
     questions = [
         QuestionResponse(
             id=q.id,
@@ -73,7 +362,7 @@ async def get_exam_detail(
                 for o in q.options
             ],
         )
-        for q in exam.questions
+        for q in all_questions
     ]
 
     return {
@@ -127,6 +416,8 @@ async def start_exam(
 
     return {"submission_id": str(submission.id)}
 
+
+# ── Answers & Submission ───────────────────────────────────────────────────────
 
 @router.put("/submissions/{submission_id}/answers/{question_id}", response_model=AnswerResponse)
 async def upsert_answer(

@@ -1,9 +1,13 @@
+from typing import Literal
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    ENV: Literal["development", "production"] = "development"
 
     DATABASE_URL: str
     REDIS_URL: str
@@ -22,7 +26,6 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def fix_db_url(cls, v: str) -> str:
-        # Railway fournit postgresql:// — SQLAlchemy async requiert postgresql+asyncpg://
         if isinstance(v, str) and v.startswith("postgresql://"):
             return v.replace("postgresql://", "postgresql+asyncpg://", 1)
         return v
@@ -30,9 +33,15 @@ class Settings(BaseSettings):
     @field_validator("REDIS_URL", mode="before")
     @classmethod
     def fix_redis_url(cls, v: str) -> str:
-        # Upstash/Railway fournit parfois rediss:// (TLS)
         if isinstance(v, str) and v.startswith("rediss://"):
-            return v  # redis-py supporte rediss://
+            return v
+        return v
+
+    @field_validator("SECRET_KEY", mode="before")
+    @classmethod
+    def validate_secret_key(cls, v: str) -> str:
+        if len(v) < 32:
+            raise ValueError("SECRET_KEY must be at least 32 characters — generate with: python -c \"import secrets; print(secrets.token_hex(32))\"")
         return v
 
 

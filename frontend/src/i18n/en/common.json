@@ -34,6 +34,7 @@
     "dashboard": "Dashboard",
     "exam": "Exam",
     "results": "Results",
-    "admin": "Admin"
+    "admin": "Admin",
+    "profile": "Profile"
   }
 }

@@ -1,7 +1,9 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "/",
+  // Empty string → relative URLs, routed by nginx proxy
+  // VITE_API_URL can override for external deployments (e.g. Vercel → Railway)
+  baseURL: import.meta.env.VITE_API_URL ?? "",
   headers: { "Content-Type": "application/json" },
 });
 
@@ -65,8 +67,9 @@ api.interceptors.response.use(
       }
 
       try {
+        const refreshBase = import.meta.env.VITE_API_URL ?? "";
         const { data } = await axios.post<{ access_token: string }>(
-          `${import.meta.env.VITE_API_URL ?? ""}/auth/refresh`,
+          `${refreshBase}/auth/refresh`,
           { refresh_token: refreshToken }
         );
         localStorage.setItem("pyexam_access_token", data.access_token);

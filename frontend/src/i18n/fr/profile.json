@@ -1,0 +1,39 @@
+{
+  "title": "Mon profil",
+  "avatar": {
+    "title": "Photo de profil",
+    "subtitle": "Entrez une URL d'image, ou laissez vide pour utiliser vos initiales.",
+    "label": "URL de l'image",
+    "placeholder": "https://exemple.com/avatar.jpg",
+    "save": "Enregistrer la photo",
+    "saving": "Enregistrement…",
+    "saved": "Photo mise à jour !"
+  },
+  "info": {
+    "title": "Informations personnelles",
+    "full_name": "Nom complet",
+    "student_number": "Numéro étudiant",
+    "preferred_language": "Langue préférée",
+    "lang_fr": "Français",
+    "lang_en": "Anglais",
+    "save": "Enregistrer les modifications",
+    "saving": "Enregistrement…",
+    "saved": "Profil mis à jour !"
+  },
+  "password": {
+    "title": "Changer le mot de passe",
+    "current": "Mot de passe actuel",
+    "new": "Nouveau mot de passe",
+    "confirm": "Confirmer le nouveau mot de passe",
+    "hint": "6 caractères minimum",
+    "save": "Changer le mot de passe",
+    "saving": "Enregistrement…",
+    "saved": "Mot de passe modifié !",
+    "mismatch": "Les nouveaux mots de passe ne correspondent pas.",
+    "too_short": "Le mot de passe doit contenir au moins 6 caractères.",
+    "wrong_current": "Le mot de passe actuel est incorrect."
+  },
+  "errors": {
+    "server_error": "Une erreur est survenue. Réessayez."
+  }
+}

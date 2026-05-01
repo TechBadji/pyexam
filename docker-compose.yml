@@ -5,13 +5,13 @@ services:
     image: postgres:15
     restart: unless-stopped
     environment:
-      POSTGRES_USER: pyexam
-      POSTGRES_PASSWORD: pyexam
-      POSTGRES_DB: pyexam
+      POSTGRES_USER: ${POSTGRES_USER:-pyexam}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pyexam}
+      POSTGRES_DB: ${POSTGRES_DB:-pyexam}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pyexam"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pyexam}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,12 +28,12 @@ services:
   piston:
     image: ghcr.io/engineer-man/piston
     restart: unless-stopped
-    ports:
-      - "2000:2000"
+    privileged: true
+    # Port 2000 intentionally NOT exposed to host — accessible only via internal Docker network
     tmpfs:
       - /piston/jobs
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:2000/api/v2/runtimes || exit 1"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:2000/api/v2/runtimes',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -53,11 +53,11 @@ services:
       piston:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health || exit 1"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 30s
 
   celery_worker:
     build:
@@ -99,7 +99,7 @@ services:
     depends_on:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:80 || exit 1"]
+      test: ["CMD-SHELL", "curl -fs http://localhost:80/ || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -118,7 +118,7 @@ services:
       frontend:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/health || exit 1"]
+      test: ["CMD-SHELL", "curl -fs http://localhost/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5

@@ -30,6 +30,7 @@ async def seed() -> None:
             hashed_password=hash_password("admin123"),
             role=UserRole.admin,
             preferred_language=PreferredLanguage.fr,
+            is_verified=True,
         )
         db.add(admin)
 
@@ -42,6 +43,7 @@ async def seed() -> None:
                 role=UserRole.student,
                 student_number=f"202400{i}",
                 preferred_language=PreferredLanguage.fr,
+                is_verified=True,
             )
             for i in range(1, 4)
         ]

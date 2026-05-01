@@ -6,10 +6,12 @@ import enAdmin from "./en/admin.json";
 import enAuth from "./en/auth.json";
 import enCommon from "./en/common.json";
 import enExam from "./en/exam.json";
+import enProfile from "./en/profile.json";
 import frAdmin from "./fr/admin.json";
 import frAuth from "./fr/auth.json";
 import frCommon from "./fr/common.json";
 import frExam from "./fr/exam.json";
+import frProfile from "./fr/profile.json";
 
 const LANG_KEY = "pyexam_lang";
 
@@ -18,13 +20,13 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      fr: { common: frCommon, auth: frAuth, exam: frExam, admin: frAdmin },
-      en: { common: enCommon, auth: enAuth, exam: enExam, admin: enAdmin },
+      fr: { common: frCommon, auth: frAuth, exam: frExam, admin: frAdmin, profile: frProfile },
+      en: { common: enCommon, auth: enAuth, exam: enExam, admin: enAdmin, profile: enProfile },
     },
     fallbackLng: "fr",
     supportedLngs: ["fr", "en"],
     defaultNS: "common",
-    ns: ["common", "auth", "exam", "admin"],
+    ns: ["common", "auth", "exam", "admin", "profile"],
     detection: {
       order: ["localStorage", "navigator"],
       lookupLocalStorage: LANG_KEY,

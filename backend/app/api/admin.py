@@ -16,6 +16,7 @@ from app.models.answer import Answer
 from app.models.audit_log import AuditLog
 from app.models.exam import Exam, ExamStatus
 from app.models.question import MCQOption, Question, QuestionType
+from app.models.question_bank import BankMCQOption, BankQuestion
 from app.models.submission import Submission, SubmissionStatus
 from app.models.user import User, UserRole
 from app.schemas.exam import ExamCreate, ExamResponse, ExamUpdate
@@ -28,6 +29,23 @@ from app.schemas.question import (
     QuestionUpdate,
 )
 from app.services import audit_service
+from pydantic import BaseModel as _BaseModel
+
+
+class FromBankRequest(_BaseModel):
+    question_ids: list[uuid.UUID]
+    start_order_index: int = 1
+
+
+class DrawConfigRequest(_BaseModel):
+    n_mcq: int = 0
+    n_coding: int = 0
+
+
+class AutoPopulateRequest(_BaseModel):
+    tags: list[str] = []
+    difficulty: str | None = None
+
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -153,6 +171,149 @@ async def delete_question(
     if question is None:
         raise HTTPException(status_code=404, detail="Question not found")
     await db.delete(question)
+
+
+@router.post("/exams/{exam_id}/from-bank", status_code=status.HTTP_201_CREATED)
+async def import_from_bank(
+    exam_id: uuid.UUID,
+    body: FromBankRequest,
+    current_user: _AdminUser,
+    db: _DB,
+) -> dict:
+    exam_result = await db.execute(select(Exam).where(Exam.id == exam_id))
+    if exam_result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="Exam not found")
+
+    bq_result = await db.execute(
+        select(BankQuestion)
+        .options(selectinload(BankQuestion.options))
+        .where(BankQuestion.id.in_(body.question_ids))
+    )
+    bank_questions = {bq.id: bq for bq in bq_result.scalars().all()}
+
+    created = 0
+    for idx, bq_id in enumerate(body.question_ids):
+        bq = bank_questions.get(bq_id)
+        if bq is None:
+            continue
+        q = Question(
+            exam_id=exam_id,
+            type=bq.type,
+            order_index=body.start_order_index + idx,
+            points=bq.points,
+            statement=bq.statement,
+            test_cases=bq.test_cases,
+            source_bank_id=bq.id,
+            source_version=bq.version,
+        )
+        db.add(q)
+        await db.flush()
+        if bq.type == QuestionType.mcq:
+            for opt in bq.options:
+                db.add(MCQOption(
+                    question_id=q.id,
+                    label=opt.label,
+                    text=opt.text,
+                    is_correct=opt.is_correct,
+                ))
+        created += 1
+
+    return {"imported": created}
+
+
+@router.put("/exams/{exam_id}/draw-config", response_model=dict)
+async def set_draw_config(
+    exam_id: uuid.UUID,
+    body: DrawConfigRequest,
+    current_user: _AdminUser,
+    db: _DB,
+) -> dict:
+    """Set the random-draw configuration for a session exam."""
+    result = await db.execute(select(Exam).where(Exam.id == exam_id))
+    exam = result.scalar_one_or_none()
+    if exam is None:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    exam.draw_config = {"n_mcq": body.n_mcq, "n_coding": body.n_coding}
+    await db.flush()
+    return {"draw_config": exam.draw_config}
+
+
+@router.post("/exams/{exam_id}/auto-populate", response_model=dict)
+async def auto_populate_pool(
+    exam_id: uuid.UUID,
+    body: AutoPopulateRequest,
+    current_user: _AdminUser,
+    db: _DB,
+) -> dict:
+    """
+    Copy all matching bank questions into the exam question pool.
+    Existing pool questions are preserved; only new ones are added.
+    """
+    exam_result = await db.execute(select(Exam).where(Exam.id == exam_id))
+    exam = exam_result.scalar_one_or_none()
+    if exam is None:
+        raise HTTPException(status_code=404, detail="Exam not found")
+
+    bq_query = (
+        select(BankQuestion)
+        .options(selectinload(BankQuestion.options))
+    )
+    if body.tags:
+        for tag in body.tags:
+            bq_query = bq_query.where(BankQuestion.tags.contains([tag]))
+    if body.difficulty:
+        from app.models.question_bank import DifficultyLevel
+        try:
+            diff = DifficultyLevel(body.difficulty)
+            bq_query = bq_query.where(BankQuestion.difficulty == diff)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Unknown difficulty: {body.difficulty}")
+
+    bq_result = await db.execute(bq_query)
+    bank_questions = bq_result.scalars().all()
+
+    # Don't re-import bank questions already in the pool
+    existing_result = await db.execute(
+        select(Question.source_bank_id).where(
+            Question.exam_id == exam_id,
+            Question.source_bank_id.is_not(None),
+        )
+    )
+    already_imported = {row[0] for row in existing_result.all()}
+
+    max_order_result = await db.execute(
+        select(func.coalesce(func.max(Question.order_index), 0)).where(Question.exam_id == exam_id)
+    )
+    next_order = (max_order_result.scalar() or 0) + 1
+
+    added = 0
+    for bq in bank_questions:
+        if bq.id in already_imported:
+            continue
+        q = Question(
+            exam_id=exam_id,
+            type=bq.type,
+            order_index=next_order,
+            points=bq.points,
+            statement=bq.statement,
+            test_cases=bq.test_cases,
+            source_bank_id=bq.id,
+            source_version=bq.version,
+        )
+        db.add(q)
+        await db.flush()
+        if bq.type == QuestionType.mcq:
+            for opt in bq.options:
+                db.add(MCQOption(
+                    question_id=q.id,
+                    label=opt.label,
+                    text=opt.text,
+                    is_correct=opt.is_correct,
+                ))
+        next_order += 1
+        added += 1
+
+    return {"added": added, "total_pool": len(already_imported) + added}
 
 
 # ── MCQ Options ────────────────────────────────────────────────────────────────
