@@ -60,6 +60,7 @@ export default function App() {
             <Route path="/admin/bank" element={<QuestionBankPage />} />
             <Route path="/admin/exams/:examId/report" element={<AdminExamReport />} />
             <Route path="/admin/exams/:examId/stats" element={<AdminExamReport />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
           <Route
