@@ -1,11 +1,8 @@
 # Overlay pour le déploiement AWS — www.digitalmatis.com/pyexam/
 # Usage: docker compose -f docker-compose.yml -f docker-compose.aws.yml up -d --build
+# Note: set NGINX_PORT=8888 in .env to avoid conflict with host Apache on port 80
 
 services:
-  nginx:
-    ports: !reset
-      - "8888:80"   # Port 80 déjà occupé par Apache AWS — on expose 8888 uniquement
-
   frontend:
     build:
       context: ./frontend
