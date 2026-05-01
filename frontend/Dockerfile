@@ -9,7 +9,7 @@ ENV VITE_BASE_PATH=$VITE_BASE_PATH
 ENV VITE_API_URL=$VITE_API_URL
 
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm install --prefer-offline 2>/dev/null || npm install
 
 COPY . .
 RUN npm run build
