@@ -3,8 +3,8 @@
 
 services:
   nginx:
-    ports:
-      - "8888:80"   # Port 80 déjà occupé par nginx AWS — on utilise 8888 en interne
+    ports: !reset
+      - "8888:80"   # Port 80 déjà occupé par Apache AWS — on expose 8888 uniquement
 
   frontend:
     build:
