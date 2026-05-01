@@ -34,6 +34,7 @@ export default function CodingQuestion({
     if (initialCode) return initialCode;
     return localStorage.getItem(draftKey) ?? "";
   });
+  const [stdin, setStdin] = useState("");
   const [output, setOutput] = useState<RunResult | null>(null);
   const [running, setRunning] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -76,7 +77,7 @@ export default function CodingQuestion({
     try {
       const { data } = await api.post<RunResult>("/code/run", {
         code,
-        stdin: "",
+        stdin,
       });
       setOutput(data);
     } catch {
@@ -112,6 +113,23 @@ export default function CodingQuestion({
           }}
         />
       </div>
+
+      {!readOnly && (
+        <div>
+          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            {t("interface.stdin_label")}
+            <span className="ml-1 font-normal text-gray-400 dark:text-gray-500">{t("interface.stdin_hint")}</span>
+          </label>
+          <textarea
+            value={stdin}
+            onChange={(e) => setStdin(e.target.value)}
+            placeholder={t("interface.stdin_placeholder")}
+            rows={3}
+            className="w-full font-mono text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-y"
+            spellCheck={false}
+          />
+        </div>
+      )}
 
       <div className="flex items-center gap-3">
         {!readOnly && (
