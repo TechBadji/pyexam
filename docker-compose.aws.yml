@@ -4,13 +4,13 @@
 
 services:
   backend:
-    image: ghcr.io/techbadji/pyexam-backend:latest
+    image: techbadji/pyexam-backend:latest
 
   celery_worker:
-    image: ghcr.io/techbadji/pyexam-backend:latest
+    image: techbadji/pyexam-backend:latest
 
   celery_beat:
-    image: ghcr.io/techbadji/pyexam-backend:latest
+    image: techbadji/pyexam-backend:latest
 
   frontend:
-    image: ghcr.io/techbadji/pyexam-frontend:latest
+    image: techbadji/pyexam-frontend:latest
