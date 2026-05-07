@@ -3,10 +3,10 @@ set -e
 
 alembic upgrade head
 
-# Run seed only in development (not in production)
-if [ "${ENV:-development}" != "production" ]; then
-  python seed.py
-fi
+# Seeds are idempotent — safe to run on every startup
+python seed.py
+python seed_bank.py
+python seed_bank_algo.py
 
 # Start Celery worker + beat in background (production only)
 if [ "${ENV:-development}" = "production" ]; then
