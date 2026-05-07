@@ -1,3 +1,5 @@
+import ast
+import re
 import uuid
 from datetime import datetime, timezone
 from typing import Annotated
@@ -12,7 +14,7 @@ from app.middleware.auth_middleware import require_role
 from app.models.answer import Answer
 from app.models.enrollment import ExamEnrollment
 from app.models.exam import Exam, ExamStatus
-from app.models.question import Question
+from app.models.question import Question, QuestionType
 from app.models.submission import Submission, SubmissionStatus
 from app.models.user import User, UserRole
 from app.schemas.answer import AnswerResponse, AnswerUpsert
@@ -27,13 +29,14 @@ from app.services.draw_service import draw_questions
 router = APIRouter(tags=["student"])
 
 _StudentUser = Annotated[User, Depends(require_role(UserRole.student))]
+_AnyUser = Annotated[User, Depends(require_role(UserRole.student, UserRole.admin))]
 _DB = Annotated[AsyncSession, Depends(get_db)]
 
 
 # ── Profile ────────────────────────────────────────────────────────────────────
 
 @router.get("/student/me")
-async def get_me(current_user: _StudentUser, db: _DB) -> dict:
+async def get_me(current_user: _AnyUser, db: _DB) -> dict:
     return {
         "id": str(current_user.id),
         "full_name": current_user.full_name,
@@ -46,7 +49,7 @@ async def get_me(current_user: _StudentUser, db: _DB) -> dict:
 
 
 @router.put("/student/profile")
-async def update_profile(body: ProfileUpdate, current_user: _StudentUser, db: _DB) -> dict:
+async def update_profile(body: ProfileUpdate, current_user: _AnyUser, db: _DB) -> dict:
     if body.full_name is not None:
         current_user.full_name = body.full_name
     if body.student_number is not None:
@@ -66,7 +69,7 @@ async def update_profile(body: ProfileUpdate, current_user: _StudentUser, db: _D
 
 
 @router.put("/student/password", status_code=status.HTTP_204_NO_CONTENT)
-async def change_password(body: PasswordChange, current_user: _StudentUser, db: _DB) -> None:
+async def change_password(body: PasswordChange, current_user: _AnyUser, db: _DB) -> None:
     if not verify_password(body.current_password, current_user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -82,7 +85,7 @@ async def change_password(body: PasswordChange, current_user: _StudentUser, db: 
 
 
 @router.put("/student/avatar")
-async def update_avatar(body: AvatarUpdate, current_user: _StudentUser, db: _DB) -> dict:
+async def update_avatar(body: AvatarUpdate, current_user: _AnyUser, db: _DB) -> dict:
     current_user.avatar_url = body.avatar_url
     await db.flush()
     return {"avatar_url": current_user.avatar_url}
@@ -385,11 +388,28 @@ async def start_exam(
     db: _DB,
 ) -> dict:
     existing = await db.execute(
-        select(Submission).where(Submission.submission_token == body.submission_token)
+        select(Submission)
+        .options(selectinload(Submission.answers))
+        .where(
+            Submission.submission_token == body.submission_token,
+            Submission.student_id == current_user.id,
+        )
     )
     submission = existing.scalar_one_or_none()
     if submission is not None:
-        return {"submission_id": str(submission.id)}
+        return {
+            "submission_id": str(submission.id),
+            "started_at": submission.started_at.isoformat(),
+            "status": submission.status.value,
+            "answers": [
+                {
+                    "question_id": str(a.question_id),
+                    "selected_option_id": str(a.selected_option_id) if a.selected_option_id else None,
+                    "code_written": a.code_written,
+                }
+                for a in submission.answers
+            ],
+        }
 
     exam_result = await db.execute(select(Exam).where(Exam.id == exam_id))
     exam = exam_result.scalar_one_or_none()
@@ -414,7 +434,12 @@ async def start_exam(
         extra_data={"exam_id": str(exam_id), "submission_id": str(submission.id)},
     )
 
-    return {"submission_id": str(submission.id)}
+    return {
+        "submission_id": str(submission.id),
+        "started_at": submission.started_at.isoformat(),
+        "status": "in_progress",
+        "answers": [],
+    }
 
 
 # ── Answers & Submission ───────────────────────────────────────────────────────
@@ -518,9 +543,6 @@ async def submit_exam(
     submission.status = SubmissionStatus.submitted
     await db.flush()
 
-    from app.tasks.email_task import send_receipt_email_task
-    send_receipt_email_task.delay(str(submission_id))
-
     await audit_service.log(
         user_id=current_user.id,
         action="EXAM_SUBMIT",
@@ -529,6 +551,37 @@ async def submit_exam(
     )
 
     return {"message": "Submitted successfully"}
+
+
+def _parse_test_results(
+    test_cases: list[dict],
+    feedback: str | None,
+    execution_output: str | None,
+) -> list[dict]:
+    """Parse per-test-case results from stored feedback and execution_output text."""
+    fb_lines = [l for l in (feedback or "").split("\n") if l.strip()]
+    out_lines = [l for l in (execution_output or "").split("\n") if l.strip()]
+
+    results = []
+    for i, tc in enumerate(test_cases):
+        passed = i < len(fb_lines) and "✓" in fb_lines[i]
+
+        actual: str | None = None
+        if i < len(out_lines):
+            m = re.search(r"stdout=(.*?), stderr=", out_lines[i])
+            if m:
+                try:
+                    actual = ast.literal_eval(m.group(1).strip())
+                except Exception:
+                    actual = m.group(1).strip()
+
+        results.append({
+            "input": str(tc.get("input", "")),
+            "expected_output": str(tc.get("expected_output", "")),
+            "actual_output": actual,
+            "passed": passed,
+        })
+    return results
 
 
 @router.get("/submissions/{submission_id}/results", response_model=dict)
@@ -553,17 +606,23 @@ async def get_results(
     if submission.status != SubmissionStatus.corrected:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not yet available")
 
-    breakdown = [
-        {
+    breakdown = []
+    for a in sorted(submission.answers, key=lambda a: a.question.order_index):
+        q = a.question
+        item: dict = {
             "question_id": str(a.question_id),
-            "statement": a.question.statement,
-            "points": a.question.points,
+            "question_type": q.type.value,
+            "statement": q.statement,
+            "points": q.points,
             "score": a.score,
             "feedback": a.feedback,
-            "execution_output": a.execution_output,
         }
-        for a in sorted(submission.answers, key=lambda a: a.question.order_index)
-    ]
+        if q.type == QuestionType.coding:
+            item["code_written"] = a.code_written
+            item["test_results"] = _parse_test_results(
+                q.test_cases or [], a.feedback, a.execution_output
+            )
+        breakdown.append(item)
 
     return {
         "submission_id": str(submission.id),

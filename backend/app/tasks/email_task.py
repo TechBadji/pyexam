@@ -5,7 +5,7 @@ from celery.utils.log import get_task_logger
 
 from app.tasks.celery_app import celery
 from app.database import AsyncSessionLocal
-from app.services.email_service import send_receipt_email, send_result_email
+from app.services.email_service import send_result_email
 
 logger = get_task_logger(__name__)
 
@@ -39,26 +39,3 @@ def send_result_email_task(self, submission_id: str) -> dict:
     return {"submission_id": submission_id, "sent": True}
 
 
-@celery.task(
-    bind=True,
-    max_retries=3,
-    default_retry_delay=30,
-    name="app.tasks.email_task.send_receipt_email_task",
-)
-def send_receipt_email_task(self, submission_id: str) -> dict:
-    logger.info("Sending receipt email for submission %s", submission_id)
-
-    async def _send():
-        async with AsyncSessionLocal() as db:
-            await send_receipt_email(uuid.UUID(submission_id), db)
-
-    try:
-        _run(_send())
-    except Exception as exc:
-        logger.error("Failed to send receipt email for %s: %s", submission_id, exc)
-        raise self.retry(
-            exc=exc,
-            countdown=30 * (2 ** self.request.retries),
-        )
-
-    return {"submission_id": submission_id, "sent": True}

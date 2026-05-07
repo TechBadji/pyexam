@@ -75,6 +75,7 @@
   },
   "results": {
     "title": "Résultats de l'examen",
+    "not_available": "Résultats non disponibles ou correction en cours.",
     "total_score": "Score total",
     "passed": "Réussi",
     "failed": "Échoué",
@@ -83,6 +84,17 @@
     "correct_answer": "Réponse correcte",
     "feedback": "Commentaire",
     "points_earned": "Points obtenus",
-    "tab_switches": "Changements d'onglet"
+    "tab_switches": "Changements d'onglet",
+    "your_code": "Votre code",
+    "show_code": "Voir le code",
+    "hide_code": "Masquer le code",
+    "no_code": "Aucun code soumis.",
+    "test_results": "Résultats des tests",
+    "col_input": "Entrée",
+    "col_expected": "Attendu",
+    "col_got": "Obtenu",
+    "col_status": "Statut",
+    "no_output": "(aucune sortie)",
+    "mcq_feedback": "Correction"
   }
 }

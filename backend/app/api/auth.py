@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -6,11 +7,12 @@ from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+logger = logging.getLogger(__name__)
+
 from app.database import get_db
 from app.limiter import limiter
 from app.models.user import PreferredLanguage, User, UserRole
-from app.services import audit_service, auth_service
-from app.services import redis_service
+from app.services import audit_service, auth_service, redis_service
 from app.services.email_service import send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -176,12 +178,16 @@ async def register(
     await db.flush()
 
     code = await redis_service.store_verification_code(body.email)
-    await send_verification_email(body.email, body.full_name, code, body.preferred_language.value)
-
-    from app.config import settings
-    dev_code = code if settings.RESEND_API_KEY == "re_placeholder" else None
-
-    return RegisterResponse(message="Verification email sent", dev_code=dev_code)
+    try:
+        await send_verification_email(
+            body.email, body.full_name, code, body.preferred_language.value
+        )
+        return RegisterResponse(message="Verification email sent")
+    except Exception as exc:
+        logger.warning("Email send failed for %s: %s", body.email, exc)
+        # Email failed — auto-verify so the student isn't blocked
+        user.is_verified = True
+        return RegisterResponse(message="Account created", dev_code=code)
 
 
 @router.post("/verify-email")
@@ -225,9 +231,11 @@ async def resend_verification(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already verified")
 
     code = await redis_service.store_verification_code(body.email)
-    await send_verification_email(body.email, user.full_name, code, user.preferred_language.value)
-
-    from app.config import settings
-    dev_code = code if settings.RESEND_API_KEY == "re_placeholder" else None
-
-    return ResendResponse(message="Verification code resent", dev_code=dev_code)
+    try:
+        await send_verification_email(
+            body.email, user.full_name, code, user.preferred_language.value
+        )
+        return ResendResponse(message="Verification code resent")
+    except Exception as exc:
+        logger.warning("Resend email failed for %s: %s", body.email, exc)
+        return ResendResponse(message="Email unavailable", dev_code=code)

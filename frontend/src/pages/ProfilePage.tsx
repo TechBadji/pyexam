@@ -126,7 +126,7 @@ function AvatarSection() {
     setError("");
     const trimmed = url.trim();
     if (trimmed && !/^https?:\/\/.+/.test(trimmed)) {
-      setError("L'URL doit commencer par http:// ou https://");
+      setError(t("avatar.invalid_url"));
       return;
     }
     setLoading(true);
@@ -355,13 +355,13 @@ export default function ProfilePage() {
         <div className="max-w-2xl mx-auto px-4 pt-8 pb-8">
           <div className="flex items-center gap-2 mb-6">
             <Link
-              to="/dashboard"
+              to={user?.role === "admin" ? "/admin" : "/dashboard"}
               className="flex items-center gap-1.5 text-sm text-indigo-200 hover:text-white transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
-              {tCommon("nav.dashboard")}
+              {user?.role === "admin" ? tCommon("nav.admin") : tCommon("nav.dashboard")}
             </Link>
           </div>
 
@@ -369,7 +369,7 @@ export default function ProfilePage() {
             <PyExamLogo size={44} />
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-white">{t("title")}</h1>
-              <p className="text-sm text-indigo-200 mt-0.5">PyExam · Espace étudiant</p>
+              <p className="text-sm text-indigo-200 mt-0.5">{t("subtitle")}</p>
             </div>
             {user && <UserAvatar user={user} size={60} />}
           </div>

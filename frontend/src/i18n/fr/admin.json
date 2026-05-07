@@ -9,7 +9,14 @@
     "correction_done": "Correction terminée",
     "view_report": "Rapport",
     "view_stats": "Statistiques",
-    "question_bank": "Banque de questions"
+    "question_bank": "Banque de questions",
+    "correction_error": "Erreur lors du lancement de la correction.",
+    "publish": "Publier",
+    "close_exam": "Fermer",
+    "exam_published": "Examen publié — les étudiants peuvent y accéder.",
+    "exam_closed": "Examen fermé.",
+    "users": "Utilisateurs",
+    "audit_log": "Journal d'activité"
   },
   "exam_form": {
     "exam_title": "Titre de l'examen",
@@ -30,12 +37,20 @@
     "input": "Entrée (stdin)",
     "expected_output": "Sortie attendue",
     "weight": "Poids",
+    "stdin_hint": "Plusieurs valeurs lues par input() → une valeur par ligne (Entrée pour passer à la ligne).",
     "section_manual": "Questions manuelles",
     "section_bank": "Importer depuis la banque",
     "bank_selected": "{{count}} question(s) sélectionnée(s) depuis la banque",
     "bank_remove": "Retirer",
     "save": "Enregistrer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "type_label": "Type d'examen",
+    "type_standard": "Examen standard",
+    "type_standard_desc": "Ensemble fixe de questions, identique pour chaque étudiant.",
+    "type_session": "Session à tirage aléatoire",
+    "type_session_desc": "Questions tirées aléatoirement depuis un pool lors de l'inscription.",
+    "error_dates": "La date de début doit être antérieure à la date de fin.",
+    "error_generic": "Une erreur est survenue lors de l'enregistrement. Vérifiez le formulaire et réessayez."
   },
   "bank": {
     "page_title": "Banque de Questions",
@@ -74,6 +89,7 @@
     "form_input": "Entrée (stdin)",
     "form_expected": "Sortie attendue",
     "form_weight": "Poids",
+    "form_stdin_hint": "Plusieurs valeurs lues par input() → une valeur par ligne (Entrée pour passer à la ligne).",
     "form_save": "Enregistrer",
     "form_cancel": "Annuler",
     "form_saving": "Enregistrement...",
@@ -122,7 +138,10 @@
     "auto_populate_any_difficulty": "Tous niveaux",
     "auto_populate_run": "Importer les questions correspondantes",
     "auto_populate_success": "{{added}} question(s) ajoutée(s). Pool : {{total}}.",
-    "pool_size": "Pool actuel : {{n}} question(s)"
+    "pool_size": "Pool actuel : {{n}} question(s)",
+    "config_title": "Configuration du tirage",
+    "config_hint": "Nombre de questions assignées aléatoirement à chaque étudiant lors de l'inscription.",
+    "auto_populate_save_first": "Enregistrez d'abord l'examen pour peupler le pool."
   },
   "report": {
     "title": "Rapport de l'examen",
@@ -133,7 +152,9 @@
     "tab_switches": "Changements d'onglet",
     "export_csv": "Exporter CSV",
     "export_pdf": "Exporter PDF",
-    "back": "Retour"
+    "back": "Retour",
+    "submissions_label": "Soumissions",
+    "passed_label": "Reçus"
   },
   "stats": {
     "title": "Statistiques",
@@ -144,10 +165,48 @@
     "hardest_questions": "Questions les plus difficiles"
   },
   "audit": {
-    "title": "Journal d'audit",
+    "title": "Journal d'activité",
     "action": "Action",
     "user": "Utilisateur",
     "date": "Date",
-    "details": "Détails"
+    "details": "Détails",
+    "total_events": "événement(s)",
+    "all_actions": "Toutes les actions",
+    "col_date": "Date",
+    "col_action": "Action",
+    "col_user": "Utilisateur",
+    "col_details": "Détails",
+    "show_details": "voir les détails",
+    "empty": "Aucun événement."
+  },
+  "users": {
+    "title": "Gestion des utilisateurs",
+    "create_user": "Créer un utilisateur",
+    "create_title": "Nouvel utilisateur",
+    "create_confirm": "Créer",
+    "create_error": "Erreur lors de la création.",
+    "search_placeholder": "Nom, email, n° étudiant…",
+    "search": "Rechercher",
+    "all_roles": "Tous les rôles",
+    "role_student": "Étudiant",
+    "role_admin": "Administrateur",
+    "col_name": "Nom",
+    "col_email": "Email",
+    "col_number": "N° étudiant",
+    "col_role": "Rôle",
+    "col_created": "Créé le",
+    "col_actions": "Actions",
+    "delete_user": "Supprimer",
+    "delete_confirm": "Supprimer cet utilisateur ? Cette action est irréversible.",
+    "delete_success": "Utilisateur supprimé.",
+    "delete_error": "Erreur lors de la suppression.",
+    "delete_self_error": "Impossible de supprimer votre propre compte.",
+    "reset_password": "Réinitialiser MDP",
+    "reset_title": "Réinitialiser le mot de passe",
+    "reset_confirm": "Confirmer",
+    "reset_success": "Mot de passe réinitialisé.",
+    "new_password": "Nouveau mot de passe",
+    "optional": "facultatif",
+    "empty": "Aucun utilisateur."
   }
 }

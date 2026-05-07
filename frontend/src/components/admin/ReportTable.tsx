@@ -1,3 +1,5 @@
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { useTranslation } from "react-i18next";
 
 interface ReportRow {
@@ -68,7 +70,41 @@ export default function ReportTable({ rows, examId }: ReportTableProps) {
   };
 
   const exportPDF = () => {
-    window.open(`/admin/exams/${examId}/report.pdf`, "_blank");
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    doc.setFontSize(14);
+    doc.text(t("report.title"), 14, 16);
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(`Exam ID: ${examId}  —  ${new Date().toLocaleString(lang === "fr" ? "fr-FR" : "en-US")}`, 14, 22);
+    doc.setTextColor(0);
+
+    autoTable(doc, {
+      startY: 28,
+      head: [[
+        t("report.student_number"),
+        t("report.student_name"),
+        "Email",
+        t("report.score"),
+        t("report.status"),
+        t("report.tab_switches"),
+        "Submitted At",
+      ]],
+      body: rows.map((r) => [
+        r.student_number ?? "—",
+        r.student_name,
+        r.email,
+        fmtScore(r.total_score),
+        r.status,
+        r.tab_switch_count,
+        fmtDate(r.submitted_at),
+      ]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [79, 70, 229] },
+      alternateRowStyles: { fillColor: [245, 245, 255] },
+    });
+
+    doc.save(`report_${examId}.pdf`);
   };
 
   return (

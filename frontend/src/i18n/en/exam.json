@@ -75,6 +75,7 @@
   },
   "results": {
     "title": "Exam Results",
+    "not_available": "Results are not available or grading is in progress.",
     "total_score": "Total score",
     "passed": "Passed",
     "failed": "Failed",
@@ -83,6 +84,17 @@
     "correct_answer": "Correct answer",
     "feedback": "Feedback",
     "points_earned": "Points earned",
-    "tab_switches": "Tab switches"
+    "tab_switches": "Tab switches",
+    "your_code": "Your code",
+    "show_code": "Show code",
+    "hide_code": "Hide code",
+    "no_code": "No code submitted.",
+    "test_results": "Test results",
+    "col_input": "Input",
+    "col_expected": "Expected",
+    "col_got": "Got",
+    "col_status": "Status",
+    "no_output": "(no output)",
+    "mcq_feedback": "Feedback"
   }
 }

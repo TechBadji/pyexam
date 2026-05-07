@@ -39,9 +39,9 @@ async def get_current_user(
     return user
 
 
-def require_role(role: UserRole):
+def require_role(*roles: UserRole):
     async def _checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
-        if current_user.role != role:
+        if current_user.role not in roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions",

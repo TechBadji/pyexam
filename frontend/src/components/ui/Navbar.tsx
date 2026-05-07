@@ -65,7 +65,6 @@ export default function Navbar() {
             to="/"
             className="flex items-center gap-2 font-bold text-brand-600 dark:text-brand-400 text-lg"
           >
-            <span className="text-2xl">🐍</span>
             PyExam
           </Link>
 

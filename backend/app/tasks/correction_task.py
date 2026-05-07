@@ -47,6 +47,13 @@ def correct_exam_task(self, exam_id: str) -> dict:
                     failed_ids.append(str(submission.id))
                     logger.error("Failed to correct submission %s: %s", submission.id, exc)
 
+            # Mark the exam itself as corrected
+            exam_result = await db.execute(select(Exam).where(Exam.id == eid))
+            exam = exam_result.scalar_one_or_none()
+            if exam is not None:
+                exam.status = ExamStatus.corrected
+                await db.commit()
+
         return corrected_ids, failed_ids
 
     try:

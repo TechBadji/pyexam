@@ -34,6 +34,7 @@ interface ExamFormData {
 
 interface ExamFormProps {
   initialData?: Partial<ExamFormData>;
+  initialDrawConfig?: { n_mcq: number; n_coding: number } | null;
   examId?: string;
   onSuccess: () => void;
   onCancel: () => void;
@@ -48,7 +49,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   culture: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200",
 };
 
-export default function ExamForm({ initialData, examId, onSuccess, onCancel }: ExamFormProps) {
+export default function ExamForm({ initialData, initialDrawConfig, examId, onSuccess, onCancel }: ExamFormProps) {
   const { t } = useTranslation("admin");
   const isEdit = !!examId;
 
@@ -65,16 +66,18 @@ export default function ExamForm({ initialData, examId, onSuccess, onCancel }: E
   const [bankImports, setBankImports] = useState<BankQuestionPreview[]>([]);
   const [showBankPicker, setShowBankPicker] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // ── Draw config (session mode) ──
-  const [drawEnabled, setDrawEnabled] = useState(false);
-  const [drawNMcq, setDrawNMcq] = useState(5);
-  const [drawNCoding, setDrawNCoding] = useState(1);
-  const [drawSaving, setDrawSaving] = useState(false);
-  const [drawSaved, setDrawSaved] = useState(false);
+  // ── Type d'examen ──
+  const [examType, setExamType] = useState<"standard" | "session">(
+    initialDrawConfig ? "session" : "standard"
+  );
+  const [drawNMcq, setDrawNMcq] = useState(initialDrawConfig?.n_mcq ?? 5);
+  const [drawNCoding, setDrawNCoding] = useState(initialDrawConfig?.n_coding ?? 1);
   const [autoPopulateTags, setAutoPopulateTags] = useState("");
   const [autoPopulateDiff, setAutoPopulateDiff] = useState("");
   const [autoPopulating, setAutoPopulating] = useState(false);
+  const [autoPopulateResult, setAutoPopulateResult] = useState<string | null>(null);
 
   const addMCQ = () =>
     setQuestions((q) => [
@@ -119,30 +122,16 @@ export default function ExamForm({ initialData, examId, onSuccess, onCancel }: E
     });
   };
 
-  const handleSaveDrawConfig = async () => {
-    if (!examId) return;
-    setDrawSaving(true);
-    setDrawSaved(false);
-    try {
-      await api.put(`/admin/exams/${examId}/draw-config`, {
-        n_mcq: drawNMcq,
-        n_coding: drawNCoding,
-      });
-      setDrawSaved(true);
-    } finally {
-      setDrawSaving(false);
-    }
-  };
-
-  const handleAutoPopulate = async () => {
-    if (!examId) return;
+  const handleAutoPopulate = async (id: string) => {
     setAutoPopulating(true);
+    setAutoPopulateResult(null);
     try {
       const tags = autoPopulateTags.split(",").map((s) => s.trim()).filter(Boolean);
-      await api.post(`/admin/exams/${examId}/auto-populate`, {
+      const { data } = await api.post<{ added: number; total: number }>(`/admin/exams/${id}/auto-populate`, {
         tags,
         difficulty: autoPopulateDiff || null,
       });
+      setAutoPopulateResult(t("draw.auto_populate_success", { added: data.added, total: data.total }));
     } finally {
       setAutoPopulating(false);
     }
@@ -150,6 +139,14 @@ export default function ExamForm({ initialData, examId, onSuccess, onCancel }: E
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveError(null);
+
+    // Client-side date validation
+    if (form.start_time && form.end_time && form.start_time >= form.end_time) {
+      setSaveError(t("exam_form.error_dates"));
+      return;
+    }
+
     setSaving(true);
     try {
       let id = examId;
@@ -183,7 +180,24 @@ export default function ExamForm({ initialData, examId, onSuccess, onCancel }: E
         });
       }
 
+      // Save draw config if session mode
+      if (examType === "session") {
+        await api.put(`/admin/exams/${id}/draw-config`, {
+          n_mcq: drawNMcq,
+          n_coding: drawNCoding,
+        });
+      }
+
       onSuccess();
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setSaveError(detail.map((d: { msg?: string }) => d.msg).join(" · "));
+      } else if (typeof detail === "string") {
+        setSaveError(detail);
+      } else {
+        setSaveError(t("exam_form.error_generic"));
+      }
     } finally {
       setSaving(false);
     }
@@ -197,7 +211,72 @@ export default function ExamForm({ initialData, examId, onSuccess, onCancel }: E
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Exam metadata */}
+
+        {/* ── Type d'examen ─────────────────────────────────────────────────── */}
+        <div>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            {t("exam_form.type_label")}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Carte Examen standard */}
+            <button
+              type="button"
+              onClick={() => setExamType("standard")}
+              className={`relative text-left rounded-xl border-2 p-4 transition-all ${
+                examType === "standard"
+                  ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40"
+                  : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700"
+              }`}
+            >
+              {examType === "standard" && (
+                <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                </span>
+              )}
+              <div className="flex items-center gap-2 mb-1.5">
+                <svg className="w-4 h-4 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {t("exam_form.type_standard")}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                {t("exam_form.type_standard_desc")}
+              </p>
+            </button>
+
+            {/* Carte Session */}
+            <button
+              type="button"
+              onClick={() => setExamType("session")}
+              className={`relative text-left rounded-xl border-2 p-4 transition-all ${
+                examType === "session"
+                  ? "border-violet-500 bg-violet-50 dark:bg-violet-950/40"
+                  : "border-gray-200 dark:border-gray-700 hover:border-violet-300 dark:hover:border-violet-700"
+              }`}
+            >
+              {examType === "session" && (
+                <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-violet-500 flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                </span>
+              )}
+              <div className="flex items-center gap-2 mb-1.5">
+                <svg className="w-4 h-4 text-violet-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h8m-8 4h4" />
+                </svg>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {t("exam_form.type_session")}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                {t("exam_form.type_session_desc")}
+              </p>
+            </button>
+          </div>
+        </div>
+
+        {/* ── Métadonnées ───────────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("exam_form.exam_title")}</label>
@@ -221,7 +300,104 @@ export default function ExamForm({ initialData, examId, onSuccess, onCancel }: E
           </div>
         </div>
 
-        {/* Manual questions */}
+        {/* ── Config tirage (Session uniquement) ────────────────────────────── */}
+        {examType === "session" && (
+          <div className="rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50/40 dark:bg-violet-950/20 p-4 space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-violet-700 dark:text-violet-300 mb-0.5">
+                {t("draw.config_title")}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {t("draw.config_hint")}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  {t("draw.n_mcq")}
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={drawNMcq}
+                  onChange={(e) => setDrawNMcq(Number(e.target.value))}
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  {t("draw.n_coding")}
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={drawNCoding}
+                  onChange={(e) => setDrawNCoding(Number(e.target.value))}
+                  className={inputCls}
+                />
+              </div>
+            </div>
+
+            {/* Auto-populate depuis la banque */}
+            <div className="border-t border-violet-200 dark:border-violet-800 pt-4 space-y-3">
+              <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                {t("draw.auto_populate_title")}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    {t("draw.auto_populate_tags")}
+                  </label>
+                  <input
+                    type="text"
+                    value={autoPopulateTags}
+                    onChange={(e) => setAutoPopulateTags(e.target.value)}
+                    placeholder="python, algorithme..."
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    {t("draw.auto_populate_difficulty")}
+                  </label>
+                  <select
+                    value={autoPopulateDiff}
+                    onChange={(e) => setAutoPopulateDiff(e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="">{t("draw.auto_populate_any_difficulty")}</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="expert">Expert</option>
+                    <option value="culture">Culture</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  disabled={autoPopulating || !isEdit}
+                  onClick={() => examId && handleAutoPopulate(examId)}
+                  className="px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-xs font-medium transition-colors"
+                  title={!isEdit ? t("draw.auto_populate_save_first") : undefined}
+                >
+                  {autoPopulating ? "…" : t("draw.auto_populate_run")}
+                </button>
+                {!isEdit && (
+                  <span className="text-xs text-gray-400 dark:text-gray-500 italic">
+                    {t("draw.auto_populate_save_first")}
+                  </span>
+                )}
+                {autoPopulateResult && (
+                  <span className="text-xs text-green-600 dark:text-green-400">{autoPopulateResult}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Questions manuelles ───────────────────────────────────────────── */}
         {questions.length > 0 && (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
@@ -254,10 +430,11 @@ export default function ExamForm({ initialData, examId, onSuccess, onCancel }: E
 
                   {q.type === "coding" && (
                     <div className="space-y-2">
+                      <p className="text-xs text-amber-600 dark:text-amber-400">{t("exam_form.stdin_hint")}</p>
                       {q.test_cases.map((tc, ti) => (
-                        <div key={ti} className="grid grid-cols-3 gap-2">
-                          <input className={inputCls} placeholder={t("exam_form.input")} value={tc.input} onChange={(e) => updateTC(qi, ti, { input: e.target.value })} />
-                          <input className={inputCls} placeholder={t("exam_form.expected_output")} value={tc.expected_output} onChange={(e) => updateTC(qi, ti, { expected_output: e.target.value })} />
+                        <div key={ti} className="grid grid-cols-3 gap-2 items-start">
+                          <textarea rows={2} className={`${inputCls} font-mono text-xs resize-y`} placeholder={t("exam_form.input")} value={tc.input} onChange={(e) => updateTC(qi, ti, { input: e.target.value })} />
+                          <textarea rows={2} className={`${inputCls} font-mono text-xs resize-y`} placeholder={t("exam_form.expected_output")} value={tc.expected_output} onChange={(e) => updateTC(qi, ti, { expected_output: e.target.value })} />
                           <input type="number" step={0.1} min={0.1} className={inputCls} placeholder={t("exam_form.weight")} value={tc.weight} onChange={(e) => updateTC(qi, ti, { weight: Number(e.target.value) })} />
                         </div>
                       ))}
@@ -272,7 +449,7 @@ export default function ExamForm({ initialData, examId, onSuccess, onCancel }: E
           </div>
         )}
 
-        {/* Bank imports */}
+        {/* ── Questions banque ──────────────────────────────────────────────── */}
         {bankImports.length > 0 && (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
@@ -311,7 +488,7 @@ export default function ExamForm({ initialData, examId, onSuccess, onCancel }: E
           </div>
         )}
 
-        {/* Add buttons */}
+        {/* ── Boutons d'ajout ───────────────────────────────────────────────── */}
         <div className="flex gap-2 flex-wrap">
           <button type="button" onClick={addMCQ} className="px-4 py-2 border-2 border-dashed border-indigo-300 text-indigo-600 dark:text-indigo-400 rounded-lg text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
             + {t("exam_form.add_mcq")}
@@ -337,111 +514,20 @@ export default function ExamForm({ initialData, examId, onSuccess, onCancel }: E
           </p>
         )}
 
-        {/* ── Random draw (session mode) — only available when editing a saved exam ── */}
-        {isEdit && (
-          <div className="border border-indigo-200 dark:border-indigo-800 rounded-xl p-4 bg-indigo-50/40 dark:bg-indigo-950/20">
-            <div className="flex items-center gap-3 mb-3">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={drawEnabled}
-                  onChange={(e) => setDrawEnabled(e.target.checked)}
-                  className="rounded accent-indigo-600 w-4 h-4"
-                />
-                <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
-                  {t("draw.section_title")}
-                </span>
-              </label>
-            </div>
-            {drawEnabled && (
-              <div className="space-y-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400">{t("draw.section_hint")}</p>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("draw.n_mcq")}</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={drawNMcq}
-                      onChange={(e) => { setDrawNMcq(Number(e.target.value)); setDrawSaved(false); }}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("draw.n_coding")}</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={drawNCoding}
-                      onChange={(e) => { setDrawNCoding(Number(e.target.value)); setDrawSaved(false); }}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    disabled={drawSaving}
-                    onClick={handleSaveDrawConfig}
-                    className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-medium transition-colors"
-                  >
-                    {drawSaving ? t("draw.saving") : t("draw.save_config")}
-                  </button>
-                  {drawSaved && <span className="text-xs text-green-600 dark:text-green-400">{t("draw.saved")}</span>}
-                </div>
-
-                {/* Auto-populate pool */}
-                <div className="border-t border-indigo-200 dark:border-indigo-800 pt-3">
-                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">{t("draw.auto_populate_title")}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t("draw.auto_populate_hint")}</p>
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("draw.auto_populate_tags")}</label>
-                      <input
-                        type="text"
-                        value={autoPopulateTags}
-                        onChange={(e) => setAutoPopulateTags(e.target.value)}
-                        placeholder="python, algorithm..."
-                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("draw.auto_populate_difficulty")}</label>
-                      <select
-                        value={autoPopulateDiff}
-                        onChange={(e) => setAutoPopulateDiff(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      >
-                        <option value="">{t("draw.auto_populate_any_difficulty")}</option>
-                        <option value="beginner">Beginner</option>
-                        <option value="intermediate">Intermediate</option>
-                        <option value="expert">Expert</option>
-                        <option value="culture">Culture</option>
-                      </select>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={autoPopulating}
-                    onClick={handleAutoPopulate}
-                    className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white text-xs font-medium transition-colors"
-                  >
-                    {autoPopulating ? "…" : t("draw.auto_populate_run")}
-                  </button>
-                </div>
-              </div>
-            )}
+        {/* ── Error banner ──────────────────────────────────────────────────── */}
+        {saveError && (
+          <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+            {saveError}
           </div>
         )}
 
+        {/* ── Actions ───────────────────────────────────────────────────────── */}
         <div className="flex gap-3 justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
           <button type="button" onClick={onCancel} className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             {t("exam_form.cancel")}
           </button>
           <button type="submit" disabled={saving} className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-medium transition-colors">
-            {saving ? "..." : t("exam_form.save")}
+            {saving ? "…" : t("exam_form.save")}
           </button>
         </div>
       </form>

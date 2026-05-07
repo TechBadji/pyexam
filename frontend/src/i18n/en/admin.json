@@ -9,7 +9,14 @@
     "correction_done": "Grading complete",
     "view_report": "Report",
     "view_stats": "Statistics",
-    "question_bank": "Question Bank"
+    "question_bank": "Question Bank",
+    "correction_error": "An error occurred while launching grading.",
+    "publish": "Publish",
+    "close_exam": "Close",
+    "exam_published": "Exam published — students can now access it.",
+    "exam_closed": "Exam closed.",
+    "users": "Users",
+    "audit_log": "Activity log"
   },
   "exam_form": {
     "exam_title": "Exam title",
@@ -30,12 +37,20 @@
     "input": "Input (stdin)",
     "expected_output": "Expected output",
     "weight": "Weight",
+    "stdin_hint": "Multiple input() calls → one value per line (press Enter between values).",
     "section_manual": "Manual questions",
     "section_bank": "Import from bank",
     "bank_selected": "{{count}} question(s) selected from bank",
     "bank_remove": "Remove",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "type_label": "Exam type",
+    "type_standard": "Standard exam",
+    "type_standard_desc": "Fixed set of questions, same for every student.",
+    "type_session": "Random draw session",
+    "type_session_desc": "Questions drawn randomly from a pool at enrollment time.",
+    "error_dates": "Start time must be before end time.",
+    "error_generic": "An error occurred while saving. Please check the form and try again."
   },
   "bank": {
     "page_title": "Question Bank",
@@ -74,6 +89,7 @@
     "form_input": "Input (stdin)",
     "form_expected": "Expected output",
     "form_weight": "Weight",
+    "form_stdin_hint": "Multiple input() calls → one value per line (press Enter between values).",
     "form_save": "Save",
     "form_cancel": "Cancel",
     "form_saving": "Saving...",
@@ -122,7 +138,10 @@
     "auto_populate_any_difficulty": "Any difficulty",
     "auto_populate_run": "Import matching questions",
     "auto_populate_success": "{{added}} question(s) added. Pool: {{total}}.",
-    "pool_size": "Current pool: {{n}} question(s)"
+    "pool_size": "Current pool: {{n}} question(s)",
+    "config_title": "Draw configuration",
+    "config_hint": "Number of questions randomly assigned to each student at enrollment.",
+    "auto_populate_save_first": "Save the exam first to populate the pool."
   },
   "report": {
     "title": "Exam report",
@@ -133,7 +152,9 @@
     "tab_switches": "Tab switches",
     "export_csv": "Export CSV",
     "export_pdf": "Export PDF",
-    "back": "Back"
+    "back": "Back",
+    "submissions_label": "Submissions",
+    "passed_label": "Passed"
   },
   "stats": {
     "title": "Statistics",
@@ -144,10 +165,48 @@
     "hardest_questions": "Hardest questions"
   },
   "audit": {
-    "title": "Audit log",
+    "title": "Activity log",
     "action": "Action",
     "user": "User",
     "date": "Date",
-    "details": "Details"
+    "details": "Details",
+    "total_events": "event(s)",
+    "all_actions": "All actions",
+    "col_date": "Date",
+    "col_action": "Action",
+    "col_user": "User",
+    "col_details": "Details",
+    "show_details": "show details",
+    "empty": "No events."
+  },
+  "users": {
+    "title": "User management",
+    "create_user": "Create user",
+    "create_title": "New user",
+    "create_confirm": "Create",
+    "create_error": "Error while creating user.",
+    "search_placeholder": "Name, email, student ID…",
+    "search": "Search",
+    "all_roles": "All roles",
+    "role_student": "Student",
+    "role_admin": "Administrator",
+    "col_name": "Name",
+    "col_email": "Email",
+    "col_number": "Student ID",
+    "col_role": "Role",
+    "col_created": "Created",
+    "col_actions": "Actions",
+    "delete_user": "Delete",
+    "delete_confirm": "Delete this user? This action cannot be undone.",
+    "delete_success": "User deleted.",
+    "delete_error": "Error deleting user.",
+    "delete_self_error": "You cannot delete your own account.",
+    "reset_password": "Reset password",
+    "reset_title": "Reset password",
+    "reset_confirm": "Confirm",
+    "reset_success": "Password reset successfully.",
+    "new_password": "New password",
+    "optional": "optional",
+    "empty": "No users found."
   }
 }

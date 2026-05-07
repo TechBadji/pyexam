@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
+import AdminAuditPage from "./pages/AdminAuditPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminExamReport from "./pages/AdminExamReport";
+import AdminUsersPage from "./pages/AdminUsersPage";
 import QuestionBankPage from "./pages/QuestionBankPage";
 import ExamPage from "./pages/ExamPage";
 import LoginPage from "./pages/LoginPage";
@@ -50,7 +52,6 @@ export default function App() {
 
           <Route element={<RequireAuth role="student" />}>
             <Route path="/dashboard" element={<StudentDashboard />} />
-            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/exam/:examId" element={<ExamPage />} />
             <Route path="/results/:submissionId" element={<ResultsPage />} />
           </Route>
@@ -58,8 +59,13 @@ export default function App() {
           <Route element={<RequireAuth role="admin" />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/bank" element={<QuestionBankPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/audit" element={<AdminAuditPage />} />
             <Route path="/admin/exams/:examId/report" element={<AdminExamReport />} />
             <Route path="/admin/exams/:examId/stats" element={<AdminExamReport />} />
+          </Route>
+
+          <Route element={<RequireAuth />}>
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
 

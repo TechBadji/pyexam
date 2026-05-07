@@ -645,10 +645,11 @@ export default function QuestionBankPage() {
 
               {form.type === "coding" && (
                 <div className="space-y-2">
+                  <p className="text-xs text-amber-600 dark:text-amber-400">{t("bank.form_stdin_hint")}</p>
                   {form.test_cases.map((tc, i) => (
-                    <div key={i} className="grid grid-cols-3 gap-2">
-                      <input value={tc.input} onChange={(e) => updateTC(i, { input: e.target.value })} placeholder={t("bank.form_input")} className={inputCls} />
-                      <input value={tc.expected_output} onChange={(e) => updateTC(i, { expected_output: e.target.value })} placeholder={t("bank.form_expected")} className={inputCls} />
+                    <div key={i} className="grid grid-cols-3 gap-2 items-start">
+                      <textarea rows={2} value={tc.input} onChange={(e) => updateTC(i, { input: e.target.value })} placeholder={t("bank.form_input")} className={`${inputCls} font-mono text-xs resize-y`} />
+                      <textarea rows={2} value={tc.expected_output} onChange={(e) => updateTC(i, { expected_output: e.target.value })} placeholder={t("bank.form_expected")} className={`${inputCls} font-mono text-xs resize-y`} />
                       <input type="number" min={0.1} step={0.1} value={tc.weight} onChange={(e) => updateTC(i, { weight: Number(e.target.value) })} placeholder={t("bank.form_weight")} className={inputCls} />
                     </div>
                   ))}

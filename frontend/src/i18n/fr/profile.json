@@ -1,10 +1,12 @@
 {
   "title": "Mon profil",
+  "subtitle": "PyExam · Profil",
   "avatar": {
     "title": "Photo de profil",
     "subtitle": "Entrez une URL d'image, ou laissez vide pour utiliser vos initiales.",
     "label": "URL de l'image",
     "placeholder": "https://exemple.com/avatar.jpg",
+    "invalid_url": "L'URL doit commencer par http:// ou https://",
     "save": "Enregistrer la photo",
     "saving": "Enregistrement…",
     "saved": "Photo mise à jour !"

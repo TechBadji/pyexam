@@ -1,7 +1,9 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
-import resend
+import aiosmtplib
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -13,8 +15,6 @@ from app.models.exam import Exam
 from app.models.question import Question
 from app.models.submission import Submission
 from app.models.user import User
-
-resend.api_key = settings.RESEND_API_KEY
 
 
 async def send_verification_email(email: str, full_name: str, code: str, lang: str) -> None:
@@ -40,17 +40,29 @@ async def send_verification_email(email: str, full_name: str, code: str, lang: s
       <p style="color:#888;font-size:12px">{expiry}</p>
     </body></html>
     """
+    await _send(email, subject, html)
 
-    if settings.RESEND_API_KEY == "re_placeholder":
-        print(f"[DEV EMAIL] Verification code for {email}: {code}", flush=True)
+
+async def _send(to: str, subject: str, html: str) -> None:
+    """Send an HTML email via SMTP (async). Silently skips if SMTP_USER is not configured."""
+    if not settings.SMTP_USER:
+        print(f"[EMAIL] No SMTP_USER configured — skipping email to {to} | {subject}", flush=True)
         return
 
-    resend.Emails.send({
-        "from": settings.FROM_EMAIL,
-        "to": [email],
-        "subject": subject,
-        "html": html,
-    })
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = settings.FROM_EMAIL
+    msg["To"] = to
+    msg.attach(MIMEText(html, "html", "utf-8"))
+
+    await aiosmtplib.send(
+        msg,
+        hostname=settings.SMTP_HOST,
+        port=settings.SMTP_PORT,
+        username=settings.SMTP_USER,
+        password=settings.SMTP_PASSWORD,
+        start_tls=True,
+    )
 
 
 def _fmt_date(dt: datetime, lang: str) -> str:
@@ -60,9 +72,8 @@ def _fmt_date(dt: datetime, lang: str) -> str:
 
 
 def _fmt_score(value: float, lang: str) -> str:
-    if lang == "en":
-        return f"{value:.1f}"
-    return f"{value:.1f}".replace(".", ",")
+    s = f"{value:.1f}"
+    return s.replace(".", ",") if lang == "fr" else s
 
 
 async def _load_submission_data(
@@ -85,42 +96,6 @@ async def _load_submission_data(
     return submission, submission.student, submission.exam
 
 
-async def send_receipt_email(submission_id: uuid.UUID, db: AsyncSession) -> None:
-    submission, student, exam = await _load_submission_data(submission_id, db)
-    lang = student.preferred_language.value
-    submitted_at = submission.submitted_at or datetime.now(timezone.utc)
-
-    subject = get_translation(
-        "email.receipt_subject", lang, exam_title=exam.title
-    )
-    body_text = get_translation(
-        "email.receipt_body",
-        lang,
-        exam_title=exam.title,
-        submitted_at=_fmt_date(submitted_at, lang),
-    )
-    greeting = get_translation("email.greeting", lang, full_name=student.full_name)
-    footer = get_translation(
-        "email.footer", lang, institution_name=settings.INSTITUTION_NAME
-    )
-
-    html = f"""
-    <html><body style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px">
-    <p>{greeting}</p>
-    <p>{body_text}</p>
-    <hr style="margin:32px 0">
-    <p style="color:#888;font-size:12px">{footer}</p>
-    </body></html>
-    """
-
-    resend.Emails.send({
-        "from": settings.FROM_EMAIL,
-        "to": [student.email],
-        "subject": subject,
-        "html": html,
-    })
-
-
 async def send_result_email(submission_id: uuid.UUID, db: AsyncSession) -> None:
     submission, student, exam = await _load_submission_data(submission_id, db)
     lang = student.preferred_language.value
@@ -132,19 +107,13 @@ async def send_result_email(submission_id: uuid.UUID, db: AsyncSession) -> None:
 
     subject = get_translation("email.subject", lang, exam_title=exam.title)
     greeting = get_translation("email.greeting", lang, full_name=student.full_name)
-    announcement = get_translation(
-        "email.results_announcement", lang, exam_title=exam.title
-    )
+    announcement = get_translation("email.results_announcement", lang, exam_title=exam.title)
     score_label = get_translation("email.total_score_label", lang)
     pts_label = get_translation("email.points_label", lang)
-    status_msg = get_translation(
-        "email.pass_message" if passed else "email.fail_message", lang
-    )
+    status_msg = get_translation("email.pass_message" if passed else "email.fail_message", lang)
     breakdown_header = get_translation("email.breakdown_header", lang)
     feedback_label = get_translation("email.feedback_label", lang)
-    footer = get_translation(
-        "email.footer", lang, institution_name=settings.INSTITUTION_NAME
-    )
+    footer = get_translation("email.footer", lang, institution_name=settings.INSTITUTION_NAME)
 
     rows = ""
     for answer in sorted(submission.answers, key=lambda a: a.question.order_index):
@@ -188,9 +157,4 @@ async def send_result_email(submission_id: uuid.UUID, db: AsyncSession) -> None:
     </body></html>
     """
 
-    resend.Emails.send({
-        "from": settings.FROM_EMAIL,
-        "to": [student.email],
-        "subject": subject,
-        "html": html,
-    })
+    await _send(student.email, subject, html)

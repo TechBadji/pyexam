@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel as _BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import Integer, case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -116,7 +116,7 @@ async def get_question_stats(
             BankQuestion.statement,
             func.count(Answer.id).label("attempt_count"),
             func.sum(
-                func.cast(Answer.score > 0, "int")
+                case((Answer.score > 0, 1), else_=0)
             ).label("success_count"),
         )
         .join(Answer, Answer.question_id == Question.id)

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useExamStore } from "./examStore";
 
 export interface AuthUser {
   id: string;
@@ -37,6 +38,10 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         localStorage.removeItem("pyexam_access_token");
         localStorage.removeItem("pyexam_refresh_token");
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("draft_") || k.startsWith("pyexam_token_"))
+          .forEach((k) => localStorage.removeItem(k));
+        useExamStore.getState().reset();
         set({ user: null, accessToken: null, refreshToken: null });
       },
 

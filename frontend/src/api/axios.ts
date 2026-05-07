@@ -1,9 +1,10 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
+import { useAuthStore } from "../store/authStore";
 
 const api = axios.create({
   // Empty string → relative URLs, routed by nginx proxy
   // VITE_API_URL can override for external deployments (e.g. Vercel → Railway)
-  baseURL: import.meta.env.VITE_API_URL ?? "",
+  baseURL: import.meta.env.VITE_API_URL || "/api",
   headers: { "Content-Type": "application/json" },
 });
 
@@ -60,14 +61,13 @@ api.interceptors.response.use(
 
       const refreshToken = localStorage.getItem("pyexam_refresh_token");
       if (!refreshToken) {
-        localStorage.removeItem("pyexam_access_token");
-        localStorage.removeItem("pyexam_refresh_token");
+        useAuthStore.getState().logout();
         window.location.href = "/login";
         return Promise.reject(error);
       }
 
       try {
-        const refreshBase = import.meta.env.VITE_API_URL ?? "";
+        const refreshBase = import.meta.env.VITE_API_URL || "/api";
         const { data } = await axios.post<{ access_token: string }>(
           `${refreshBase}/auth/refresh`,
           { refresh_token: refreshToken }
@@ -80,8 +80,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        localStorage.removeItem("pyexam_access_token");
-        localStorage.removeItem("pyexam_refresh_token");
+        useAuthStore.getState().logout();
         window.location.href = "/login";
         return Promise.reject(refreshError);
       } finally {

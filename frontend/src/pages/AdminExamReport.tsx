@@ -23,6 +23,10 @@ interface Stats {
   mean: number | null;
   median: number | null;
   pass_rate: number | null;
+  passed_count: number | null;
+  total_corrected: number | null;
+  max_score: number | null;
+  passing_threshold: number | null;
   score_distribution: Array<{ range: string; count: number }>;
   questions: Array<{ question_id: string; statement: string; avg_score: number; fail_rate: number }>;
 }
@@ -32,6 +36,7 @@ type Tab = "report" | "stats";
 export default function AdminExamReport() {
   const { examId } = useParams<{ examId: string }>();
   const { t } = useTranslation("admin");
+  const { t: tCommon } = useTranslation("common");
   const [report, setReport] = useState<ReportRow[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [tab, setTab] = useState<Tab>("report");
@@ -51,10 +56,8 @@ export default function AdminExamReport() {
   }, [examId]);
 
   const submittedCount = report.length;
-  const correctedCount = report.filter((r) => r.status === "corrected").length;
-  const passedCount = stats?.pass_rate !== null && stats?.pass_rate !== undefined
-    ? Math.round((stats.pass_rate / 100) * correctedCount)
-    : null;
+  const correctedCount = stats?.total_corrected ?? report.filter((r) => r.status === "corrected").length;
+  const passedCount = stats?.passed_count ?? null;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -90,19 +93,19 @@ export default function AdminExamReport() {
             <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/10 flex-wrap">
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-white">{submittedCount}</span>
-                <span className="text-xs text-indigo-200">Soumissions</span>
+                <span className="text-xs text-indigo-200">{t("report.submissions_label")}</span>
               </div>
               <div className="w-px h-8 bg-white/20" />
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-blue-300">{correctedCount}</span>
-                <span className="text-xs text-indigo-200">Corrigés</span>
+                <span className="text-xs text-indigo-200">{tCommon("status.corrected")}</span>
               </div>
               {passedCount !== null && (
                 <>
                   <div className="w-px h-8 bg-white/20" />
                   <div className="flex flex-col">
                     <span className="text-xl font-bold text-emerald-300">{passedCount}</span>
-                    <span className="text-xs text-indigo-200">Reçus</span>
+                    <span className="text-xs text-indigo-200">{t("report.passed_label")}</span>
                   </div>
                 </>
               )}

@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import type { MCQOption, Question } from "../../store/examStore";
 
 interface MCQQuestionProps {
@@ -8,26 +7,15 @@ interface MCQQuestionProps {
   onAnswer: (optionId: string) => void;
 }
 
-const DEBOUNCE_MS = 800;
-
 export default function MCQQuestion({
   question,
   selectedOptionId,
   readOnly,
   onAnswer,
 }: MCQQuestionProps) {
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
-
   const handleChange = (option: MCQOption) => {
     if (readOnly) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => onAnswer(option.id), DEBOUNCE_MS);
+    onAnswer(option.id);
   };
 
   return (

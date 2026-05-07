@@ -1,9 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_db
 from app.limiter import limiter
 from app.middleware.auth_middleware import require_role
 from app.models.user import User, UserRole
@@ -13,7 +11,6 @@ from app.services import piston_service
 router = APIRouter(prefix="/code", tags=["code"])
 
 _StudentUser = Annotated[User, Depends(require_role(UserRole.student))]
-_DB = Annotated[AsyncSession, Depends(get_db)]
 
 
 @router.post("/run", response_model=CodeRunResponse)
@@ -22,6 +19,5 @@ async def run_code(
     request: Request,  # required by slowapi rate limiter
     body: CodeRunRequest,
     current_user: _StudentUser,
-    db: _DB,
 ) -> CodeRunResponse:
     return await piston_service.run_code(code=body.code, stdin=body.stdin)

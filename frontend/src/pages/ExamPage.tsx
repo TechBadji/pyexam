@@ -16,11 +16,12 @@ import { useExamStore, type Exam } from "../store/examStore";
 export default function ExamPage() {
   const { examId } = useParams<{ examId: string }>();
   const { t } = useTranslation("exam");
+  const { t: tCommon } = useTranslation("common");
   const navigate = useNavigate();
-  useAuthStore();
+  const { user } = useAuthStore();
   const {
     currentExam, submissionId, startedAt, answers, isSubmitted,
-    setExam, setSubmissionId, setStartedAt, setAnswer, markSubmitted,
+    setExam, setSubmissionId, setStartedAt, setAnswer, markSubmitted, reset,
   } = useExamStore();
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -35,16 +36,43 @@ export default function ExamPage() {
 
   useEffect(() => {
     if (!examId) return;
+    reset();
+    const tokenKey = `pyexam_token_${examId}_${user?.id}`;
     const load = async () => {
       const { data: exam } = await api.get<Exam>(`/exams/${examId}`);
       setExam(exam);
-      const token = submissionId ?? crypto.randomUUID();
-      const { data: startData } = await api.post<{ submission_id: string }>(
-        `/exams/${examId}/start`,
-        { submission_token: token }
-      );
+
+      // Reuse the same token across refreshes so the same submission is found
+      let token = localStorage.getItem(tokenKey);
+      if (!token) {
+        token = crypto.randomUUID();
+        localStorage.setItem(tokenKey, token);
+      }
+
+      const { data: startData } = await api.post<{
+        submission_id: string;
+        started_at: string;
+        status: string;
+        answers: { question_id: string; selected_option_id: string | null; code_written: string | null }[];
+      }>(`/exams/${examId}/start`, { submission_token: token });
+
+      // Already submitted — go straight to results
+      if (startData.status === "submitted" || startData.status === "corrected") {
+        navigate(`/results/${startData.submission_id}`, { replace: true });
+        return;
+      }
+
       setSubmissionId(startData.submission_id);
-      if (!startedAt) setStartedAt(new Date());
+      setStartedAt(new Date(startData.started_at));
+
+      // Restore saved answers into the store
+      for (const a of startData.answers) {
+        const draft: { selected_option_id?: string; code_written?: string } = {};
+        if (a.selected_option_id) draft.selected_option_id = a.selected_option_id;
+        if (a.code_written) draft.code_written = a.code_written;
+        if (Object.keys(draft).length > 0) setAnswer(a.question_id, draft);
+      }
+
       setLoading(false);
     };
     load().catch(() => setLoading(false));
@@ -89,7 +117,7 @@ export default function ExamPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [submissionId, submitting, isSubmitted]);
+  }, [submissionId, submitting, isSubmitted, examId]);
 
   if (loading) {
     return (
@@ -154,6 +182,7 @@ export default function ExamPage() {
 
           {question.type === "mcq" ? (
             <MCQQuestion
+              key={question.id}
               question={question}
               selectedOptionId={answers[question.id]?.selected_option_id}
               readOnly={isSubmitted}
@@ -161,6 +190,7 @@ export default function ExamPage() {
             />
           ) : (
             <CodingQuestion
+              key={question.id}
               question={question}
               initialCode={answers[question.id]?.code_written}
               readOnly={isSubmitted}
@@ -174,14 +204,14 @@ export default function ExamPage() {
               onClick={() => setCurrentIndex((i) => i - 1)}
               className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 disabled:opacity-40 hover:text-brand-600 transition-colors"
             >
-              ← Précédent
+              ← {tCommon("buttons.previous")}
             </button>
             <button
               disabled={currentIndex === currentExam.questions.length - 1}
               onClick={() => setCurrentIndex((i) => i + 1)}
               className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 disabled:opacity-40 hover:text-brand-600 transition-colors"
             >
-              Suivant →
+              {tCommon("buttons.next")} →
             </button>
           </div>
         </div>
@@ -201,7 +231,7 @@ export default function ExamPage() {
                 onClick={() => setShowConfirm(false)}
                 className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
-                Annuler
+                {tCommon("buttons.cancel")}
               </button>
               <button
                 onClick={() => { setShowConfirm(false); doSubmit(); }}

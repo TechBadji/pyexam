@@ -1,8 +1,12 @@
-import Editor from "@monaco-editor/react";
+import Editor, { loader } from "@monaco-editor/react";
+import * as monaco from "monaco-editor";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import api from "../../api/axios";
+import { useAuthStore } from "../../store/authStore";
 import type { Question } from "../../store/examStore";
+
+loader.config({ monaco });
 
 interface CodingQuestionProps {
   question: Question;
@@ -28,7 +32,8 @@ export default function CodingQuestion({
   onCodeChange,
 }: CodingQuestionProps) {
   const { t } = useTranslation("exam");
-  const draftKey = `draft_${question.id}`;
+  const { user } = useAuthStore();
+  const draftKey = `draft_${user?.id}_${question.id}`;
 
   const [code, setCode] = useState<string>(() => {
     if (initialCode) return initialCode;

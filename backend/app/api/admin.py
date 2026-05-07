@@ -66,6 +66,12 @@ async def create_exam(body: ExamCreate, current_user: _AdminUser, db: _DB) -> Ex
     exam = Exam(**body.model_dump(), created_by=current_user.id)
     db.add(exam)
     await db.flush()
+    await audit_service.log(
+        user_id=current_user.id,
+        action="EXAM_CREATE",
+        db=db,
+        extra_data={"exam_id": str(exam.id), "title": exam.title},
+    )
     return exam
 
 
@@ -138,8 +144,6 @@ async def create_question(
         raise HTTPException(status_code=404, detail="Exam not found")
 
     data = body.model_dump()
-    if data.get("test_cases"):
-        data["test_cases"] = [tc for tc in data["test_cases"]]
     question = Question(exam_id=exam_id, **data)
     db.add(question)
     await db.flush()
@@ -472,7 +476,8 @@ async def get_stats(exam_id: uuid.UUID, current_user: _AdminUser, db: _DB) -> di
     )
     max_score = max_score_result.scalar() or 1.0
     threshold = (cfg.PASSING_GRADE_PERCENT / 100) * max_score
-    pass_rate = round(sum(1 for s in scores if s >= threshold) / len(scores) * 100, 1)
+    passed_count = sum(1 for s in scores if s >= threshold)
+    pass_rate = round(passed_count / len(scores) * 100, 1)
 
     ranges = [(0, 20), (20, 40), (40, 60), (60, 80), (80, 100)]
     distribution = []
@@ -514,6 +519,10 @@ async def get_stats(exam_id: uuid.UUID, current_user: _AdminUser, db: _DB) -> di
         "mean": round(mean(scores), 2),
         "median": round(median(scores), 2),
         "pass_rate": pass_rate,
+        "passed_count": passed_count,
+        "total_corrected": len(scores),
+        "max_score": float(max_score),
+        "passing_threshold": float(cfg.PASSING_GRADE_PERCENT),
         "score_distribution": distribution,
         "questions": question_stats,
     }
@@ -587,35 +596,163 @@ async def list_audit_logs(
     limit: int = Query(default=100, le=500),
     offset: int = Query(default=0),
 ) -> dict:
-    query = select(AuditLog).order_by(AuditLog.created_at.desc())
+    query = (
+        select(AuditLog, User.full_name, User.email)
+        .join(User, AuditLog.user_id == User.id, isouter=True)
+        .order_by(AuditLog.created_at.desc())
+    )
 
     if user_id is not None:
         query = query.where(AuditLog.user_id == user_id)
     if action is not None:
         query = query.where(AuditLog.action == action)
     if exam_id is not None:
-        query = query.where(
-            AuditLog.extra_data["exam_id"].astext == str(exam_id)
-        )
+        query = query.where(AuditLog.extra_data["exam_id"].astext == str(exam_id))
 
-    count_result = await db.execute(select(func.count()).select_from(query.subquery()))
+    count_query = select(func.count()).select_from(AuditLog)
+    if user_id is not None:
+        count_query = count_query.where(AuditLog.user_id == user_id)
+    if action is not None:
+        count_query = count_query.where(AuditLog.action == action)
+    if exam_id is not None:
+        count_query = count_query.where(AuditLog.extra_data["exam_id"].astext == str(exam_id))
+    count_result = await db.execute(count_query)
     total = count_result.scalar() or 0
 
     result = await db.execute(query.offset(offset).limit(limit))
-    logs = result.scalars().all()
+    rows = result.all()
 
     return {
         "items": [
             {
                 "id": str(log.id),
                 "user_id": str(log.user_id),
+                "user_name": full_name or "—",
+                "user_email": email or "—",
                 "action": log.action,
                 "extra_data": log.extra_data,
                 "created_at": log.created_at.isoformat(),
             }
-            for log in logs
+            for log, full_name, email in rows
         ],
         "total": total,
         "limit": limit,
         "offset": offset,
     }
+
+
+# ── User management ────────────────────────────────────────────────────────────
+
+class AdminUserCreate(_BaseModel):
+    email: str
+    full_name: str
+    password: str
+    role: str = "student"
+    student_number: str | None = None
+    preferred_language: str = "fr"
+
+
+class AdminPasswordReset(_BaseModel):
+    new_password: str
+
+
+@router.get("/users", response_model=list[dict])
+async def list_users(
+    current_user: _AdminUser,
+    db: _DB,
+    role: str | None = Query(default=None),
+    search: str | None = Query(default=None),
+) -> list[dict]:
+    query = select(User).order_by(User.created_at.desc())
+    if role:
+        query = query.where(User.role == role)
+    if search:
+        like = f"%{search}%"
+        query = query.where(
+            User.full_name.ilike(like) | User.email.ilike(like) | User.student_number.ilike(like)
+        )
+    result = await db.execute(query)
+    users = result.scalars().all()
+    return [
+        {
+            "id": str(u.id),
+            "email": u.email,
+            "full_name": u.full_name,
+            "role": u.role.value,
+            "student_number": u.student_number,
+            "preferred_language": u.preferred_language.value,
+            "created_at": u.created_at.isoformat(),
+        }
+        for u in users
+    ]
+
+
+@router.post("/users", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def create_user(body: AdminUserCreate, current_user: _AdminUser, db: _DB) -> dict:
+    from app.services.auth_service import hash_password
+    existing = await db.execute(select(User).where(User.email == body.email))
+    if existing.scalar_one_or_none() is not None:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    user = User(
+        email=body.email,
+        full_name=body.full_name,
+        hashed_password=hash_password(body.password),
+        role=UserRole(body.role),
+        student_number=body.student_number,
+        preferred_language=body.preferred_language,
+        is_verified=True,
+    )
+    db.add(user)
+    await db.flush()
+    await audit_service.log(
+        user_id=current_user.id,
+        action="USER_CREATE",
+        db=db,
+        extra_data={"new_user_id": str(user.id), "role": body.role, "email": body.email},
+    )
+    return {"id": str(user.id), "email": user.email, "role": user.role.value}
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(user_id: uuid.UUID, current_user: _AdminUser, db: _DB) -> None:
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    await audit_service.log(
+        user_id=current_user.id,
+        action="USER_DELETE",
+        db=db,
+        extra_data={"deleted_user_id": str(user_id), "deleted_email": user.email},
+    )
+    # Delete related records that have NOT NULL FKs before removing the user
+    subs = await db.execute(
+        select(Submission).where(Submission.student_id == user_id).options(selectinload(Submission.answers))
+    )
+    for sub in subs.scalars().all():
+        await db.delete(sub)
+    await db.execute(
+        AuditLog.__table__.delete().where(AuditLog.user_id == user_id)
+    )
+    await db.delete(user)
+
+
+@router.post("/users/{user_id}/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+async def reset_user_password(
+    user_id: uuid.UUID, body: AdminPasswordReset, current_user: _AdminUser, db: _DB
+) -> None:
+    from app.services.auth_service import hash_password
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.hashed_password = hash_password(body.new_password)
+    await db.flush()
+    await audit_service.log(
+        user_id=current_user.id,
+        action="PASSWORD_RESET",
+        db=db,
+        extra_data={"target_user_id": str(user_id), "target_email": user.email},
+    )
