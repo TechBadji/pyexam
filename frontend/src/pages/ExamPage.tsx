@@ -45,7 +45,13 @@ export default function ExamPage() {
       // Reuse the same token across refreshes so the same submission is found
       let token = localStorage.getItem(tokenKey);
       if (!token) {
-        token = crypto.randomUUID();
+        // crypto.randomUUID() requires HTTPS in some browsers — use a safe fallback
+        token = (typeof crypto !== "undefined" && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+              const r = (Math.random() * 16) | 0;
+              return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+            });
         localStorage.setItem(tokenKey, token);
       }
 
@@ -75,7 +81,11 @@ export default function ExamPage() {
 
       setLoading(false);
     };
-    load().catch(() => setLoading(false));
+    load().catch((err) => {
+      console.error("[ExamPage] load failed:", err?.response?.status, err?.message);
+      toast.error(t("interface.load_error") ?? "Erreur de chargement. Rechargez la page.");
+      setLoading(false);
+    });
   }, [examId]);
 
   useEffect(() => {
