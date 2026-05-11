@@ -6,6 +6,7 @@ from app.config import settings
 
 _TTL = 900  # 15 minutes
 _SESSION_TTL = 7 * 24 * 3600  # 7 days — matches refresh token lifetime
+_RESET_TTL = 900  # 15 minutes
 
 
 def _key(email: str) -> str:
@@ -46,3 +47,22 @@ async def get_user_session(user_id: str) -> str | None:
 async def delete_user_session(user_id: str) -> None:
     async with aioredis.from_url(settings.REDIS_URL, decode_responses=True) as client:
         await client.delete(_session_key(user_id))
+
+
+def _reset_key(token: str) -> str:
+    return f"reset:{token}"
+
+
+async def store_reset_token(token: str, user_id: str) -> None:
+    async with aioredis.from_url(settings.REDIS_URL, decode_responses=True) as client:
+        await client.setex(_reset_key(token), _RESET_TTL, user_id)
+
+
+async def get_reset_token(token: str) -> str | None:
+    async with aioredis.from_url(settings.REDIS_URL, decode_responses=True) as client:
+        return await client.get(_reset_key(token))
+
+
+async def delete_reset_token(token: str) -> None:
+    async with aioredis.from_url(settings.REDIS_URL, decode_responses=True) as client:
+        await client.delete(_reset_key(token))

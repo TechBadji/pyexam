@@ -36,6 +36,14 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        const token = localStorage.getItem("pyexam_access_token");
+        if (token) {
+          const base = import.meta.env.VITE_API_URL || "/api";
+          fetch(`${base}/auth/logout`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(() => undefined);
+        }
         localStorage.removeItem("pyexam_access_token");
         localStorage.removeItem("pyexam_refresh_token");
         Object.keys(localStorage)

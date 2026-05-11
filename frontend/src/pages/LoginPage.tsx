@@ -247,13 +247,18 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Submit */}
-              <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-                {t("login.no_account")}{" "}
-                <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-medium">
-                  {t("login.sign_up")}
+              {/* Forgot password + Submit */}
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {t("login.no_account")}{" "}
+                  <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                    {t("login.sign_up")}
+                  </Link>
+                </p>
+                <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                  {t("forgot_password.link")}
                 </Link>
-              </p>
+              </div>
 
               <button
                 type="submit"

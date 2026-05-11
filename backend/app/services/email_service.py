@@ -43,6 +43,40 @@ async def send_verification_email(email: str, full_name: str, code: str, lang: s
     await _send(email, subject, html)
 
 
+async def send_password_reset_email(email: str, full_name: str, reset_url: str, lang: str) -> None:
+    if lang == "fr":
+        subject = "Réinitialisation de votre mot de passe PyExam"
+        heading = "Réinitialisez votre mot de passe"
+        body_text = f"Bonjour {full_name}, cliquez sur le bouton ci-dessous pour réinitialiser votre mot de passe :"
+        button_text = "Réinitialiser mon mot de passe"
+        expiry = "Ce lien expire dans 15 minutes."
+        ignore = "Si vous n'avez pas demandé cette réinitialisation, ignorez cet e-mail."
+    else:
+        subject = "Reset your PyExam password"
+        heading = "Reset your password"
+        body_text = f"Hello {full_name}, click the button below to reset your password:"
+        button_text = "Reset my password"
+        expiry = "This link expires in 15 minutes."
+        ignore = "If you did not request this, you can safely ignore this email."
+
+    html = f"""
+    <html><body style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px">
+      <h2 style="color:#4f46e5">{heading}</h2>
+      <p>{body_text}</p>
+      <div style="text-align:center;margin:32px 0">
+        <a href="{reset_url}"
+           style="display:inline-block;padding:14px 32px;background:#4f46e5;color:white;
+                  text-decoration:none;border-radius:8px;font-weight:bold;font-size:15px">
+          {button_text}
+        </a>
+      </div>
+      <p style="color:#888;font-size:12px">{expiry}</p>
+      <p style="color:#888;font-size:12px">{ignore}</p>
+    </body></html>
+    """
+    await _send(email, subject, html)
+
+
 async def _send(to: str, subject: str, html: str) -> None:
     """Send an HTML email via SMTP (async). Silently skips if SMTP_USER is not configured."""
     if not settings.SMTP_USER:

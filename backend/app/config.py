@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     INSTITUTION_NAME: str = "Université PyExam"
     PISTON_API_URL: str = "http://piston:2000"
     FRONTEND_URL: str = "http://localhost"
+    FRONTEND_BASE_PATH: str = ""
     PASSING_GRADE_PERCENT: float = 50.0
 
     @field_validator("DATABASE_URL", mode="before")

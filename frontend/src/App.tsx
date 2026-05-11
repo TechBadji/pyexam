@@ -7,9 +7,11 @@ import AdminExamReport from "./pages/AdminExamReport";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import QuestionBankPage from "./pages/QuestionBankPage";
 import ExamPage from "./pages/ExamPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import RegisterPage from "./pages/RegisterPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ResultsPage from "./pages/ResultsPage";
 import StudentDashboard from "./pages/StudentDashboard";
 
@@ -49,6 +51,9 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Route>
+
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           <Route element={<RequireAuth role="student" />}>
             <Route path="/dashboard" element={<StudentDashboard />} />

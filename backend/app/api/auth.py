@@ -1,4 +1,5 @@
 import logging
+import secrets
 import uuid
 from typing import Annotated
 
@@ -10,11 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
+from app.config import settings
 from app.database import get_db
 from app.limiter import limiter
+from app.middleware.auth_middleware import get_current_user
 from app.models.user import PreferredLanguage, User, UserRole
 from app.services import audit_service, auth_service, redis_service
-from app.services.email_service import send_verification_email
+from app.services.email_service import send_password_reset_email, send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -247,3 +250,76 @@ async def resend_verification(
     except Exception as exc:
         logger.warning("Resend email failed for %s: %s", body.email, exc)
         return ResendResponse(message="Email unavailable", dev_code=code)
+
+
+@router.post("/logout")
+async def logout(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> dict:
+    await redis_service.delete_user_session(str(current_user.id))
+    return {"message": "Logged out"}
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        return v
+
+
+@router.post("/forgot-password")
+@limiter.limit("3/minute")
+async def forgot_password(
+    request: Request,
+    body: ForgotPasswordRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict:
+    result = await db.execute(select(User).where(User.email == body.email))
+    user = result.scalar_one_or_none()
+    # Always return the same message — don't reveal whether the email exists
+    if user is None:
+        return {"message": "If this email exists, a reset link has been sent"}
+
+    token = secrets.token_urlsafe(32)
+    await redis_service.store_reset_token(token, str(user.id))
+
+    reset_url = f"{settings.FRONTEND_URL}{settings.FRONTEND_BASE_PATH}/reset-password?token={token}"
+    try:
+        await send_password_reset_email(body.email, user.full_name, reset_url, user.preferred_language.value)
+    except Exception as exc:
+        logger.warning("Password reset email failed for %s: %s", body.email, exc)
+
+    return {"message": "If this email exists, a reset link has been sent"}
+
+
+@router.post("/reset-password")
+@limiter.limit("5/minute")
+async def reset_password(
+    request: Request,
+    body: ResetPasswordRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict:
+    user_id = await redis_service.get_reset_token(body.token)
+    if user_id is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
+
+    result = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    user.hashed_password = auth_service.hash_password(body.new_password)
+    await redis_service.delete_reset_token(body.token)
+    await redis_service.delete_user_session(user_id)  # force re-login on all devices
+    await db.flush()
+
+    return {"message": "Password reset successfully"}
