@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -38,6 +38,11 @@ export default function AdminUsersPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
+  const [showImport, setShowImport] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ created: number; skipped: number; errors: { row: number; reason: string }[]; generated_passwords: { email: string; full_name: string; password: string }[] } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const load = () => {
     setLoading(true);
     const params = new URLSearchParams();
@@ -51,6 +56,37 @@ export default function AdminUsersPage() {
   useEffect(() => { load(); }, [roleFilter]);
 
   const handleSearch = (e: React.FormEvent) => { e.preventDefault(); load(); };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const { data } = await api.post<typeof importResult>("/admin/students/import", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setImportResult(data);
+      if (data && data.created > 0) load();
+      toast.success(t("users.import_success", { created: data?.created ?? 0, skipped: data?.skipped ?? 0 }));
+    } catch {
+      toast.error(t("errors.server_error", { ns: "auth" }));
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const downloadTemplate = () => {
+    const csv = "full_name,email,student_number,password\nJean Dupont,jean.dupont@email.com,20240001,\nMarie Martin,marie.martin@email.com,,";
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "students_template.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleReset = async () => {
     if (!resetTarget || !newPassword) return;
@@ -125,12 +161,24 @@ export default function AdminUsersPage() {
           </div>
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-white">{t("users.title")}</h1>
-            <button
-              onClick={() => setShowCreate(true)}
-              className="px-4 py-2 rounded-xl bg-white text-indigo-700 text-sm font-semibold hover:bg-indigo-50 transition-colors shadow-sm"
-            >
-              + {t("users.create_user")}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowImport(true)}
+                disabled={importing}
+                className="px-4 py-2 rounded-xl bg-white/20 text-white text-sm font-semibold hover:bg-white/30 transition-colors shadow-sm flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                {importing ? "…" : t("users.import_csv")}
+              </button>
+              <button
+                onClick={() => setShowCreate(true)}
+                className="px-4 py-2 rounded-xl bg-white text-indigo-700 text-sm font-semibold hover:bg-indigo-50 transition-colors shadow-sm"
+              >
+                + {t("users.create_user")}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -349,6 +397,94 @@ export default function AdminUsersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Import CSV modal ─────────────────────────────────────────────────── */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        className="hidden"
+        onChange={handleImport}
+      />
+      {showImport && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("users.import_title")}</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t("users.import_subtitle")}</p>
+
+            {importResult ? (
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                  {t("users.import_success", { created: importResult.created, skipped: importResult.skipped })}
+                </p>
+                {importResult.generated_passwords.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">{t("users.import_passwords_title")}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t("users.import_passwords_hint")}</p>
+                    <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                      <table className="w-full text-xs">
+                        <thead className="bg-gray-50 dark:bg-gray-800">
+                          <tr>
+                            <th className="px-3 py-2 text-left text-gray-500">Email</th>
+                            <th className="px-3 py-2 text-left text-gray-500">Password</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {importResult.generated_passwords.map((p) => (
+                            <tr key={p.email} className="border-t border-gray-100 dark:border-gray-700">
+                              <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">{p.email}</td>
+                              <td className="px-3 py-1.5 font-mono text-gray-900 dark:text-gray-100">{p.password}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+                {importResult.errors.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-red-600 dark:text-red-400">{t("users.import_errors_title")}</p>
+                    <ul className="text-xs text-red-500 space-y-0.5 max-h-24 overflow-y-auto">
+                      {importResult.errors.map((e) => (
+                        <li key={e.row}>Ligne {e.row} : {e.reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="flex justify-end pt-2">
+                  <button onClick={() => { setShowImport(false); setImportResult(null); }} className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors">
+                    OK
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={downloadTemplate}
+                  className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  {t("users.import_template")}
+                </button>
+                <div className="flex gap-3 justify-end pt-2">
+                  <button onClick={() => setShowImport(false)} className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    {t("exam_form.cancel")}
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={importing}
+                    className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
+                  >
+                    {importing ? t("users.import_loading") : t("users.import_confirm")}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

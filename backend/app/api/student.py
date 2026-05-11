@@ -1,4 +1,5 @@
 import ast
+import random as _random
 import re
 import uuid
 from datetime import datetime, timezone
@@ -352,21 +353,31 @@ async def get_exam_detail(
         drawn_set = {uuid.UUID(qid) for qid in enrollment.drawn_question_ids}
         all_questions = [q for q in all_questions if q.id in drawn_set]
 
-    questions = [
-        QuestionResponse(
-            id=q.id,
-            exam_id=q.exam_id,
-            type=q.type,
-            order_index=q.order_index,
-            points=q.points,
-            statement=q.statement,
-            options=[
-                MCQOptionResponse(id=o.id, question_id=o.question_id, label=o.label, text=o.text)
-                for o in q.options
-            ],
+    # Deterministic shuffle per student — same student always sees same order
+    student_seed = str(current_user.id) + str(exam_id)
+    q_rng = _random.Random(hash(student_seed))
+    shuffled = list(all_questions)
+    q_rng.shuffle(shuffled)
+
+    questions = []
+    for q in shuffled:
+        options = list(q.options)
+        if options:
+            _random.Random(hash(student_seed + str(q.id))).shuffle(options)
+        questions.append(
+            QuestionResponse(
+                id=q.id,
+                exam_id=q.exam_id,
+                type=q.type,
+                order_index=q.order_index,
+                points=q.points,
+                statement=q.statement,
+                options=[
+                    MCQOptionResponse(id=o.id, question_id=o.question_id, label=o.label, text=o.text)
+                    for o in options
+                ],
+            )
         )
-        for q in all_questions
-    ]
 
     return {
         "id": str(exam.id),

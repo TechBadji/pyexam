@@ -207,6 +207,17 @@
     "reset_success": "Mot de passe réinitialisé.",
     "new_password": "Nouveau mot de passe",
     "optional": "facultatif",
-    "empty": "Aucun utilisateur."
+    "empty": "Aucun utilisateur.",
+    "import_csv": "Importer CSV",
+    "import_title": "Importer des étudiants via CSV",
+    "import_subtitle": "Format attendu : full_name, email, student_number (optionnel), password (optionnel — généré automatiquement si absent)",
+    "import_template": "Télécharger le modèle CSV",
+    "import_confirm": "Importer",
+    "import_loading": "Importation…",
+    "import_success": "{{created}} créé(s), {{skipped}} ignoré(s)",
+    "import_passwords_title": "Mots de passe générés",
+    "import_passwords_hint": "Ces mots de passe ne seront plus affichés — copiez-les maintenant.",
+    "import_errors_title": "Erreurs",
+    "import_no_file": "Sélectionnez un fichier CSV."
   }
 }

@@ -1,10 +1,12 @@
+import csv
 import io
+import secrets
 import uuid
 from datetime import datetime, timezone
 from statistics import mean, median
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -755,4 +757,123 @@ async def reset_user_password(
         action="PASSWORD_RESET",
         db=db,
         extra_data={"target_user_id": str(user_id), "target_email": user.email},
+    )
+
+
+# ── CSV Import ─────────────────────────────────────────────────────────────────
+
+@router.post("/students/import", response_model=dict)
+async def import_students_csv(
+    current_user: _AdminUser,
+    db: _DB,
+    file: UploadFile = File(...),
+) -> dict:
+    content = await file.read()
+    try:
+        text = content.decode("utf-8-sig")  # handles Excel BOM
+    except UnicodeDecodeError:
+        text = content.decode("latin-1")
+
+    reader = csv.DictReader(io.StringIO(text))
+    from app.models.user import PreferredLanguage
+    from app.services.auth_service import hash_password as _hash
+
+    created = 0
+    skipped = 0
+    errors: list[dict] = []
+    generated: list[dict] = []
+
+    for i, row in enumerate(reader, start=2):
+        email = (row.get("email") or "").strip().lower()
+        full_name = (row.get("full_name") or "").strip()
+        student_number = (row.get("student_number") or "").strip() or None
+        password = (row.get("password") or "").strip()
+
+        if not email or not full_name:
+            errors.append({"row": i, "reason": "email and full_name required"})
+            continue
+        if len(password) > 0 and len(password) < 8:
+            errors.append({"row": i, "reason": f"{email}: password too short (min 8 chars)"})
+            continue
+
+        existing = await db.execute(select(User).where(User.email == email))
+        if existing.scalar_one_or_none() is not None:
+            skipped += 1
+            continue
+
+        auto_password = not password
+        if auto_password:
+            password = secrets.token_urlsafe(10)
+
+        db.add(User(
+            email=email,
+            full_name=full_name,
+            hashed_password=_hash(password),
+            role=UserRole.student,
+            student_number=student_number,
+            preferred_language=PreferredLanguage.fr,
+            is_verified=True,
+        ))
+        created += 1
+        if auto_password:
+            generated.append({"email": email, "full_name": full_name, "password": password})
+
+    await db.flush()
+    await audit_service.log(
+        user_id=current_user.id,
+        action="STUDENTS_IMPORT",
+        db=db,
+        extra_data={"created": created, "skipped": skipped, "errors_count": len(errors)},
+    )
+    return {"created": created, "skipped": skipped, "errors": errors, "generated_passwords": generated}
+
+
+# ── CSV Export ─────────────────────────────────────────────────────────────────
+
+@router.get("/exams/{exam_id}/results/export")
+async def export_results_csv(
+    exam_id: uuid.UUID,
+    current_user: _AdminUser,
+    db: _DB,
+) -> StreamingResponse:
+    result = await db.execute(
+        select(Submission)
+        .options(
+            selectinload(Submission.student),
+            selectinload(Submission.answers).selectinload(Answer.question),
+        )
+        .where(
+            Submission.exam_id == exam_id,
+            Submission.status.in_([SubmissionStatus.submitted, SubmissionStatus.corrected]),
+        )
+        .order_by(Submission.total_score.desc().nullslast())
+    )
+    submissions = result.scalars().all()
+
+    max_score = 0.0
+    if submissions:
+        max_score = sum(a.question.points for a in submissions[0].answers) or 0.0
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["full_name", "student_number", "email", "score", "max_score", "percentage", "status", "submitted_at"])
+    for s in submissions:
+        score = s.total_score or 0.0
+        pct = round(score / max_score * 100, 1) if max_score > 0 else 0.0
+        writer.writerow([
+            s.student.full_name,
+            s.student.student_number or "",
+            s.student.email,
+            f"{score:.2f}",
+            f"{max_score:.2f}",
+            f"{pct:.1f}%",
+            s.status.value,
+            s.submitted_at.strftime("%Y-%m-%d %H:%M") if s.submitted_at else "",
+        ])
+
+    csv_bytes = output.getvalue().encode("utf-8-sig")  # BOM for Excel
+    return StreamingResponse(
+        io.BytesIO(csv_bytes),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="results_{exam_id}.csv"'},
     )

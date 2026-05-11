@@ -207,6 +207,17 @@
     "reset_success": "Password reset successfully.",
     "new_password": "New password",
     "optional": "optional",
-    "empty": "No users found."
+    "empty": "No users found.",
+    "import_csv": "Import CSV",
+    "import_title": "Import students from CSV",
+    "import_subtitle": "Expected format: full_name, email, student_number (optional), password (optional — auto-generated if missing)",
+    "import_template": "Download CSV template",
+    "import_confirm": "Import",
+    "import_loading": "Importing…",
+    "import_success": "{{created}} created, {{skipped}} skipped",
+    "import_passwords_title": "Generated passwords",
+    "import_passwords_hint": "These passwords will not be shown again — copy them now.",
+    "import_errors_title": "Errors",
+    "import_no_file": "Please select a CSV file."
   }
 }

@@ -41,6 +41,28 @@ export default function AdminExamReport() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [tab, setTab] = useState<Tab>("report");
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportCsv = async () => {
+    if (!examId || exporting) return;
+    setExporting(true);
+    try {
+      const base = import.meta.env.VITE_API_URL || "/api";
+      const token = localStorage.getItem("pyexam_access_token");
+      const res = await fetch(`${base}/admin/exams/${examId}/results/export`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `results_${examId}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     if (!examId) return;
@@ -126,20 +148,32 @@ export default function AdminExamReport() {
       {/* ── Tabs ─────────────────────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex gap-1">
-            {(["report", "stats"] as Tab[]).map((tabName) => (
-              <button
-                key={tabName}
-                onClick={() => setTab(tabName)}
-                className={`px-5 py-3.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                  tab === tabName
-                    ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400"
-                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                }`}
-              >
-                {tabName === "report" ? t("report.title") : t("stats.title")}
-              </button>
-            ))}
+          <div className="flex items-center justify-between">
+            <div className="flex gap-1">
+              {(["report", "stats"] as Tab[]).map((tabName) => (
+                <button
+                  key={tabName}
+                  onClick={() => setTab(tabName)}
+                  className={`px-5 py-3.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                    tab === tabName
+                      ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400"
+                      : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  }`}
+                >
+                  {tabName === "report" ? t("report.title") : t("stats.title")}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={handleExportCsv}
+              disabled={exporting || report.length === 0}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              {exporting ? "…" : t("report.export_csv")}
+            </button>
           </div>
         </div>
       </div>
