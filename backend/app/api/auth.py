@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -111,8 +112,10 @@ async def login(
         extra_data={"email": user.email},
     )
 
-    access_token = auth_service.create_access_token(str(user.id))
-    refresh_token = auth_service.create_refresh_token(str(user.id))
+    session_id = str(uuid.uuid4())
+    await redis_service.set_user_session(str(user.id), session_id)
+    access_token = auth_service.create_access_token(str(user.id), session_id)
+    refresh_token = auth_service.create_refresh_token(str(user.id), session_id)
 
     return LoginResponse(
         access_token=access_token,
@@ -141,6 +144,7 @@ async def refresh_token(
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
         user_id: str = payload["sub"]
+        session_id: str | None = payload.get("sid")
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
@@ -148,7 +152,11 @@ async def refresh_token(
     if result.scalar_one_or_none() is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
-    return RefreshResponse(access_token=auth_service.create_access_token(user_id))
+    active_session = await redis_service.get_user_session(user_id)
+    if active_session is None or active_session != session_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired")
+
+    return RefreshResponse(access_token=auth_service.create_access_token(user_id, session_id))
 
 
 @router.post("/register", response_model=RegisterResponse)

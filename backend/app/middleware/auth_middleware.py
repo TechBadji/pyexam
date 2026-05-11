@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import get_db
 from app.models.user import User, UserRole
+from app.services import redis_service
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -27,9 +28,14 @@ async def get_current_user(
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id: str | None = payload.get("sub")
         token_type: str | None = payload.get("type")
+        session_id: str | None = payload.get("sid")
         if user_id is None or token_type != "access":
             raise credentials_exception
     except JWTError:
+        raise credentials_exception
+
+    active_session = await redis_service.get_user_session(user_id)
+    if active_session is None or active_session != session_id:
         raise credentials_exception
 
     result = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
