@@ -13,6 +13,7 @@ class ExamCreate(BaseModel):
     start_time: datetime
     end_time: datetime
     status: ExamStatus = ExamStatus.draft
+    allowed_groups: list[str] | None = None
 
     @model_validator(mode="after")
     def validate_dates_and_duration(self) -> "ExamCreate":
@@ -30,6 +31,7 @@ class ExamUpdate(BaseModel):
     start_time: datetime | None = None
     end_time: datetime | None = None
     status: ExamStatus | None = None
+    allowed_groups: list[str] | None = None
 
 
 class ExamResponse(BaseModel):
@@ -44,6 +46,7 @@ class ExamResponse(BaseModel):
     status: ExamStatus
     created_by: uuid.UUID
     created_at: datetime
+    allowed_groups: list[str] | None = None
 
 
 class ExamWithCountdown(ExamResponse):

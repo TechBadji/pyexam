@@ -34,6 +34,7 @@ class Exam(Base):
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
     )
     draw_config: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    allowed_groups: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

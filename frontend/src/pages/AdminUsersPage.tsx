@@ -11,6 +11,7 @@ interface UserRow {
   full_name: string;
   role: "student" | "admin";
   student_number: string | null;
+  class_name: string | null;
   preferred_language: string;
   created_at: string;
 }
@@ -34,7 +35,7 @@ export default function AdminUsersPage() {
   const [deleting, setDeleting] = useState(false);
 
   const [showCreate, setShowCreate] = useState(false);
-  const [createForm, setCreateForm] = useState({ email: "", full_name: "", password: "", role: "student", student_number: "" });
+  const [createForm, setCreateForm] = useState({ email: "", full_name: "", password: "", role: "student", student_number: "", class_name: "" });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -80,7 +81,7 @@ export default function AdminUsersPage() {
   };
 
   const downloadTemplate = () => {
-    const csv = "full_name,email,student_number,password\nJean Dupont,jean.dupont@email.com,20240001,\nMarie Martin,marie.martin@email.com,,";
+    const csv = "full_name,email,student_number,class_name,password\nJean Dupont,jean.dupont@email.com,20240001,L3-INFO,\nMarie Martin,marie.martin@email.com,,M1-MATHS,";
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -125,9 +126,10 @@ export default function AdminUsersPage() {
       await api.post("/admin/users", {
         ...createForm,
         student_number: createForm.student_number || null,
+        class_name: createForm.class_name || null,
       });
       setShowCreate(false);
-      setCreateForm({ email: "", full_name: "", password: "", role: "student", student_number: "" });
+      setCreateForm({ email: "", full_name: "", password: "", role: "student", student_number: "", class_name: "" });
       load();
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
@@ -218,7 +220,7 @@ export default function AdminUsersPage() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  {[t("users.col_name"), t("users.col_email"), t("users.col_number"), t("users.col_role"), t("users.col_created"), t("users.col_actions")].map((h) => (
+                  {[t("users.col_name"), t("users.col_email"), t("users.col_number"), t("users.col_class"), t("users.col_role"), t("users.col_created"), t("users.col_actions")].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
                   ))}
                 </tr>
@@ -229,6 +231,7 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">{u.full_name}</td>
                     <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{u.email}</td>
                     <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{u.student_number ?? "—"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{u.class_name ?? "—"}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLORS[u.role]}`}>
                         {u.role === "admin" ? t("users.role_admin") : t("users.role_student")}
@@ -367,6 +370,12 @@ export default function AdminUsersPage() {
                 value={createForm.student_number}
                 onChange={(e) => setCreateForm({ ...createForm, student_number: e.target.value })}
                 placeholder={`${t("users.col_number")} (${t("users.optional")})`}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <input
+                value={createForm.class_name}
+                onChange={(e) => setCreateForm({ ...createForm, class_name: e.target.value })}
+                placeholder={`${t("users.col_class")} (${t("users.optional")})`}
                 className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <input

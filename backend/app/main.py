@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
 
 import redis.asyncio as aioredis
+import sentry_sdk
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -13,6 +14,14 @@ from app.api import auth, student, admin, code_runner, bank
 from app.config import settings
 from app.database import engine
 from app.limiter import limiter
+
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.ENV,
+        traces_sample_rate=0.1,
+        send_default_pii=False,
+    )
 
 
 @asynccontextmanager

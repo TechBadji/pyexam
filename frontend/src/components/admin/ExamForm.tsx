@@ -30,10 +30,11 @@ interface ExamFormData {
   start_time: string;
   end_time: string;
   status: string;
+  allowed_groups: string | null;
 }
 
 interface ExamFormProps {
-  initialData?: Partial<ExamFormData>;
+  initialData?: Partial<ExamFormData & { allowed_groups?: string[] | null }>;
   initialDrawConfig?: { n_mcq: number; n_coding: number } | null;
   examId?: string;
   onSuccess: () => void;
@@ -60,6 +61,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
     start_time: initialData?.start_time ?? "",
     end_time: initialData?.end_time ?? "",
     status: initialData?.status ?? "draft",
+    allowed_groups: initialData?.allowed_groups ? initialData.allowed_groups.join(", ") : null,
   });
 
   const [questions, setQuestions] = useState<QuestionDraft[]>([]);
@@ -149,11 +151,16 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
 
     setSaving(true);
     try {
+      const allowedGroups = form.allowed_groups
+        ? form.allowed_groups.split(",").map((s) => s.trim()).filter(Boolean)
+        : null;
+      const payload = { ...form, allowed_groups: allowedGroups?.length ? allowedGroups : null };
+
       let id = examId;
       if (isEdit) {
-        await api.put(`/admin/exams/${id}`, form);
+        await api.put(`/admin/exams/${id}`, payload);
       } else {
-        const { data } = await api.post<{ id: string }>("/admin/exams", form);
+        const { data } = await api.post<{ id: string }>("/admin/exams", payload);
         id = data.id;
       }
 
@@ -297,6 +304,16 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("exam_form.end_time")}</label>
             <input type="datetime-local" className={inputCls} value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} required />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("exam_form.allowed_groups")}</label>
+            <input
+              type="text"
+              className={inputCls}
+              value={form.allowed_groups ?? ""}
+              onChange={(e) => setForm({ ...form, allowed_groups: e.target.value || null })}
+              placeholder={t("exam_form.allowed_groups_placeholder")}
+            />
           </div>
         </div>
 

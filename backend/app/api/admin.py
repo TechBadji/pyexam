@@ -652,6 +652,7 @@ class AdminUserCreate(_BaseModel):
     role: str = "student"
     student_number: str | None = None
     preferred_language: str = "fr"
+    class_name: str | None = None
 
 
 class AdminPasswordReset(_BaseModel):
@@ -682,6 +683,7 @@ async def list_users(
             "full_name": u.full_name,
             "role": u.role.value,
             "student_number": u.student_number,
+            "class_name": u.class_name,
             "preferred_language": u.preferred_language.value,
             "created_at": u.created_at.isoformat(),
         }
@@ -701,6 +703,7 @@ async def create_user(body: AdminUserCreate, current_user: _AdminUser, db: _DB) 
         hashed_password=hash_password(body.password),
         role=UserRole(body.role),
         student_number=body.student_number,
+        class_name=body.class_name,
         preferred_language=body.preferred_language,
         is_verified=True,
     )
@@ -787,6 +790,7 @@ async def import_students_csv(
         email = (row.get("email") or "").strip().lower()
         full_name = (row.get("full_name") or "").strip()
         student_number = (row.get("student_number") or "").strip() or None
+        class_name = (row.get("class_name") or "").strip() or None
         password = (row.get("password") or "").strip()
 
         if not email or not full_name:
@@ -811,6 +815,7 @@ async def import_students_csv(
             hashed_password=_hash(password),
             role=UserRole.student,
             student_number=student_number,
+            class_name=class_name,
             preferred_language=PreferredLanguage.fr,
             is_verified=True,
         ))

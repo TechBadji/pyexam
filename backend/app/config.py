@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost"
     FRONTEND_BASE_PATH: str = ""
     PASSING_GRADE_PERCENT: float = 50.0
+    SENTRY_DSN: str = ""
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

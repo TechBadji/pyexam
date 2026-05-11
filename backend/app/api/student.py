@@ -307,6 +307,10 @@ async def list_available_exams(current_user: _StudentUser, db: _DB) -> list[Exam
     now = datetime.now(timezone.utc)
     out = []
     for exam in exams:
+        # Group access filter: if exam has allowed_groups, student must have a matching class_name
+        if exam.allowed_groups:
+            if not current_user.class_name or current_user.class_name not in exam.allowed_groups:
+                continue
         start = exam.start_time.replace(tzinfo=timezone.utc) if exam.start_time.tzinfo is None else exam.start_time
         end = exam.end_time.replace(tzinfo=timezone.utc) if exam.end_time.tzinfo is None else exam.end_time
         out.append(
@@ -428,6 +432,20 @@ async def start_exam(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exam not found")
     if exam.status != ExamStatus.active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam is not active")
+
+    # Group access check
+    if exam.allowed_groups:
+        if not current_user.class_name or current_user.class_name not in exam.allowed_groups:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to take this exam")
+
+    # Time window enforcement
+    now = datetime.now(timezone.utc)
+    exam_start = exam.start_time.replace(tzinfo=timezone.utc) if exam.start_time.tzinfo is None else exam.start_time
+    exam_end = exam.end_time.replace(tzinfo=timezone.utc) if exam.end_time.tzinfo is None else exam.end_time
+    if now < exam_start:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam has not started yet")
+    if now > exam_end:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam window has closed")
 
     submission = Submission(
         student_id=current_user.id,
