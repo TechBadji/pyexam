@@ -85,8 +85,14 @@ export default function CodingQuestion({
         stdin,
       });
       setOutput(data);
-    } catch {
-      setOutput({ stdout: "", stderr: "Erreur d'exécution.", exit_code: -1 });
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      let msg = "Erreur d'exécution.";
+      if (status === 429) msg = "Limite atteinte — 10 exécutions/min maximum.";
+      else if (status === 503 || status === 502) msg = "Moteur d'exécution indisponible. Réessayez dans quelques instants.";
+      else if (detail) msg = detail;
+      setOutput({ stdout: "", stderr: msg, exit_code: -1 });
     } finally {
       setRunning(false);
     }

@@ -1,6 +1,7 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.limiter import limiter
 from app.middleware.auth_middleware import require_role
@@ -20,4 +21,20 @@ async def run_code(
     body: CodeRunRequest,
     current_user: _StudentUser,
 ) -> CodeRunResponse:
-    return await piston_service.run_code(code=body.code, stdin=body.stdin)
+    try:
+        return await piston_service.run_code(code=body.code, stdin=body.stdin)
+    except httpx.TimeoutException:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Le moteur d'exécution n'a pas répondu à temps. Réessayez.",
+        )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Erreur du moteur d'exécution : {e.response.status_code}",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Moteur d'exécution indisponible : {e}",
+        )
