@@ -139,6 +139,10 @@ async def send_result_email(submission_id: uuid.UUID, db: AsyncSession) -> None:
     threshold_pct = exam.passing_threshold if exam.passing_threshold is not None else settings.PASSING_GRADE_PERCENT
     passed = (total / max_score * 100 >= threshold_pct) if max_score > 0 else False
 
+    scaled_score: float | None = None
+    if exam.grade_scale and max_score > 0:
+        scaled_score = round(total / max_score * exam.grade_scale, 2)
+
     subject = get_translation("email.subject", lang, exam_title=exam.title)
     greeting = get_translation("email.greeting", lang, full_name=student.full_name)
     announcement = get_translation("email.results_announcement", lang, exam_title=exam.title)
@@ -165,16 +169,29 @@ async def send_result_email(submission_id: uuid.UUID, db: AsyncSession) -> None:
         """
 
     status_color = "#16a34a" if passed else "#dc2626"
+
+    scaled_block = ""
+    if scaled_score is not None:
+        grade_label = "Note" if lang == "fr" else "Grade"
+        scaled_block = f"""
+    <p style="margin:8px 0">
+      <strong>{grade_label} :</strong>
+      <span style="font-size:1.6em;font-weight:bold;color:{status_color}">
+        {_fmt_score(scaled_score, lang)} / {int(exam.grade_scale)}
+      </span>
+    </p>"""
+
     html = f"""
     <html><body style="font-family:Arial,sans-serif;max-width:640px;margin:auto;padding:24px">
     <p>{greeting}</p>
     <p>{announcement}</p>
-    <p><strong>{score_label} :</strong>
-       <span style="font-size:1.4em;color:{status_color}">
+    <p style="margin:8px 0"><strong>{score_label} :</strong>
+       <span style="font-size:1.2em;color:#555">
          {_fmt_score(total, lang)} / {_fmt_score(max_score, lang)} {pts_label}
        </span>
     </p>
-    <p style="color:{status_color};font-weight:bold">{status_msg}</p>
+    {scaled_block}
+    <p style="color:{status_color};font-weight:bold;font-size:1.1em">{status_msg}</p>
     <h3>{breakdown_header}</h3>
     <table style="width:100%;border-collapse:collapse">
       <thead>

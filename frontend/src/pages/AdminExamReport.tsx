@@ -15,6 +15,10 @@ interface ReportRow {
   submission_id: string;
   status: string;
   total_score: number | null;
+  max_score: number | null;
+  grade_scale: number | null;
+  scaled_score: number | null;
+  passed: boolean | null;
   submitted_at: string | null;
   tab_switch_count: number;
 }

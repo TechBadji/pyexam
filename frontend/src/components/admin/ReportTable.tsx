@@ -10,6 +10,10 @@ interface ReportRow {
   submission_id: string;
   status: string;
   total_score: number | null;
+  max_score: number | null;
+  grade_scale: number | null;
+  scaled_score: number | null;
+  passed: boolean | null;
   submitted_at: string | null;
   tab_switch_count: number;
 }
@@ -23,9 +27,19 @@ export default function ReportTable({ rows, examId }: ReportTableProps) {
   const { t, i18n } = useTranslation("admin");
   const lang = i18n.language.startsWith("fr") ? "fr" : "en";
 
-  const fmtScore = (v: number | null) => {
+  const hasGradeScale = rows.some((r) => r.grade_scale != null);
+
+  const fmtScore = (v: number | null, decimals = 1) => {
     if (v === null) return "—";
-    return lang === "fr" ? v.toFixed(1).replace(".", ",") : v.toFixed(1);
+    return lang === "fr" ? v.toFixed(decimals).replace(".", ",") : v.toFixed(decimals);
+  };
+
+  const fmtGrade = (row: ReportRow) => {
+    if (row.grade_scale != null && row.scaled_score != null)
+      return `${fmtScore(row.scaled_score, 2)} / ${row.grade_scale}`;
+    if (row.total_score != null && row.max_score != null && row.max_score > 0)
+      return `${fmtScore(row.total_score)} / ${fmtScore(row.max_score)}`;
+    return "—";
   };
 
   const fmtDate = (s: string | null) => {
@@ -132,7 +146,8 @@ export default function ReportTable({ rows, examId }: ReportTableProps) {
                 t("report.student_number"),
                 t("report.student_name"),
                 t("report.score"),
-                t("report.status"),
+                ...(hasGradeScale ? [t("report.grade")] : []),
+                t("report.result"),
                 t("report.tab_switches"),
                 "Submitted At",
               ].map((h) => (
@@ -155,18 +170,29 @@ export default function ReportTable({ rows, examId }: ReportTableProps) {
                   {row.student_name}
                 </td>
                 <td className="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-300">
-                  {fmtScore(row.total_score)}
+                  {fmtScore(row.total_score)} / {fmtScore(row.max_score)}
                 </td>
+                {hasGradeScale && (
+                  <td className="px-4 py-3 text-sm font-mono font-semibold text-indigo-600 dark:text-indigo-400">
+                    {fmtGrade(row)}
+                  </td>
+                )}
                 <td className="px-4 py-3">
-                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                    row.status === "corrected"
-                      ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"
-                      : row.status === "submitted"
-                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                  }`}>
-                    {row.status}
-                  </span>
+                  {row.passed === true && (
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200">
+                      {t("report.passed")}
+                    </span>
+                  )}
+                  {row.passed === false && (
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200">
+                      {t("report.failed")}
+                    </span>
+                  )}
+                  {row.passed === null && (
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                      {row.status}
+                    </span>
+                  )}
                 </td>
                 <td className={`px-4 py-3 text-sm text-center font-medium ${
                   row.tab_switch_count > 3

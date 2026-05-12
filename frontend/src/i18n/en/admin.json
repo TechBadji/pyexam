@@ -156,13 +156,17 @@
     "student_name": "Student name",
     "student_number": "Student ID",
     "score": "Score",
+    "grade": "Grade",
+    "result": "Result",
     "status": "Status",
     "tab_switches": "Tab switches",
     "export_csv": "Export CSV",
     "export_pdf": "Export PDF",
     "back": "Back",
     "submissions_label": "Submissions",
-    "passed_label": "Passed"
+    "passed_label": "Passed",
+    "passed": "Passed",
+    "failed": "Failed"
   },
   "stats": {
     "title": "Statistics",
