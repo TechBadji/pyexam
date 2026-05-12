@@ -6,7 +6,7 @@ from app.config import settings
 
 _LANGUAGE = "python"
 _VERSION = "3.10.0"
-_TIMEOUT = 3.0
+_TIMEOUT = 10.0
 
 
 @dataclass

@@ -32,6 +32,8 @@ services:
     # Port 2000 intentionally NOT exposed to host — accessible only via internal Docker network
     tmpfs:
       - /piston/jobs
+    volumes:
+      - piston_packages:/piston/packages
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:2000/api/v2/runtimes',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))\""]
       interval: 30s
@@ -125,3 +127,4 @@ services:
 
 volumes:
   postgres_data:
+  piston_packages:
