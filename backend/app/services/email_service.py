@@ -136,8 +136,8 @@ async def send_result_email(submission_id: uuid.UUID, db: AsyncSession) -> None:
 
     total = submission.total_score or 0.0
     max_score = sum(a.question.points for a in submission.answers)
-    pass_threshold = settings.PASSING_GRADE_PERCENT / 100
-    passed = (total / max_score >= pass_threshold) if max_score > 0 else False
+    threshold_pct = exam.passing_threshold if exam.passing_threshold is not None else settings.PASSING_GRADE_PERCENT
+    passed = (total / max_score * 100 >= threshold_pct) if max_score > 0 else False
 
     subject = get_translation("email.subject", lang, exam_title=exam.title)
     greeting = get_translation("email.greeting", lang, full_name=student.full_name)
