@@ -79,6 +79,22 @@ def _grade_mcq(answer: Answer, question: Question) -> tuple[float, str, str]:
     return 0.0, f"Incorrect. La bonne réponse était : {correct_label}.", ""
 
 
+def _extract_actual(stdout: str, expected: str) -> str:
+    """Return the tail of stdout matching the number of lines in expected.
+
+    Students often use input("prompt") which writes prompts to stdout before
+    the actual output. By taking the last N lines (N = lines in expected) we
+    ignore those prompts and compare only the meaningful output.
+    """
+    expected_lines = expected.splitlines()
+    n = len(expected_lines)
+    if n == 0:
+        return stdout.strip()
+    actual_lines = stdout.rstrip("\n").splitlines()
+    tail = actual_lines[-n:] if len(actual_lines) >= n else actual_lines
+    return "\n".join(tail).strip()
+
+
 async def _grade_coding(answer: Answer, question: Question) -> tuple[float, str, str]:
     if not answer.code_written or not question.test_cases:
         return 0.0, "Aucun code soumis ou aucun test défini.", ""
@@ -96,7 +112,7 @@ async def _grade_coding(answer: Answer, question: Question) -> tuple[float, str,
 
         try:
             piston_result = await run_code(answer.code_written, stdin=stdin)
-            actual = piston_result.stdout.strip()
+            actual = _extract_actual(piston_result.stdout, expected)
             outputs.append(f"Test {i}: stdout={actual!r}, stderr={piston_result.stderr!r}")
 
             if actual == expected:
