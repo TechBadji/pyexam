@@ -120,6 +120,14 @@ export default function ExamPage() {
     if (!submissionId || submitting || isSubmitted) return;
     setSubmitting(true);
     try {
+      // Flush offline queue + force-save all in-memory answers so no pending
+      // debounce or failed request is lost when the student clicks Submit.
+      await flushQueue().catch(() => undefined);
+      await Promise.all(
+        Object.entries(answers).map(([qId, ans]) =>
+          api.put(`/submissions/${submissionId}/answers/${qId}`, ans).catch(() => undefined)
+        )
+      );
       await api.post(`/submissions/${submissionId}/submit`);
       markSubmitted();
       toast.success(t("interface.auto_submitted"));
@@ -127,7 +135,7 @@ export default function ExamPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [submissionId, submitting, isSubmitted, examId]);
+  }, [submissionId, submitting, isSubmitted, examId, answers]);
 
   if (loading) {
     return (
