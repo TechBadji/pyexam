@@ -12,6 +12,7 @@ interface CodingQuestionProps {
   question: Question;
   initialCode: string | undefined;
   readOnly: boolean;
+  onCodeUpdate: (code: string) => void;
   onCodeChange: (code: string) => void;
 }
 
@@ -29,6 +30,7 @@ export default function CodingQuestion({
   question,
   initialCode,
   readOnly,
+  onCodeUpdate,
   onCodeChange,
 }: CodingQuestionProps) {
   const { t } = useTranslation("exam");
@@ -72,6 +74,7 @@ export default function CodingQuestion({
     const v = value ?? "";
     setCode(v);
     localStorage.setItem(draftKey, v);
+    onCodeUpdate(v);  // immediate store update so doSubmit flush always has latest code
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => triggerSave(v), DEBOUNCE_MS);
   };
