@@ -51,6 +51,12 @@
     "type_session_desc": "Questions tirées aléatoirement depuis un pool lors de l'inscription.",
     "allowed_groups": "Accès restreint aux classes",
     "allowed_groups_placeholder": "L3-INFO, M1-MATHS (vide = tous les étudiants)",
+    "grading_title": "Notation",
+    "grade_scale": "Noté sur",
+    "grade_scale_placeholder": "ex: 20 (laisser vide = points bruts)",
+    "passing_threshold": "Seuil d'admission (%)",
+    "passing_threshold_placeholder": "ex: 70 (défaut global : 50%)",
+    "grading_hint": "Laissez vide pour utiliser les points bruts et le seuil global.",
     "error_dates": "La date de début doit être antérieure à la date de fin.",
     "error_generic": "Une erreur est survenue lors de l'enregistrement. Vérifiez le formulaire et réessayez."
   },

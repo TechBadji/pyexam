@@ -35,6 +35,8 @@ class Exam(Base):
     )
     draw_config: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     allowed_groups: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    grade_scale: Mapped[float | None] = mapped_column(nullable=True)
+    passing_threshold: Mapped[float | None] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

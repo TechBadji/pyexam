@@ -415,6 +415,11 @@ async def launch_correction(
 
 @router.get("/exams/{exam_id}/report", response_model=list[dict])
 async def get_report(exam_id: uuid.UUID, current_user: _AdminUser, db: _DB) -> list[dict]:
+    exam_result = await db.execute(select(Exam).where(Exam.id == exam_id))
+    exam = exam_result.scalar_one_or_none()
+    if exam is None:
+        raise HTTPException(status_code=404, detail="Exam not found")
+
     result = await db.execute(
         select(Submission)
         .options(
@@ -426,8 +431,15 @@ async def get_report(exam_id: uuid.UUID, current_user: _AdminUser, db: _DB) -> l
     )
     submissions = result.scalars().all()
 
+    from app.config import settings as _cfg
+    threshold = exam.passing_threshold if exam.passing_threshold is not None else _cfg.PASSING_GRADE_PERCENT
+
     report = []
     for s in submissions:
+        max_score = sum(a.question.points for a in s.answers) or 0.0
+        raw_score = s.total_score or 0.0
+        scaled_score = round(raw_score / max_score * exam.grade_scale, 2) if exam.grade_scale and max_score > 0 else None
+        passed = (raw_score / max_score * 100) >= threshold if max_score > 0 else None
         answers = [
             {
                 "question_id": str(a.question_id),
@@ -446,7 +458,11 @@ async def get_report(exam_id: uuid.UUID, current_user: _AdminUser, db: _DB) -> l
                 "email": s.student.email,
                 "submission_id": str(s.id),
                 "status": s.status.value,
-                "total_score": s.total_score,
+                "total_score": raw_score,
+                "max_score": max_score,
+                "grade_scale": exam.grade_scale,
+                "scaled_score": scaled_score,
+                "passed": passed,
                 "submitted_at": s.submitted_at.isoformat() if s.submitted_at else None,
                 "tab_switch_count": s.tab_switch_count,
                 "answers": answers,
@@ -841,6 +857,11 @@ async def export_results_csv(
     current_user: _AdminUser,
     db: _DB,
 ) -> StreamingResponse:
+    exam_result = await db.execute(select(Exam).where(Exam.id == exam_id))
+    exam = exam_result.scalar_one_or_none()
+    if exam is None:
+        raise HTTPException(status_code=404, detail="Exam not found")
+
     result = await db.execute(
         select(Submission)
         .options(
@@ -855,26 +876,42 @@ async def export_results_csv(
     )
     submissions = result.scalars().all()
 
+    from app.config import settings as _cfg
+    threshold = exam.passing_threshold if exam.passing_threshold is not None else _cfg.PASSING_GRADE_PERCENT
+
     max_score = 0.0
     if submissions:
         max_score = sum(a.question.points for a in submissions[0].answers) or 0.0
 
+    headers = ["full_name", "student_number", "email", "score", "max_score", "percentage"]
+    if exam.grade_scale:
+        headers.append(f"note_sur_{int(exam.grade_scale)}")
+    headers += ["admission", "status", "submitted_at"]
+
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["full_name", "student_number", "email", "score", "max_score", "percentage", "status", "submitted_at"])
+    writer.writerow(headers)
     for s in submissions:
         score = s.total_score or 0.0
         pct = round(score / max_score * 100, 1) if max_score > 0 else 0.0
-        writer.writerow([
+        passed = pct >= threshold if max_score > 0 else None
+        row = [
             s.student.full_name,
             s.student.student_number or "",
             s.student.email,
             f"{score:.2f}",
             f"{max_score:.2f}",
             f"{pct:.1f}%",
+        ]
+        if exam.grade_scale:
+            scaled = round(score / max_score * exam.grade_scale, 2) if max_score > 0 else 0.0
+            row.append(f"{scaled:.2f}/{int(exam.grade_scale)}")
+        row += [
+            "Admis" if passed else ("Refusé" if passed is not None else "—"),
             s.status.value,
             s.submitted_at.strftime("%Y-%m-%d %H:%M") if s.submitted_at else "",
-        ])
+        ]
+        writer.writerow(row)
 
     csv_bytes = output.getvalue().encode("utf-8-sig")  # BOM for Excel
     return StreamingResponse(

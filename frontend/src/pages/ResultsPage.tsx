@@ -25,6 +25,11 @@ interface BreakdownItem {
 interface Results {
   submission_id: string;
   total_score: number;
+  max_score: number;
+  grade_scale: number | null;
+  scaled_score: number | null;
+  passing_threshold: number;
+  passed: boolean | null;
   status: string;
   tab_switch_count: number;
   breakdown: BreakdownItem[];
@@ -152,13 +157,10 @@ export default function ResultsPage() {
       .finally(() => setLoading(false));
   }, [submissionId]);
 
-  const fmtScore = (v: number | null) => {
+  const fmtScore = (v: number | null, decimals = 1) => {
     if (v === null) return "—";
-    return lang === "fr" ? v.toFixed(1).replace(".", ",") : v.toFixed(1);
+    return lang === "fr" ? v.toFixed(decimals).replace(".", ",") : v.toFixed(decimals);
   };
-
-  const maxScore = results?.breakdown.reduce((s, b) => s + b.points, 0) ?? 0;
-  const passed = results ? (results.total_score / maxScore) >= 0.5 : false;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -183,27 +185,39 @@ export default function ResultsPage() {
         {results && (
           <div className="space-y-6">
             {/* Score banner */}
-            <div className={`rounded-2xl p-6 border-2 ${passed
-              ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700"
-              : "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700"}`}>
+            <div className={`rounded-2xl p-6 border-2 ${
+              results.passed === true
+                ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700"
+                : results.passed === false
+                ? "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700"
+                : "bg-gray-50 dark:bg-gray-800/40 border-gray-200 dark:border-gray-700"
+            }`}>
               <div className="flex items-center justify-between flex-wrap gap-4">
-                <div>
+                <div className="space-y-1">
                   <p className="text-sm text-gray-500 dark:text-gray-400">{t("results.total_score")}</p>
-                  <p className="text-4xl font-bold text-gray-900 dark:text-white mt-1">
-                    {fmtScore(results.total_score)} / {fmtScore(maxScore)}
+                  <p className="text-4xl font-bold text-gray-900 dark:text-white">
+                    {fmtScore(results.total_score)} / {fmtScore(results.max_score)}
                   </p>
+                  {results.grade_scale != null && results.scaled_score != null && (
+                    <p className="text-2xl font-semibold text-indigo-600 dark:text-indigo-400">
+                      {fmtScore(results.scaled_score, 2)} / {results.grade_scale}
+                    </p>
+                  )}
                 </div>
-                <span className={`text-lg font-bold px-4 py-2 rounded-full ${passed
-                  ? "bg-green-500 text-white"
-                  : "bg-red-500 text-white"}`}>
-                  {passed ? t("results.passed") : t("results.failed")}
-                </span>
+                {results.passed !== null && (
+                  <span className={`text-lg font-bold px-4 py-2 rounded-full ${
+                    results.passed ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                  }`}>
+                    {results.passed ? t("results.passed") : t("results.failed")}
+                  </span>
+                )}
               </div>
-              {results.tab_switch_count > 0 && (
-                <p className="text-xs text-gray-400 mt-3">
-                  {t("results.tab_switches")}: {results.tab_switch_count}
-                </p>
-              )}
+              <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-400">
+                <span>{t("results.passing_threshold")} : {results.passing_threshold}%</span>
+                {results.tab_switch_count > 0 && (
+                  <span>{t("results.tab_switches")} : {results.tab_switch_count}</span>
+                )}
+              </div>
             </div>
 
             {/* Per-question breakdown */}

@@ -14,6 +14,8 @@ class ExamCreate(BaseModel):
     end_time: datetime
     status: ExamStatus = ExamStatus.draft
     allowed_groups: list[str] | None = None
+    grade_scale: float | None = None
+    passing_threshold: float | None = None
 
     @model_validator(mode="after")
     def validate_dates_and_duration(self) -> "ExamCreate":
@@ -32,6 +34,8 @@ class ExamUpdate(BaseModel):
     end_time: datetime | None = None
     status: ExamStatus | None = None
     allowed_groups: list[str] | None = None
+    grade_scale: float | None = None
+    passing_threshold: float | None = None
 
 
 class ExamResponse(BaseModel):
@@ -47,6 +51,8 @@ class ExamResponse(BaseModel):
     created_by: uuid.UUID
     created_at: datetime
     allowed_groups: list[str] | None = None
+    grade_scale: float | None = None
+    passing_threshold: float | None = None
 
 
 class ExamWithCountdown(ExamResponse):

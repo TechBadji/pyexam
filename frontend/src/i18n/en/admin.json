@@ -51,6 +51,12 @@
     "type_session_desc": "Questions drawn randomly from a pool at enrollment time.",
     "allowed_groups": "Restrict access to classes",
     "allowed_groups_placeholder": "L3-INFO, M1-MATHS (empty = all students)",
+    "grading_title": "Grading",
+    "grade_scale": "Graded out of",
+    "grade_scale_placeholder": "e.g. 20 (leave empty = raw points)",
+    "passing_threshold": "Passing threshold (%)",
+    "passing_threshold_placeholder": "e.g. 70 (global default: 50%)",
+    "grading_hint": "Leave empty to use raw points and the global threshold.",
     "error_dates": "Start time must be before end time.",
     "error_generic": "An error occurred while saving. Please check the form and try again."
   },

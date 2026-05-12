@@ -622,7 +622,8 @@ async def get_results(
     result = await db.execute(
         select(Submission)
         .options(
-            selectinload(Submission.answers).selectinload(Answer.question)
+            selectinload(Submission.answers).selectinload(Answer.question),
+            selectinload(Submission.exam),
         )
         .where(
             Submission.id == submission_id,
@@ -634,6 +635,22 @@ async def get_results(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
     if submission.status != SubmissionStatus.corrected:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not yet available")
+
+    exam = submission.exam
+    max_score = sum(a.question.points for a in submission.answers) or 0.0
+    raw_score = submission.total_score or 0.0
+
+    # Scaled grade (e.g. out of 20)
+    scaled_score: float | None = None
+    if exam.grade_scale and max_score > 0:
+        scaled_score = round(raw_score / max_score * exam.grade_scale, 2)
+
+    # Pass / fail
+    from app.config import settings as _cfg
+    threshold = exam.passing_threshold if exam.passing_threshold is not None else _cfg.PASSING_GRADE_PERCENT
+    passed: bool | None = None
+    if max_score > 0:
+        passed = (raw_score / max_score * 100) >= threshold
 
     breakdown = []
     for a in sorted(submission.answers, key=lambda a: a.question.order_index):
@@ -655,7 +672,12 @@ async def get_results(
 
     return {
         "submission_id": str(submission.id),
-        "total_score": submission.total_score,
+        "total_score": raw_score,
+        "max_score": max_score,
+        "grade_scale": exam.grade_scale,
+        "scaled_score": scaled_score,
+        "passing_threshold": threshold,
+        "passed": passed,
         "status": submission.status.value,
         "tab_switch_count": submission.tab_switch_count,
         "breakdown": breakdown,

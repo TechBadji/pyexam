@@ -31,10 +31,12 @@ interface ExamFormData {
   end_time: string;
   status: string;
   allowed_groups: string | null;
+  grade_scale: string;
+  passing_threshold: string;
 }
 
 interface ExamFormProps {
-  initialData?: Partial<ExamFormData & { allowed_groups?: string[] | null }>;
+  initialData?: Partial<ExamFormData & { allowed_groups?: string[] | null; grade_scale?: number | null; passing_threshold?: number | null }>;
   initialDrawConfig?: { n_mcq: number; n_coding: number } | null;
   examId?: string;
   onSuccess: () => void;
@@ -62,6 +64,8 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
     end_time: initialData?.end_time ?? "",
     status: initialData?.status ?? "draft",
     allowed_groups: initialData?.allowed_groups ? initialData.allowed_groups.join(", ") : null,
+    grade_scale: initialData?.grade_scale != null ? String(initialData.grade_scale) : "",
+    passing_threshold: initialData?.passing_threshold != null ? String(initialData.passing_threshold) : "",
   });
 
   const [questions, setQuestions] = useState<QuestionDraft[]>([]);
@@ -154,7 +158,12 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
       const allowedGroups = form.allowed_groups
         ? form.allowed_groups.split(",").map((s) => s.trim()).filter(Boolean)
         : null;
-      const payload = { ...form, allowed_groups: allowedGroups?.length ? allowedGroups : null };
+      const payload = {
+        ...form,
+        allowed_groups: allowedGroups?.length ? allowedGroups : null,
+        grade_scale: form.grade_scale ? parseFloat(form.grade_scale) : null,
+        passing_threshold: form.passing_threshold ? parseFloat(form.passing_threshold) : null,
+      };
 
       let id = examId;
       if (isEdit) {
@@ -315,6 +324,39 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
               placeholder={t("exam_form.allowed_groups_placeholder")}
             />
           </div>
+        </div>
+
+        {/* ── Notation ──────────────────────────────────────────────────────── */}
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 p-4 space-y-3">
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("exam_form.grading_title")}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("exam_form.grade_scale")}</label>
+              <input
+                type="number"
+                min={1}
+                step={1}
+                className={inputCls}
+                value={form.grade_scale}
+                onChange={(e) => setForm({ ...form, grade_scale: e.target.value })}
+                placeholder={t("exam_form.grade_scale_placeholder")}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("exam_form.passing_threshold")}</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                className={inputCls}
+                value={form.passing_threshold}
+                onChange={(e) => setForm({ ...form, passing_threshold: e.target.value })}
+                placeholder={t("exam_form.passing_threshold_placeholder")}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{t("exam_form.grading_hint")}</p>
         </div>
 
         {/* ── Config tirage (Session uniquement) ────────────────────────────── */}
