@@ -50,13 +50,20 @@ export default function ReportTable({ rows, examId }: ReportTableProps) {
       : d.toLocaleString("en-US");
   };
 
+  const fmtResult = (row: ReportRow) => {
+    if (row.passed === true) return t("report.passed");
+    if (row.passed === false) return t("report.failed");
+    return row.status;
+  };
+
   const exportCSV = () => {
     const headers = [
       t("report.student_number"),
       t("report.student_name"),
       "Email",
       t("report.score"),
-      t("report.status"),
+      ...(hasGradeScale ? [t("report.grade")] : []),
+      t("report.result"),
       t("report.tab_switches"),
       "Submitted At",
     ];
@@ -65,8 +72,9 @@ export default function ReportTable({ rows, examId }: ReportTableProps) {
         r.student_number ?? "",
         r.student_name,
         r.email,
-        r.total_score ?? "",
-        r.status,
+        `${r.total_score ?? ""} / ${r.max_score ?? ""}`,
+        ...(hasGradeScale ? [fmtGrade(r)] : []),
+        fmtResult(r),
         r.tab_switch_count,
         r.submitted_at ?? "",
       ]
@@ -100,7 +108,8 @@ export default function ReportTable({ rows, examId }: ReportTableProps) {
         t("report.student_name"),
         "Email",
         t("report.score"),
-        t("report.status"),
+        ...(hasGradeScale ? [t("report.grade")] : []),
+        t("report.result"),
         t("report.tab_switches"),
         "Submitted At",
       ]],
@@ -108,14 +117,27 @@ export default function ReportTable({ rows, examId }: ReportTableProps) {
         r.student_number ?? "—",
         r.student_name,
         r.email,
-        fmtScore(r.total_score),
-        r.status,
+        `${fmtScore(r.total_score)} / ${fmtScore(r.max_score)}`,
+        ...(hasGradeScale ? [fmtGrade(r)] : []),
+        fmtResult(r),
         r.tab_switch_count,
         fmtDate(r.submitted_at),
       ]),
       styles: { fontSize: 9 },
       headStyles: { fillColor: [79, 70, 229] },
       alternateRowStyles: { fillColor: [245, 245, 255] },
+      didParseCell: (data) => {
+        if (hasGradeScale && data.column.index === 4 && data.section === "body") {
+          data.cell.styles.textColor = [79, 70, 229];
+          data.cell.styles.fontStyle = "bold";
+        }
+        const resultCol = hasGradeScale ? 5 : 4;
+        if (data.column.index === resultCol && data.section === "body") {
+          const val = String(data.cell.raw);
+          data.cell.styles.textColor = val === t("report.passed") ? [22, 163, 74] : val === t("report.failed") ? [220, 38, 38] : [100, 100, 100];
+          data.cell.styles.fontStyle = "bold";
+        }
+      },
     });
 
     doc.save(`report_${examId}.pdf`);
