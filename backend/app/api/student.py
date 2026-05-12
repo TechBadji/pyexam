@@ -556,7 +556,9 @@ async def submit_exam(
     db: _DB,
 ) -> dict:
     result = await db.execute(
-        select(Submission).where(
+        select(Submission)
+        .options(selectinload(Submission.answers))
+        .where(
             Submission.id == submission_id,
             Submission.student_id == current_user.id,
         )
@@ -567,6 +569,15 @@ async def submit_exam(
 
     if submission.status != SubmissionStatus.in_progress:
         return {"message": "Already submitted"}
+
+    # Ensure every exam question has an Answer record so the corrector counts all points.
+    questions_result = await db.execute(
+        select(Question).where(Question.exam_id == submission.exam_id)
+    )
+    answered_ids = {a.question_id for a in submission.answers}
+    for q in questions_result.scalars().all():
+        if q.id not in answered_ids:
+            db.add(Answer(submission_id=submission.id, question_id=q.id))
 
     submission.submitted_at = datetime.now(timezone.utc)
     submission.status = SubmissionStatus.submitted
