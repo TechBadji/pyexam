@@ -7,7 +7,7 @@ from celery.utils.log import get_task_logger
 from sqlalchemy import select
 
 from app.tasks.celery_app import celery
-from app.database import AsyncSessionLocal
+from app.database import task_db_session
 from app.models.exam import Exam, ExamStatus
 from app.models.submission import Submission, SubmissionStatus
 from app.services.correction_service import correct_submission
@@ -29,7 +29,7 @@ def correct_exam_task(self, exam_id: str) -> dict:
         corrected_ids: list[str] = []
         failed_ids: list[str] = []
 
-        async with AsyncSessionLocal() as db:
+        async with task_db_session() as db:
             result = await db.execute(
                 select(Submission).where(
                     Submission.exam_id == eid,
@@ -79,7 +79,7 @@ def auto_close_exams_task() -> dict:
 
     async def _close():
         now = datetime.now(timezone.utc)
-        async with AsyncSessionLocal() as db:
+        async with task_db_session() as db:
             result = await db.execute(
                 select(Exam).where(
                     Exam.status == ExamStatus.active,

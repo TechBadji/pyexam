@@ -4,7 +4,7 @@ import uuid
 from celery.utils.log import get_task_logger
 
 from app.tasks.celery_app import celery
-from app.database import AsyncSessionLocal
+from app.database import task_db_session
 from app.services.email_service import send_result_email
 
 logger = get_task_logger(__name__)
@@ -24,7 +24,7 @@ def send_result_email_task(self, submission_id: str) -> dict:
     logger.info("Sending result email for submission %s", submission_id)
 
     async def _send():
-        async with AsyncSessionLocal() as db:
+        async with task_db_session() as db:
             await send_result_email(uuid.UUID(submission_id), db)
 
     try:
