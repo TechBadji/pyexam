@@ -31,13 +31,13 @@ const Steps = ({ items }: { items: React.ReactNode[] }) => (
 
 const Note = ({ children }: { children: React.ReactNode }) => (
   <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 px-4 py-3 text-amber-800 dark:text-amber-300 text-sm rounded-r-lg flex gap-2">
-    <span className="shrink-0">💡</span><span>{children}</span>
+    <span className="shrink-0"></span><span>{children}</span>
   </div>
 );
 
 const Tip = ({ children }: { children: React.ReactNode }) => (
   <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-400 px-4 py-3 text-green-800 dark:text-green-300 text-sm rounded-r-lg flex gap-2">
-    <span className="shrink-0">✅</span><span>{children}</span>
+    <span className="shrink-0"></span><span>{children}</span>
   </div>
 );
 
@@ -92,7 +92,7 @@ const CSVDownload = ({ file, label, description, columns }: { file: string; labe
   <div className="border border-indigo-200 dark:border-indigo-700 rounded-xl overflow-hidden">
     <div className="bg-indigo-50 dark:bg-indigo-900/30 px-5 py-4 flex items-start justify-between gap-4 flex-wrap">
       <div>
-        <p className="font-semibold text-indigo-700 dark:text-indigo-300 text-sm mb-1">📄 {label}</p>
+        <p className="font-semibold text-indigo-700 dark:text-indigo-300 text-sm mb-1"> {label}</p>
         <p className="text-xs text-gray-600 dark:text-gray-400">{description}</p>
       </div>
       <a
@@ -141,12 +141,12 @@ const CSVDownload = ({ file, label, description, columns }: { file: string; labe
 // ── TOC ───────────────────────────────────────────────────────────────────────
 
 const toc = [
-  { id: "intro",    label: "Présentation" },
-  { id: "admin",    label: "Administrateur / Professeur" },
-  { id: "csv",      label: "Import CSV" },
-  { id: "student",  label: "Étudiant / Candidat" },
+  { id: "intro", label: "Présentation" },
+  { id: "admin", label: "Administrateur / Professeur" },
+  { id: "csv", label: "Import CSV" },
+  { id: "student", label: "Étudiant / Candidat" },
   { id: "workflow", label: "Workflow complet" },
-  { id: "faq",      label: "FAQ" },
+  { id: "faq", label: "FAQ" },
 ];
 
 // ── PAGE ─────────────────────────────────────────────────────────────────────
@@ -197,7 +197,7 @@ export default function HelpPage() {
         <main className="flex-1 min-w-0 space-y-16">
 
           {/* ── PRÉSENTATION ──────────────────────────────────────────── */}
-          <Section id="intro" title="Présentation de PyExam" emoji="🎯">
+          <Section id="intro" title="Présentation de PyExam" emoji="">
             <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
               <strong>PyExam</strong> est une plateforme d'examens en ligne pour organiser des évaluations
               avec des <strong>QCM</strong> et des <strong>exercices de code Python</strong>.
@@ -206,9 +206,9 @@ export default function HelpPage() {
             </p>
             <div className="grid sm:grid-cols-3 gap-4">
               {[
-                { icon: "🛠", title: "Administrateur", color: "border-indigo-300 bg-indigo-50 dark:bg-indigo-950 dark:border-indigo-700", items: ["Créer et gérer les examens", "Ajouter les questions (QCM + Code)", "Importer les étudiants", "Consulter les rapports & exports"] },
-                { icon: "🎓", title: "Étudiant", color: "border-blue-300 bg-blue-50 dark:bg-blue-950 dark:border-blue-700", items: ["Passer les examens en ligne", "Écrire du code Python", "Tester son code avant soumission", "Recevoir ses résultats par email"] },
-                { icon: "🤖", title: "Système", color: "border-gray-300 bg-gray-50 dark:bg-gray-800 dark:border-gray-600", items: ["Exécution Python via Piston", "Correction automatique", "Envoi des emails de résultats", "Détection de triche (onglets)"] },
+                { icon: "", title: "Administrateur", color: "border-indigo-300 bg-indigo-50 dark:bg-indigo-950 dark:border-indigo-700", items: ["Créer et gérer les examens", "Ajouter les questions (QCM + Code)", "Importer les étudiants", "Consulter les rapports & exports"] },
+                { icon: "", title: "Étudiant", color: "border-blue-300 bg-blue-50 dark:bg-blue-950 dark:border-blue-700", items: ["Passer les examens en ligne", "Écrire du code Python", "Tester son code avant soumission", "Recevoir ses résultats par email"] },
+                { icon: "", title: "Système", color: "border-gray-300 bg-gray-50 dark:bg-gray-800 dark:border-gray-600", items: ["Exécution Python via Piston", "Correction automatique", "Envoi des emails de résultats", "Détection de triche (onglets)"] },
               ].map((c) => (
                 <div key={c.title} className={`rounded-xl border-2 p-4 ${c.color}`}>
                   <div className="text-2xl mb-2">{c.icon}</div>
@@ -222,7 +222,7 @@ export default function HelpPage() {
           </Section>
 
           {/* ── ADMIN ─────────────────────────────────────────────────── */}
-          <Section id="admin" title="Administrateur / Professeur" emoji="🛠">
+          <Section id="admin" title="Administrateur / Professeur" emoji="">
 
             {/* Créer un examen */}
             <SubSection title="1 · Créer un examen">
@@ -264,7 +264,7 @@ export default function HelpPage() {
                     </Annotation>
                   </div>
                   <div className="flex gap-2 pt-2">
-                    <FakeBtn>💾 Enregistrer</FakeBtn>
+                    <FakeBtn> Enregistrer</FakeBtn>
                     <FakeBtn color="gray">Annuler</FakeBtn>
                   </div>
                 </div>
@@ -500,7 +500,7 @@ export default function HelpPage() {
                 <div className="max-w-sm mx-auto space-y-4 text-center">
                   <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mx-auto text-2xl">📧</div>
                   <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Vérifiez votre adresse e-mail</p>
-                  <p className="text-xs text-gray-500">Un code a été envoyé à <strong>fatou.diop@etudiant.fr</strong></p>
+                  <p className="text-xs text-gray-500">Un code a été envoyé à <strong>fatou.diop@etudiant.sn</strong></p>
                   <Annotation text="Code reçu par email — valable 15 minutes">
                     <div className="flex gap-2 justify-center">
                       {["4", "7", "3", "9", "1", "2"].map((d, i) => (
@@ -521,7 +521,7 @@ export default function HelpPage() {
                   {/* Nav */}
                   <div className="shrink-0 w-24 space-y-1">
                     <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Questions</p>
-                    {[1,2,3,4,5].map((n) => (
+                    {[1, 2, 3, 4, 5].map((n) => (
                       <div key={n} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs cursor-pointer ${n === 3 ? "bg-indigo-600 text-white font-bold" : n <= 2 ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500"}`}>
                         {n <= 2 ? "✓" : ""} Q{n}
                       </div>
@@ -536,7 +536,7 @@ export default function HelpPage() {
                       </Annotation>
                     </div>
                     <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                      Lisez un entier N et affichez sa table de multiplication de 1 à 10.<br/>
+                      Lisez un entier N et affichez sa table de multiplication de 1 à 10.<br />
                       <span className="text-gray-400">Format : <code>N x K = R</code></span>
                     </p>
                     <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs text-green-300 space-y-0.5">
@@ -546,7 +546,7 @@ export default function HelpPage() {
                       <p className="ml-4"><span className="text-yellow-300">print</span>(f<span className="text-orange-300">"{"{"}N{"}"} x {"{"}k{"}"} = {"{"}N*k{"}"}"</span>)</p>
                     </div>
                     <div className="flex gap-2 items-center">
-                      <FakeBtn color="green">▶ Exécuter</FakeBtn>
+                      <FakeBtn color="green"> Exécuter</FakeBtn>
                       <span className="text-[10px] text-green-500 font-medium">✓ Sauvegardé</span>
                     </div>
                   </div>
@@ -591,19 +591,19 @@ export default function HelpPage() {
           </Section>
 
           {/* ── WORKFLOW ──────────────────────────────────────────────── */}
-          <Section id="workflow" title="Workflow complet" emoji="🔄">
+          <Section id="workflow" title="Workflow complet" emoji="">
             <div className="relative pl-8 space-y-0">
               <div className="absolute left-3 top-2 bottom-2 w-0.5 bg-indigo-200 dark:bg-indigo-800" />
               {[
-                { icon: "📝", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Crée l'examen : titre, durée, dates, barème, seuil, groupes." },
-                { icon: "➕", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Ajoute les questions (QCM et/ou Code avec cas de test)." },
-                { icon: "👥", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Importe ou crée les étudiants (CSV ou saisie manuelle)." },
-                { icon: "▶️", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Active l'examen — les étudiants peuvent maintenant y accéder." },
-                { icon: "💻", actor: "Étudiant", color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", step: "Se connecte, démarre l'examen, répond, soumet." },
-                { icon: "⏱", actor: "Système", color: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400", step: "Clôture automatique à la fin de la fenêtre horaire." },
-                { icon: "🤖", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Lance la correction automatique depuis le tableau de bord." },
-                { icon: "📧", actor: "Système", color: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400", step: "Envoie un email de résultats à chaque étudiant." },
-                { icon: "📊", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Consulte le rapport, exporte en PDF/CSV." },
+                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Crée l'examen : titre, durée, dates, barème, seuil, groupes." },
+                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Ajoute les questions (QCM et/ou Code avec cas de test)." },
+                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Importe ou crée les étudiants (CSV ou saisie manuelle)." },
+                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Active l'examen — les étudiants peuvent maintenant y accéder." },
+                { icon: "", actor: "Étudiant", color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", step: "Se connecte, démarre l'examen, répond, soumet." },
+                { icon: "", actor: "Système", color: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400", step: "Clôture automatique à la fin de la fenêtre horaire." },
+                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Lance la correction automatique depuis le tableau de bord." },
+                { icon: "", actor: "Système", color: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400", step: "Envoie un email de résultats à chaque étudiant." },
+                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Consulte le rapport, exporte en PDF/CSV." },
               ].map((s, i) => (
                 <div key={i} className="flex gap-4 pb-5 relative">
                   <div className="absolute -left-5 top-1 w-6 h-6 rounded-full bg-white dark:bg-gray-950 border-2 border-indigo-400 flex items-center justify-center text-sm z-10">{s.icon}</div>
