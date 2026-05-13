@@ -152,6 +152,9 @@ export default function LoginPage() {
             <FeatureRow icon={<CheckIcon />} text={t("hero.feature_1")} />
             <FeatureRow icon={<CodeIcon />} text={t("hero.feature_2")} />
             <FeatureRow icon={<ChartIcon />} text={t("hero.feature_3")} />
+            <Link to="/aide" className="block text-xs text-indigo-300 hover:text-white transition pt-1">
+              Documentation PyExam →
+            </Link>
           </div>
         </div>
 
@@ -293,11 +296,6 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
-          </div>
-          <div className="text-center mt-4">
-            <Link to="/aide" className="text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition">
-              📘 Documentation PyExam
-            </Link>
           </div>
         </div>
       </div>
