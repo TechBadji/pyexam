@@ -294,6 +294,11 @@ export default function LoginPage() {
               </button>
             </form>
           </div>
+          <div className="text-center mt-4">
+            <Link to="/aide" className="text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition">
+              📘 Documentation PyExam
+            </Link>
+          </div>
         </div>
       </div>
     </div>
