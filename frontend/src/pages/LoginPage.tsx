@@ -153,7 +153,7 @@ export default function LoginPage() {
             <FeatureRow icon={<CodeIcon />} text={t("hero.feature_2")} />
             <FeatureRow icon={<ChartIcon />} text={t("hero.feature_3")} />
             <Link to="/aide" className="block text-xs text-indigo-300 hover:text-white transition pt-1">
-              Documentation PyExam →
+              📘 Documentation PyExam →
             </Link>
           </div>
         </div>
