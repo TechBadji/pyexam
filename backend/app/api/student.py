@@ -566,6 +566,44 @@ async def tab_switch(
     )
 
 
+_ALLOWED_ACTIVITY_ACTIONS = frozenset({
+    "WINDOW_BLUR",
+    "WINDOW_FOCUS",
+    "COPY_ATTEMPT",
+    "PASTE_ATTEMPT",
+    "CUT_ATTEMPT",
+})
+
+
+@router.post("/submissions/{submission_id}/activity", status_code=status.HTTP_204_NO_CONTENT)
+async def log_activity(
+    submission_id: uuid.UUID,
+    body: dict,
+    current_user: _StudentUser,
+    db: _DB,
+) -> None:
+    action = str(body.get("action", ""))
+    if action not in _ALLOWED_ACTIVITY_ACTIONS:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Unknown action")
+
+    result = await db.execute(
+        select(Submission).where(
+            Submission.id == submission_id,
+            Submission.student_id == current_user.id,
+            Submission.status == SubmissionStatus.in_progress,
+        )
+    )
+    if result.scalar_one_or_none() is None:
+        return
+
+    await audit_service.log(
+        user_id=current_user.id,
+        action=action,
+        db=db,
+        extra_data={"submission_id": str(submission_id), **{k: v for k, v in body.items() if k != "action"}},
+    )
+
+
 @router.post("/submissions/{submission_id}/fullscreen_exit", status_code=status.HTTP_204_NO_CONTENT)
 async def fullscreen_exit(
     submission_id: uuid.UUID,

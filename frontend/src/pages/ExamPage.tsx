@@ -113,6 +113,41 @@ export default function ExamPage() {
     return () => clearInterval(id);
   }, [submissionId, isSubmitted]);
 
+  // Journal d'activité détaillé
+  const logActivity = useCallback(
+    (action: string, data?: Record<string, unknown>) => {
+      if (!submissionId || isSubmitted) return;
+      const body = { action, ...data };
+      api.post(`/submissions/${submissionId}/activity`, body).catch(() =>
+        enqueue(`/submissions/${submissionId}/activity`, "post", body)
+      );
+    },
+    [submissionId, isSubmitted]
+  );
+
+  useEffect(() => {
+    if (!submissionId || isSubmitted) return;
+
+    const onBlur  = () => logActivity("WINDOW_BLUR");
+    const onFocus = () => logActivity("WINDOW_FOCUS");
+    const onCopy  = () => logActivity("COPY_ATTEMPT");
+    const onPaste = () => logActivity("PASTE_ATTEMPT");
+    const onCut   = () => logActivity("CUT_ATTEMPT");
+
+    window.addEventListener("blur",  onBlur);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("copy",  onCopy);
+    document.addEventListener("paste", onPaste);
+    document.addEventListener("cut",   onCut);
+    return () => {
+      window.removeEventListener("blur",  onBlur);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("copy",  onCopy);
+      document.removeEventListener("paste", onPaste);
+      document.removeEventListener("cut",   onCut);
+    };
+  }, [submissionId, isSubmitted, logActivity]);
+
   // Plein écran forcé
   const enterFullscreen = () => {
     document.documentElement.requestFullscreen?.().catch(() => undefined);
