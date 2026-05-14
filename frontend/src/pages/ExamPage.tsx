@@ -102,6 +102,15 @@ export default function ExamPage() {
     return () => document.removeEventListener("visibilitychange", handler);
   }, [submissionId, isSubmitted]);
 
+  // Heartbeat toutes les 30s — permet de détecter les déconnexions > 60s côté serveur
+  useEffect(() => {
+    if (!submissionId || isSubmitted) return;
+    const id = setInterval(() => {
+      api.put(`/submissions/${submissionId}/heartbeat`).catch(() => undefined);
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [submissionId, isSubmitted]);
+
   const saveAnswer = useCallback(
     async (questionId: string, data: { selected_option_id?: string; code_written?: string }) => {
       if (!submissionId || isSubmitted) return;

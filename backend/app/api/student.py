@@ -412,6 +412,23 @@ async def start_exam(
     )
     submission = existing.scalar_one_or_none()
     if submission is not None:
+        # Grace period: if last heartbeat was > 60s ago, log reconnect after disconnection
+        now = datetime.now(timezone.utc)
+        if submission.last_heartbeat is not None:
+            hb = submission.last_heartbeat
+            if hb.tzinfo is None:
+                hb = hb.replace(tzinfo=timezone.utc)
+            gap = (now - hb).total_seconds()
+            if gap > 60:
+                await audit_service.log(
+                    user_id=current_user.id,
+                    action="RECONNECT_AFTER_DISCONNECTION",
+                    db=db,
+                    extra_data={
+                        "submission_id": str(submission.id),
+                        "gap_seconds": int(gap),
+                    },
+                )
         return {
             "submission_id": str(submission.id),
             "started_at": submission.started_at.isoformat(),
@@ -547,6 +564,26 @@ async def tab_switch(
         db=db,
         extra_data={"submission_id": str(submission_id), "count": submission.tab_switch_count},
     )
+
+
+@router.put("/submissions/{submission_id}/heartbeat", status_code=status.HTTP_204_NO_CONTENT)
+async def heartbeat(
+    submission_id: uuid.UUID,
+    current_user: _StudentUser,
+    db: _DB,
+) -> None:
+    result = await db.execute(
+        select(Submission).where(
+            Submission.id == submission_id,
+            Submission.student_id == current_user.id,
+            Submission.status == SubmissionStatus.in_progress,
+        )
+    )
+    submission = result.scalar_one_or_none()
+    if submission is None:
+        return
+    submission.last_heartbeat = datetime.now(timezone.utc)
+    await db.flush()
 
 
 @router.post("/submissions/{submission_id}/submit", status_code=status.HTTP_200_OK)
