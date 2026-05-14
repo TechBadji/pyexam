@@ -74,6 +74,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
   const [showBankPicker, setShowBankPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [codingLanguage, setCodingLanguage] = useState<"python" | "c">("python");
 
   // ── Type d'examen ──
   const [examType, setExamType] = useState<"standard" | "session">(
@@ -89,13 +90,13 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
   const addMCQ = () =>
     setQuestions((q) => [
       ...q,
-      { type: "mcq", statement: "", points: 1, options: LABELS.map((l) => ({ label: l, text: "", is_correct: false })), test_cases: [] },
+      { type: "mcq", language: codingLanguage, statement: "", points: 1, options: LABELS.map((l) => ({ label: l, text: "", is_correct: false })), test_cases: [] },
     ]);
 
   const addCoding = () =>
     setQuestions((q) => [
       ...q,
-      { type: "coding", language: "python", statement: "", points: 3, options: [], test_cases: [] },
+      { type: "coding", language: codingLanguage, statement: "", points: 3, options: [], test_cases: [] },
     ]);
 
   const updateQ = (i: number, patch: Partial<QuestionDraft>) =>
@@ -291,6 +292,37 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
                 {t("exam_form.type_session_desc")}
               </p>
             </button>
+          </div>
+        </div>
+
+        {/* ── Langage de programmation ──────────────────────────────────────── */}
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 p-4">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Langage de programmation
+          </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+            Définit le langage par défaut des questions de code et pré-filtre la banque de questions.
+          </p>
+          <div className="flex gap-3">
+            {(["python", "c"] as const).map((lang) => (
+              <button
+                key={lang}
+                type="button"
+                onClick={() => setCodingLanguage(lang)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${
+                  codingLanguage === lang
+                    ? lang === "python"
+                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300"
+                      : "border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300"
+                    : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300"
+                }`}
+              >
+                {lang === "python" ? "🐍 Python" : "⚙️ C (gcc)"}
+                {codingLanguage === lang && (
+                  <span className={`w-2 h-2 rounded-full ${lang === "python" ? "bg-indigo-500" : "bg-amber-500"}`} />
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -607,7 +639,11 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
       </form>
 
       {showBankPicker && (
-        <BankPicker onAdd={handleBankAdd} onClose={() => setShowBankPicker(false)} />
+        <BankPicker
+          onAdd={handleBankAdd}
+          onClose={() => setShowBankPicker(false)}
+          defaultTag={codingLanguage}
+        />
       )}
     </>
   );

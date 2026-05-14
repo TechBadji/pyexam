@@ -15,6 +15,7 @@ export interface BankQuestionPreview {
 interface Props {
   onAdd: (questions: BankQuestionPreview[]) => void;
   onClose: () => void;
+  defaultTag?: string;
 }
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -24,7 +25,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   culture: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200",
 };
 
-export default function BankPicker({ onAdd, onClose }: Props) {
+export default function BankPicker({ onAdd, onClose, defaultTag }: Props) {
   const { t } = useTranslation("admin");
 
   const [questions, setQuestions] = useState<BankQuestionPreview[]>([]);
@@ -34,7 +35,7 @@ export default function BankPicker({ onAdd, onClose }: Props) {
 
   const [filterType, setFilterType] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("");
-  const [filterTag, setFilterTag] = useState("");
+  const [filterTag, setFilterTag] = useState(defaultTag ?? "");
   const [filterSearch, setFilterSearch] = useState("");
 
   useEffect(() => {
@@ -79,6 +80,26 @@ export default function BankPicker({ onAdd, onClose }: Props) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="font-semibold text-gray-900 dark:text-white">{t("bank.picker_title")}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none">✕</button>
+        </div>
+
+        {/* Language quick-filter */}
+        <div className="px-6 py-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 shrink-0">Langage :</span>
+          {/* Python has no dedicated tag — "python" chip clears the tag filter to show all Python questions */}
+          {[{ label: "🐍 Python", value: "" }, { label: "⚙️ C", value: "c" }].map(({ label, value }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setFilterTag(value)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                filterTag === value
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* Filters */}
