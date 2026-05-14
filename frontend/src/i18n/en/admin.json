@@ -57,6 +57,7 @@
     "passing_threshold": "Passing threshold (%)",
     "passing_threshold_placeholder": "e.g. 70 (global default: 50%)",
     "grading_hint": "Leave empty to use raw points and the global threshold.",
+    "language": "Language",
     "error_dates": "Start time must be before end time.",
     "error_generic": "An error occurred while saving. Please check the form and try again."
   },

@@ -67,6 +67,7 @@
     "fullscreen_exit_title": "Fullscreen exit detected",
     "fullscreen_exit_body": "This action has been recorded. Please return to fullscreen to continue your exam.",
     "fullscreen_resume": "Return to fullscreen",
+    "load_error": "Loading error. Please reload the page.",
     "tab_switch_warning": "Warning: tab switch detected!",
     "offline_banner": "Offline — your answers are saved locally.",
     "reconnected_banner": "Back online — syncing..."

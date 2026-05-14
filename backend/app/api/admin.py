@@ -17,7 +17,7 @@ from app.middleware.auth_middleware import get_current_user, require_role
 from app.models.answer import Answer
 from app.models.audit_log import AuditLog
 from app.models.exam import Exam, ExamStatus
-from app.models.question import MCQOption, Question, QuestionType
+from app.models.question import CodingLanguage, MCQOption, Question, QuestionType
 from app.models.question_bank import BankMCQOption, BankQuestion
 from app.models.submission import Submission, SubmissionStatus
 from app.models.user import User, UserRole
@@ -202,9 +202,11 @@ async def import_from_bank(
         bq = bank_questions.get(bq_id)
         if bq is None:
             continue
+        lang = CodingLanguage.c if "c" in (bq.tags or []) else CodingLanguage.python
         q = Question(
             exam_id=exam_id,
             type=bq.type,
+            language=lang,
             order_index=body.start_order_index + idx,
             points=bq.points,
             statement=bq.statement,
@@ -296,9 +298,11 @@ async def auto_populate_pool(
     for bq in bank_questions:
         if bq.id in already_imported:
             continue
+        lang = CodingLanguage.c if "c" in (bq.tags or []) else CodingLanguage.python
         q = Question(
             exam_id=exam_id,
             type=bq.type,
+            language=lang,
             order_index=next_order,
             points=bq.points,
             statement=bq.statement,

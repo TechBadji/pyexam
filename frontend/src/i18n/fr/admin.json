@@ -57,6 +57,7 @@
     "passing_threshold": "Seuil d'admission (%)",
     "passing_threshold_placeholder": "ex: 70 (défaut global : 50%)",
     "grading_hint": "Laissez vide pour utiliser les points bruts et le seuil global.",
+    "language": "Langage",
     "error_dates": "La date de début doit être antérieure à la date de fin.",
     "error_generic": "Une erreur est survenue lors de l'enregistrement. Vérifiez le formulaire et réessayez."
   },

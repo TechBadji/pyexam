@@ -22,6 +22,8 @@ class SubmissionResponse(BaseModel):
     total_score: float | None
     submission_token: str
     tab_switch_count: int
+    fullscreen_exit_count: int
+    last_heartbeat: datetime | None
 
 
 class SubmissionListItem(BaseModel):
@@ -34,3 +36,4 @@ class SubmissionListItem(BaseModel):
     status: SubmissionStatus
     total_score: float | None
     tab_switch_count: int
+    fullscreen_exit_count: int
