@@ -8,6 +8,7 @@ import ExamTimer from "../components/exam/ExamTimer";
 import MCQQuestion from "../components/exam/MCQQuestion";
 import QuestionNav from "../components/exam/QuestionNav";
 import { enqueue, flushQueue, initOfflineSync } from "../components/exam/OfflineQueue";
+import WatermarkOverlay from "../components/exam/WatermarkOverlay";
 import Navbar from "../components/ui/Navbar";
 import OfflineBanner from "../components/ui/OfflineBanner";
 import { useAuthStore } from "../store/authStore";
@@ -166,6 +167,7 @@ export default function ExamPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
       <OfflineBanner />
+      {user && <WatermarkOverlay name={user.full_name} studentNumber={user.student_number} />}
 
       <header className="sticky top-14 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
