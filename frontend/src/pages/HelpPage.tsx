@@ -145,6 +145,7 @@ const toc = [
   { id: "admin", label: "Administrateur / Professeur" },
   { id: "csv", label: "Import CSV" },
   { id: "student", label: "Étudiant / Candidat" },
+  { id: "securite", label: "Sécurité & Anti-triche" },
   { id: "workflow", label: "Workflow complet" },
   { id: "faq", label: "FAQ" },
 ];
@@ -590,6 +591,130 @@ export default function HelpPage() {
             </SubSection>
           </Section>
 
+          {/* ── SÉCURITÉ & ANTI-TRICHE ───────────────────────────────── */}
+          <Section id="securite" title="Sécurité & Anti-triche" emoji="">
+
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              PyExam intègre plusieurs mécanismes automatiques pour décourager la triche lors des examens à distance.
+              Ils sont <strong>transparents pour les étudiants honnêtes</strong> et génèrent des traces consultables dans le <strong>Journal d'audit</strong>.
+            </p>
+
+            {/* Grille des fonctionnalités */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                {
+                  title: "Randomisation des questions",
+                  badge: "Automatique",
+                  badgeColor: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300",
+                  body: "L'ordre des questions et des choix QCM est mélangé de façon unique pour chaque étudiant, calculé à partir de son identifiant. Deux voisins ne voient jamais le même écran. L'ordre reste stable si l'étudiant recharge la page.",
+                },
+                {
+                  title: "Plein écran forcé",
+                  badge: "Détection",
+                  badgeColor: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
+                  body: "L'examen s'ouvre automatiquement en plein écran. Si l'étudiant appuie sur Échap ou quitte le plein écran, une fenêtre bloquante s'affiche et l'oblige à reprendre. Chaque sortie est enregistrée dans l'audit (FULLSCREEN_EXIT).",
+                },
+                {
+                  title: "Copier-coller désactivé",
+                  badge: "Bloqué",
+                  badgeColor: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+                  body: "Dans l'éditeur de code, Ctrl+V, Cmd+V, Shift+Insert (coller) et Ctrl+X (couper) sont bloqués. Le menu clic-droit et le glisser-déposer de texte sont également désactivés. Un message explicatif s'affiche si l'étudiant tente de coller.",
+                },
+                {
+                  title: "Filigrane personnalisé",
+                  badge: "Dissuasion",
+                  badgeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+                  body: "Le nom et le numéro étudiant s'affichent en diagonale sur toute la page d'examen (filigrane discret, 7 % d'opacité). Invisible en utilisation normale, mais clairement visible sur tout screenshot ou partage d'écran.",
+                },
+                {
+                  title: "Journal d'activité complet",
+                  badge: "Audit",
+                  badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+                  body: "Chaque action suspecte est horodatée et enregistrée : sortie de fenêtre (WINDOW_BLUR), retour (WINDOW_FOCUS), tentative de copier (COPY_ATTEMPT), coller (PASTE_ATTEMPT), couper (CUT_ATTEMPT), changement d'onglet (TAB_SWITCH), sortie plein écran (FULLSCREEN_EXIT).",
+                },
+                {
+                  title: "Grace period déconnexion",
+                  badge: "Tolérance",
+                  badgeColor: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+                  body: "En cas de coupure internet, les réponses sont sauvegardées localement. L'étudiant peut reprendre l'examen avec le même token de session. Si la reconnexion survient après 60 secondes, un événement RECONNECT_AFTER_DISCONNECTION est loggé pour le professeur.",
+                },
+              ].map((f) => (
+                <div key={f.title} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-sm text-gray-900 dark:text-white">{f.title}</p>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${f.badgeColor}`}>{f.badge}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{f.body}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Tableau des événements audit */}
+            <SubSection title="Événements dans le Journal d'audit">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100 dark:bg-gray-800 text-left">
+                      <th className="px-3 py-2 font-semibold text-gray-600 dark:text-gray-400 rounded-tl-lg">Événement</th>
+                      <th className="px-3 py-2 font-semibold text-gray-600 dark:text-gray-400">Déclencheur</th>
+                      <th className="px-3 py-2 font-semibold text-gray-600 dark:text-gray-400 rounded-tr-lg">Interprétation</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                    {[
+                      ["EXAM_START", "Ouverture de l'examen", "Normal — horodatage de début"],
+                      ["TAB_SWITCH", "Changement d'onglet navigateur", "Suspect — l'étudiant a quitté l'onglet examen"],
+                      ["FULLSCREEN_EXIT", "Sortie du mode plein écran", "Suspect — compteur disponible dans le rapport"],
+                      ["WINDOW_BLUR", "Bascule vers une autre application", "Suspect — indique un Alt+Tab ou clic hors fenêtre"],
+                      ["WINDOW_FOCUS", "Retour sur la fenêtre d'examen", "Corrélé à WINDOW_BLUR — mesure la durée d'absence"],
+                      ["COPY_ATTEMPT", "Ctrl+C sur la page d'examen", "Peut indiquer une copie d'énoncé ou de réponse"],
+                      ["PASTE_ATTEMPT", "Ctrl+V ou clic Coller", "Suspect — bloqué dans l'éditeur mais loggé"],
+                      ["CUT_ATTEMPT", "Ctrl+X sur la page d'examen", "Rare — loggé par cohérence"],
+                      ["RECONNECT_AFTER_DISCONNECTION", "Reconnexion > 60 s après la dernière activité", "Peut indiquer une coupure réseau — vérifier le contexte"],
+                      ["EXAM_SUBMIT", "Soumission de l'examen", "Normal — horodatage de fin"],
+                    ].map(([evt, trigger, meaning]) => (
+                      <tr key={evt} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="px-3 py-2 font-mono text-indigo-600 dark:text-indigo-400 whitespace-nowrap">{evt}</td>
+                        <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{trigger}</td>
+                        <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{meaning}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Note>Les événements ne bloquent pas automatiquement l'étudiant — c'est le professeur qui interprète et décide des suites. PyExam enregistre, vous jugez.</Note>
+            </SubSection>
+
+            {/* Mockup audit log */}
+            <SubSection title="Aperçu du Journal d'audit">
+              <Screen title="Admin → Journal d'audit">
+                <div className="space-y-1.5">
+                  {[
+                    { time: "09:01:03", action: "EXAM_START", user: "Fatou Diop", detail: "exam_id: Examen Final Python" },
+                    { time: "09:14:22", action: "WINDOW_BLUR", user: "Fatou Diop", detail: "" },
+                    { time: "09:14:45", action: "WINDOW_FOCUS", user: "Fatou Diop", detail: "absence: 23s" },
+                    { time: "09:22:10", action: "PASTE_ATTEMPT", user: "Fatou Diop", detail: "" },
+                    { time: "09:22:10", action: "FULLSCREEN_EXIT", user: "Fatou Diop", detail: "count: 1" },
+                    { time: "09:22:18", action: "FULLSCREEN_EXIT", user: "Moussa Traoré", detail: "count: 3" },
+                    { time: "09:45:01", action: "EXAM_SUBMIT", user: "Fatou Diop", detail: "" },
+                  ].map((row, i) => {
+                    const isSuspect = ["WINDOW_BLUR", "PASTE_ATTEMPT", "FULLSCREEN_EXIT", "TAB_SWITCH"].includes(row.action);
+                    return (
+                      <div key={i} className="flex items-center gap-3 text-xs font-mono py-1 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                        <span className="text-gray-400 w-16 shrink-0">{row.time}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${isSuspect ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" : "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"}`}>
+                          {row.action}
+                        </span>
+                        <span className="text-gray-700 dark:text-gray-300 shrink-0">{row.user}</span>
+                        {row.detail && <span className="text-gray-400 truncate">{row.detail}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </Screen>
+            </SubSection>
+          </Section>
+
           {/* ── WORKFLOW ──────────────────────────────────────────────── */}
           <Section id="workflow" title="Workflow complet" emoji="">
             <div className="relative pl-8 space-y-0">
@@ -624,6 +749,9 @@ export default function HelpPage() {
               { q: "La sortie attendue ne correspond pas", a: "Le système compare les dernières lignes du stdout. Si le code écrit '5 x 3 = 15' mais l'attendu est '5x3=15' (sans espaces), le test échoue. Respectez le format demandé dans l'énoncé." },
               { q: "Peut-on repasser un examen ?", a: "Non. La soumission est définitive. Créez un nouvel examen pour une nouvelle session." },
               { q: "Que signifie un nombre élevé de changements d'onglet ?", a: "L'étudiant a navigué hors de l'onglet pendant l'examen. Visible dans le rapport. Seuil à définir selon votre politique — PyExam ne bloque pas automatiquement." },
+              { q: "Un étudiant dit ne pas pouvoir coller son code — est-ce normal ?", a: "Oui, c'est intentionnel. Le copier-coller est désactivé dans l'éditeur de code pendant l'examen pour forcer l'écriture manuelle. L'étudiant doit saisir son code à la main." },
+              { q: "Peut-on désactiver le plein écran forcé ?", a: "Non, il est activé par défaut sur tous les examens. Si un étudiant ne peut pas passer en plein écran (navigateur non compatible), l'examen continue sans bloquer, mais la sortie n'est pas détectable." },
+              { q: "L'étudiant a perdu sa connexion pendant l'examen — ses réponses sont-elles perdues ?", a: "Non. Les réponses sont sauvegardées localement à chaque frappe. À la reconnexion, elles sont synchronisées automatiquement. Si la coupure dure plus de 60 secondes, un événement RECONNECT_AFTER_DISCONNECTION est loggé." },
               { q: "Quel langage de programmation est supporté ?", a: "Python 3.10 uniquement. Le code C, Java ou autres langages produiront une erreur de syntaxe." },
               { q: "Comment restreindre un examen à une classe ?", a: "Champ 'Groupes autorisés' dans la config de l'examen. Entrez le nom exact de la classe (ex: L3INFO). Les étudiants doivent avoir ce même nom dans leur champ class_name." },
               { q: "Que faire si un mot de passe généré à l'import est perdu ?", a: "Allez dans Admin → Utilisateurs, trouvez l'étudiant et utilisez 'Réinitialiser le mot de passe'. Un email de réinitialisation lui sera envoyé." },
@@ -641,7 +769,7 @@ export default function HelpPage() {
           </Section>
 
           <footer className="text-center text-xs text-gray-400 pb-6 border-t border-gray-200 dark:border-gray-800 pt-6">
-            PyExam — Documentation v2.0 · Pour toute assistance, contactez votre administrateur.
+            PyExam — Documentation v3.0 · Pour toute assistance, contactez votre administrateur.
           </footer>
 
         </main>
