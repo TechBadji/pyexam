@@ -29,6 +29,7 @@ export default function ExamPage() {
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [fullscreenExited, setFullscreenExited] = useState(false);
   const tabWarned = useRef(false);
 
   useEffect(() => {
@@ -112,6 +113,34 @@ export default function ExamPage() {
     return () => clearInterval(id);
   }, [submissionId, isSubmitted]);
 
+  // Plein écran forcé
+  const enterFullscreen = () => {
+    document.documentElement.requestFullscreen?.().catch(() => undefined);
+  };
+
+  useEffect(() => {
+    if (isSubmitted) return;
+    // Tenter le plein écran dès le chargement (fonctionne si la page vient d'un clic utilisateur)
+    enterFullscreen();
+  }, [isSubmitted]);
+
+  useEffect(() => {
+    if (isSubmitted) return;
+    const handleFsChange = () => {
+      const isFs = !!document.fullscreenElement;
+      if (!isFs && submissionId) {
+        setFullscreenExited(true);
+        api.post(`/submissions/${submissionId}/fullscreen_exit`).catch(() =>
+          enqueue(`/submissions/${submissionId}/fullscreen_exit`, "post", {})
+        );
+      } else {
+        setFullscreenExited(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFsChange);
+    return () => document.removeEventListener("fullscreenchange", handleFsChange);
+  }, [submissionId, isSubmitted]);
+
   const saveAnswer = useCallback(
     async (questionId: string, data: { selected_option_id?: string; code_written?: string }) => {
       if (!submissionId || isSubmitted) return;
@@ -168,6 +197,30 @@ export default function ExamPage() {
       <Navbar />
       <OfflineBanner />
       {user && <WatermarkOverlay name={user.full_name} studentNumber={user.student_number} />}
+
+      {fullscreenExited && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/90 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center space-y-5">
+            <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mx-auto">
+              <svg className="w-7 h-7 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              {t("interface.fullscreen_exit_title") ?? "Sortie du plein écran détectée"}
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t("interface.fullscreen_exit_body") ?? "Cette action a été enregistrée. Reprenez le plein écran pour continuer votre examen."}
+            </p>
+            <button
+              onClick={enterFullscreen}
+              className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition-colors"
+            >
+              {t("interface.fullscreen_resume") ?? "Reprendre en plein écran"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <header className="sticky top-14 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">

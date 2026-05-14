@@ -64,6 +64,9 @@
     "auto_submitted": "Votre examen a été soumis automatiquement à la fin du temps imparti.",
     "already_submitted": "Cet examen a déjà été soumis.",
     "paste_blocked": "Copier-coller désactivé — écrivez votre code manuellement.",
+    "fullscreen_exit_title": "Sortie du plein écran détectée",
+    "fullscreen_exit_body": "Cette action a été enregistrée. Reprenez le plein écran pour continuer votre examen.",
+    "fullscreen_resume": "Reprendre en plein écran",
     "tab_switch_warning": "Attention : changement d'onglet détecté !",
     "offline_banner": "Hors ligne — vos réponses sont sauvegardées localement.",
     "reconnected_banner": "Reconnecté — synchronisation en cours..."

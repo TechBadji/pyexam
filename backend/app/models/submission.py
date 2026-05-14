@@ -37,6 +37,7 @@ class Submission(Base):
     total_score: Mapped[float | None] = mapped_column(nullable=True)
     submission_token: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     tab_switch_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    fullscreen_exit_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_heartbeat: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     student: Mapped["User"] = relationship("User", back_populates="submissions")

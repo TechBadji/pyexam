@@ -566,6 +566,33 @@ async def tab_switch(
     )
 
 
+@router.post("/submissions/{submission_id}/fullscreen_exit", status_code=status.HTTP_204_NO_CONTENT)
+async def fullscreen_exit(
+    submission_id: uuid.UUID,
+    current_user: _StudentUser,
+    db: _DB,
+) -> None:
+    result = await db.execute(
+        select(Submission).where(
+            Submission.id == submission_id,
+            Submission.student_id == current_user.id,
+        )
+    )
+    submission = result.scalar_one_or_none()
+    if submission is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
+
+    submission.fullscreen_exit_count += 1
+    await db.flush()
+
+    await audit_service.log(
+        user_id=current_user.id,
+        action="FULLSCREEN_EXIT",
+        db=db,
+        extra_data={"submission_id": str(submission_id), "count": submission.fullscreen_exit_count},
+    )
+
+
 @router.put("/submissions/{submission_id}/heartbeat", status_code=status.HTTP_204_NO_CONTENT)
 async def heartbeat(
     submission_id: uuid.UUID,
