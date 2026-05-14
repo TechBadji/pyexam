@@ -143,6 +143,7 @@ const CSVDownload = ({ file, label, description, columns }: { file: string; labe
 const toc = [
   { id: "intro", label: "Présentation" },
   { id: "admin", label: "Administrateur / Professeur" },
+  { id: "banque", label: "Banque de questions" },
   { id: "csv", label: "Import CSV" },
   { id: "student", label: "Étudiant / Candidat" },
   { id: "securite", label: "Sécurité & Anti-triche" },
@@ -201,15 +202,15 @@ export default function HelpPage() {
           <Section id="intro" title="Présentation de PyExam" emoji="">
             <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
               <strong>PyExam</strong> est une plateforme d'examens en ligne pour organiser des évaluations
-              avec des <strong>QCM</strong> et des <strong>exercices de code Python</strong>.
+              avec des <strong>QCM</strong> et des <strong>exercices de code Python ou C</strong>.
               Les professeurs créent les examens, les étudiants les passent dans le navigateur,
               et les corrections sont automatiques.
             </p>
             <div className="grid sm:grid-cols-3 gap-4">
               {[
-                { icon: "", title: "Administrateur", color: "border-indigo-300 bg-indigo-50 dark:bg-indigo-950 dark:border-indigo-700", items: ["Créer et gérer les examens", "Ajouter les questions (QCM + Code)", "Importer les étudiants", "Consulter les rapports & exports"] },
-                { icon: "", title: "Étudiant", color: "border-blue-300 bg-blue-50 dark:bg-blue-950 dark:border-blue-700", items: ["Passer les examens en ligne", "Écrire du code Python", "Tester son code avant soumission", "Recevoir ses résultats par email"] },
-                { icon: "", title: "Système", color: "border-gray-300 bg-gray-50 dark:bg-gray-800 dark:border-gray-600", items: ["Exécution Python via Piston", "Correction automatique", "Envoi des emails de résultats", "Détection de triche (onglets)"] },
+                { icon: "", title: "Administrateur", color: "border-indigo-300 bg-indigo-50 dark:bg-indigo-950 dark:border-indigo-700", items: ["Créer et gérer les examens", "Ajouter des questions (QCM + Code Python/C)", "Piloter la banque de questions", "Importer les étudiants", "Consulter les rapports & exports"] },
+                { icon: "", title: "Étudiant", color: "border-blue-300 bg-blue-50 dark:bg-blue-950 dark:border-blue-700", items: ["Passer les examens en ligne", "Écrire du code Python ou C", "Tester son code avant soumission", "Recevoir ses résultats par email"] },
+                { icon: "", title: "Système", color: "border-gray-300 bg-gray-50 dark:bg-gray-800 dark:border-gray-600", items: ["Exécution Python 3.10 & C (gcc) via Piston", "Correction automatique", "Envoi des emails de résultats", "Détection de triche (onglets, plein écran)"] },
               ].map((c) => (
                 <div key={c.title} className={`rounded-xl border-2 p-4 ${c.color}`}>
                   <div className="text-2xl mb-2">{c.icon}</div>
@@ -273,10 +274,41 @@ export default function HelpPage() {
             </SubSection>
 
             {/* Questions */}
-            <SubSection title="2 · Ajouter des questions">
+            <SubSection title="2 · Choisir le langage de l'examen">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Avant d'ajouter des questions, sélectionnez le <strong>langage de programmation</strong> de l'examen.
+                Ce choix définit le langage par défaut des questions de code manuelles
+                et pré-filtre la banque de questions.
+              </p>
+              <Screen title="Admin — Sélecteur de langage">
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Langage de programmation</p>
+                  <p className="text-[11px] text-gray-400 mb-3">Définit le langage par défaut des questions de code et pré-filtre la banque de questions.</p>
+                  <div className="flex gap-3">
+                    {[
+                      { lang: "python", label: "🐍 Python", active: true, border: "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300" },
+                      { lang: "c",      label: "⚙️ C (gcc)", active: false, border: "border-gray-200 dark:border-gray-700 text-gray-500" },
+                    ].map((b) => (
+                      <div key={b.lang} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-semibold ${b.border}`}>
+                        {b.label}
+                        {b.active && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-gray-400 pt-1">
+                    Sélectionner <strong>C (gcc)</strong> pré-filtre automatiquement la banque sur les questions C et définit le compilateur gcc pour l'exécution.
+                  </p>
+                </div>
+              </Screen>
+              <Tip>
+                Le langage peut être modifié question par question dans l'éditeur. Le sélecteur global est juste un réglage par défaut pour accélérer la création.
+              </Tip>
+            </SubSection>
+
+            <SubSection title="3 · Ajouter des questions">
               <Note>
-                Chaque examen peut mélanger des QCM et des exercices de code Python.
-                Les deux types sont corrigés automatiquement.
+                Chaque examen peut mélanger des QCM et des exercices de code Python ou C.
+                Les deux types et les deux langages sont corrigés automatiquement.
               </Note>
 
               {/* QCM */}
@@ -308,7 +340,7 @@ export default function HelpPage() {
               </Screen>
 
               {/* Code */}
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-4">Exercice de code Python</p>
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-4">Exercice de code (Python ou C)</p>
               <Screen title="Admin — Éditeur de question Code">
                 <div className="space-y-3">
                   <Annotation text="Décrivez précisément ce que le code doit faire">
@@ -341,13 +373,31 @@ export default function HelpPage() {
                 </div>
               </Screen>
               <Note>
-                La <strong>Sortie attendue</strong> doit correspondre exactement au dernier <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">print()</code> de l'étudiant.
-                Les messages des <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">input("prompt")</code> sont automatiquement ignorés.
+                La <strong>Sortie attendue</strong> doit correspondre exactement à ce que le code affiche.
+                Pour Python, les messages des <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">input("prompt")</code> sont automatiquement ignorés.
+                Pour C, les <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">printf()</code> de prompt avant <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">scanf()</code> sont également filtrés de la même façon.
               </Note>
+
+              {/* Sélecteur de langage C/Python dans la question */}
+              <div className="bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-2">
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Choisir le langage par question</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Langage :</span>
+                  {[
+                    { label: "Python", active: false },
+                    { label: "C (gcc)", active: true },
+                  ].map((b) => (
+                    <span key={b.label} className={`px-3 py-1 rounded-lg text-xs font-semibold border ${b.active ? "bg-indigo-600 text-white border-indigo-600" : "bg-white dark:bg-gray-900 text-gray-500 border-gray-300 dark:border-gray-600"}`}>
+                      {b.label}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[11px] text-gray-400">Le sélecteur Python / C (gcc) apparaît sur chaque question de code. Vous pouvez mélanger les langages dans le même examen.</p>
+              </div>
             </SubSection>
 
             {/* Activer + corriger */}
-            <SubSection title="3 · Activer, clôturer et corriger">
+            <SubSection title="4 · Activer, clôturer et corriger">
               <Screen title="Admin — Tableau de bord">
                 <div className="space-y-2">
                   {[
@@ -378,7 +428,7 @@ export default function HelpPage() {
             </SubSection>
 
             {/* Rapport */}
-            <SubSection title="4 · Rapport et exports">
+            <SubSection title="5 · Rapport et exports">
               <Screen title="Admin — Rapport d'examen">
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-[11px]">
@@ -420,6 +470,172 @@ export default function HelpPage() {
               <Note>
                 Les <strong>changements d'onglet en rouge</strong> (≥ 4) signalent un comportement suspect.
                 À l'appréciation du professeur.
+              </Note>
+            </SubSection>
+          </Section>
+
+          {/* ── BANQUE DE QUESTIONS ───────────────────────────────────── */}
+          <Section id="banque" title="Banque de questions" emoji="🗄">
+
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              La banque de questions est un <strong>réservoir réutilisable</strong> de QCM et d'exercices de code,
+              indépendant des examens. Les questions peuvent être importées dans plusieurs examens,
+              disposent de statistiques de performance et d'un historique de versions.
+            </p>
+
+            {/* Vue d'ensemble */}
+            <SubSection title="Contenu de la banque">
+              <div className="grid sm:grid-cols-2 gap-4">
+                {[
+                  {
+                    lang: "🐍 Python", color: "border-indigo-200 bg-indigo-50 dark:bg-indigo-950/30 dark:border-indigo-800",
+                    badge: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300",
+                    items: [
+                      "20 QCM Débutant — types, opérateurs, listes, chaînes",
+                      "40 QCM Intermédiaire — OOP, décorateurs, générateurs…",
+                      "15 QCM Expert — métaclasses, asyncio, GIL, mémoire",
+                      "15 Coding — du FizzBuzz au N-Reines",
+                    ],
+                  },
+                  {
+                    lang: "⚙️ C (gcc)", color: "border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800",
+                    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
+                    items: [
+                      "15 QCM Débutant — types C, opérateurs, pointeurs de base",
+                      "21 QCM Intermédiaire — structures, mémoire, fichiers",
+                      "14 QCM Expert — pointeurs avancés, compilation",
+                      "10 QCM Culture générale — histoire du C, K&R, GCC, ISO",
+                      "10 Coding — FizzBuzz, tri à bulles, liste chaînée…",
+                    ],
+                  },
+                ].map((b) => (
+                  <div key={b.lang} className={`rounded-xl border-2 p-4 ${b.color}`}>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${b.badge}`}>{b.lang}</span>
+                    <ul className="mt-3 space-y-1.5">
+                      {b.items.map((item) => (
+                        <li key={item} className="text-xs text-gray-600 dark:text-gray-400 flex gap-1.5">
+                          <span className="text-gray-400 shrink-0">·</span>{item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </SubSection>
+
+            {/* Filtres */}
+            <SubSection title="Filtrer et sélectionner des questions">
+              <Screen title="Admin → Banque de questions — Sélecteur">
+                <div className="space-y-3">
+                  {/* Language chips */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-medium text-gray-500">Langage :</span>
+                    {[
+                      { label: "🐍 Python", active: true },
+                      { label: "⚙️ C", active: false },
+                    ].map((chip) => (
+                      <span key={chip.label} className={`px-3 py-1 rounded-full text-xs font-semibold ${chip.active ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"}`}>
+                        {chip.label}
+                      </span>
+                    ))}
+                  </div>
+                  {/* Filters row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      { placeholder: "Tous les types", value: "mcq" },
+                      { placeholder: "Toutes difficultés", value: "Intermédiaire" },
+                      { placeholder: "Tag…", value: "pointeurs" },
+                      { placeholder: "Rechercher…", value: "" },
+                    ].map((f, i) => (
+                      <div key={i} className="border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">
+                        {f.value ? <span className="text-gray-800 dark:text-gray-200">{f.value}</span> : <span>{f.placeholder}</span>}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Questions list */}
+                  {[
+                    { type: "QCM", diff: "Intermédiaire", diffColor: "bg-blue-100 text-blue-700", tags: ["pointeurs", "arithmétique"], pts: 1, text: "Si `int *p` pointe sur tab[0], que pointe p+1 ?" },
+                    { type: "QCM", diff: "Expert", diffColor: "bg-red-100 text-red-700", tags: ["pointeurs", "const"], pts: 1, text: "Quelle est la différence entre `const int *p` et `int * const p` ?" },
+                    { type: "Code", diff: "Intermédiaire", diffColor: "bg-blue-100 text-blue-700", tags: ["chaînes", "inversion"], pts: 2, text: "Inversion de chaîne en C — sans utiliser strrev." },
+                  ].map((q, i) => (
+                    <label key={i} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer ${i === 1 ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950 dark:border-indigo-500" : "border-gray-200 dark:border-gray-700"}`}>
+                      <input type="checkbox" checked={i === 1} readOnly className="mt-0.5 w-4 h-4 accent-indigo-600 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="flex flex-wrap gap-1.5 mb-1">
+                          <span className="text-xs font-bold uppercase text-gray-500">{q.type}</span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${q.diffColor}`}>{q.diff}</span>
+                          <span className="text-xs text-gray-400">{q.pts} pt</span>
+                          {q.tags.map((t) => <span key={t} className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{t}</span>)}
+                        </div>
+                        <p className="text-xs text-gray-700 dark:text-gray-200">{q.text}</p>
+                      </div>
+                    </label>
+                  ))}
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="w-14 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-center bg-white dark:bg-gray-800">5</span>
+                      <span>🎲 Sélection aléatoire</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <FakeBtn color="gray">Annuler</FakeBtn>
+                      <FakeBtn>Ajouter 1 question</FakeBtn>
+                    </div>
+                  </div>
+                </div>
+              </Screen>
+              <Tip>
+                Le filtre <strong>🐍 Python</strong> montre toutes les questions Python. Le filtre <strong>⚙️ C</strong> filtre par tag <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">c</code> et n'affiche que les questions du langage C.
+              </Tip>
+            </SubSection>
+
+            {/* Niveaux de difficulté */}
+            <SubSection title="Niveaux de difficulté">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100 dark:bg-gray-800 text-left">
+                      <th className="px-3 py-2 font-semibold text-gray-600 dark:text-gray-400 rounded-tl-lg">Niveau</th>
+                      <th className="px-3 py-2 font-semibold text-gray-600 dark:text-gray-400">Badge</th>
+                      <th className="px-3 py-2 font-semibold text-gray-600 dark:text-gray-400 rounded-tr-lg">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                    {[
+                      ["beginner", "bg-green-100 text-green-700", "Débutant", "Bases du langage, opérateurs, entrées/sorties simples"],
+                      ["intermediate", "bg-blue-100 text-blue-700", "Intermédiaire", "Structures de données, algorithmes classiques, OOP/pointeurs"],
+                      ["expert", "bg-red-100 text-red-700", "Expert", "Algorithmes avancés, gestion mémoire, concepts profonds"],
+                      ["culture", "bg-purple-100 text-purple-700", "Culture générale", "Histoire du langage, standards, compilateurs, sécurité"],
+                    ].map(([key, badge, label, desc]) => (
+                      <tr key={key} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="px-3 py-2 font-mono text-gray-500">{key}</td>
+                        <td className="px-3 py-2"><FakeBadge color={badge}>{label}</FakeBadge></td>
+                        <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </SubSection>
+
+            {/* Statistiques */}
+            <SubSection title="Statistiques de performance">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                La page <strong>Statistiques</strong> de la banque affiche le taux de réussite de chaque question
+                calculé sur tous les examens passés. Les questions signalées facilitent l'amélioration continue.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {[
+                  { flag: "too_easy", color: "border-green-200 bg-green-50 dark:bg-green-950/30", badge: "bg-green-100 text-green-700", label: "Trop facile (> 95%)", desc: "La quasi-totalité des étudiants répond correctement. Pensez à augmenter les points ou à reformuler pour plus de nuance." },
+                  { flag: "too_hard", color: "border-red-200 bg-red-50 dark:bg-red-950/30", badge: "bg-red-100 text-red-700", label: "Trop difficile (< 5%)", desc: "Presque personne ne réussit. Vérifiez l'énoncé, les cas de test ou la complexité attendue." },
+                ].map((s) => (
+                  <div key={s.flag} className={`rounded-xl border p-4 space-y-2 ${s.color}`}>
+                    <FakeBadge color={s.badge}>{s.label}</FakeBadge>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <Note>
+                Les statistiques apparaissent uniquement pour les questions ayant été utilisées dans au moins un examen soumis et corrigé.
               </Note>
             </SubSection>
           </Section>
@@ -531,20 +747,24 @@ export default function HelpPage() {
                   {/* Question */}
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center justify-between">
-                      <FakeBadge color="bg-green-100 text-green-700">Code Python</FakeBadge>
+                      <FakeBadge color="bg-amber-100 text-amber-700">Code C</FakeBadge>
                       <Annotation text="Temps restant — décompte automatique">
                         <FakeBadge color="bg-amber-100 text-amber-700">⏱ 01:12:44</FakeBadge>
                       </Annotation>
                     </div>
                     <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                      Lisez un entier N et affichez sa table de multiplication de 1 à 10.<br />
-                      <span className="text-gray-400">Format : <code>N x K = R</code></span>
+                      Lisez deux entiers et affichez leur somme en C.<br />
+                      <span className="text-gray-400">Utilisez <code>scanf</code> et <code>printf</code></span>
                     </p>
                     <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs text-green-300 space-y-0.5">
-                      <p className="text-gray-500"># Votre code Python</p>
-                      <p>N = <span className="text-yellow-300">int</span>(<span className="text-yellow-300">input</span>())</p>
-                      <p><span className="text-purple-400">for</span> k <span className="text-purple-400">in</span> <span className="text-yellow-300">range</span>(1, 11):</p>
-                      <p className="ml-4"><span className="text-yellow-300">print</span>(f<span className="text-orange-300">"{"{"}N{"}"} x {"{"}k{"}"} = {"{"}N*k{"}"}"</span>)</p>
+                      <p className="text-gray-500">// Votre code C</p>
+                      <p><span className="text-purple-400">#include</span> <span className="text-orange-300">&lt;stdio.h&gt;</span></p>
+                      <p><span className="text-blue-300">int</span> <span className="text-yellow-300">main</span>() {"{"}</p>
+                      <p className="ml-4"><span className="text-blue-300">int</span> a, b;</p>
+                      <p className="ml-4"><span className="text-yellow-300">scanf</span>(<span className="text-orange-300">"%d %d"</span>, &amp;a, &amp;b);</p>
+                      <p className="ml-4"><span className="text-yellow-300">printf</span>(<span className="text-orange-300">"%d\n"</span>, a + b);</p>
+                      <p className="ml-4"><span className="text-purple-400">return</span> 0;</p>
+                      <p>{"}"}</p>
                     </div>
                     <div className="flex gap-2 items-center">
                       <FakeBtn color="green"> Exécuter</FakeBtn>
@@ -752,9 +972,12 @@ export default function HelpPage() {
               { q: "Un étudiant dit ne pas pouvoir coller son code — est-ce normal ?", a: "Oui, c'est intentionnel. Le copier-coller est désactivé dans l'éditeur de code pendant l'examen pour forcer l'écriture manuelle. L'étudiant doit saisir son code à la main." },
               { q: "Peut-on désactiver le plein écran forcé ?", a: "Non, il est activé par défaut sur tous les examens. Si un étudiant ne peut pas passer en plein écran (navigateur non compatible), l'examen continue sans bloquer, mais la sortie n'est pas détectable." },
               { q: "L'étudiant a perdu sa connexion pendant l'examen — ses réponses sont-elles perdues ?", a: "Non. Les réponses sont sauvegardées localement à chaque frappe. À la reconnexion, elles sont synchronisées automatiquement. Si la coupure dure plus de 60 secondes, un événement RECONNECT_AFTER_DISCONNECTION est loggé." },
-              { q: "Quel langage de programmation est supporté ?", a: "Python 3.10 uniquement. Le code C, Java ou autres langages produiront une erreur de syntaxe." },
+              { q: "Quels langages de programmation sont supportés ?", a: "Python 3.10 et C (compilé avec gcc 10.2.0) via le moteur Piston. Le langage est configuré par question dans le formulaire de création d'examen. Java et autres langages ne sont pas encore disponibles." },
               { q: "Comment restreindre un examen à une classe ?", a: "Champ 'Groupes autorisés' dans la config de l'examen. Entrez le nom exact de la classe (ex: L3INFO). Les étudiants doivent avoir ce même nom dans leur champ class_name." },
               { q: "Que faire si un mot de passe généré à l'import est perdu ?", a: "Allez dans Admin → Utilisateurs, trouvez l'étudiant et utilisez 'Réinitialiser le mot de passe'. Un email de réinitialisation lui sera envoyé." },
+              { q: "Comment créer un examen C en partant de la banque ?", a: "Dans le formulaire de création d'examen, sélectionnez 'C (gcc)' comme langage. La banque s'ouvrira automatiquement filtrée sur les questions C. Vous pouvez aussi sélectionner manuellement le filtre ⚙️ C dans le sélecteur de la banque." },
+              { q: "Peut-on mixer des questions Python et C dans le même examen ?", a: "Oui. Le sélecteur de langage dans le formulaire définit le langage par défaut, mais chaque question de code possède son propre sélecteur Python / C (gcc). Un examen peut donc contenir des QCM, des exercices Python et des exercices C simultanément." },
+              { q: "La sortie attendue pour une question C doit-elle inclure le retour à la ligne ?", a: "Non. Le système compare le contenu brut après avoir rogné les espaces de fin. Un printf(\"42\\n\") est équivalent à printf(\"42\") pour la comparaison. En revanche, le format des séparateurs (espace vs retour à la ligne) doit correspondre exactement à l'attendu défini." },
             ].map(({ q, a }, i) => (
               <details key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden group">
                 <summary className="flex items-center justify-between px-5 py-4 cursor-pointer font-medium text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition list-none">
@@ -769,7 +992,7 @@ export default function HelpPage() {
           </Section>
 
           <footer className="text-center text-xs text-gray-400 pb-6 border-t border-gray-200 dark:border-gray-800 pt-6">
-            PyExam — Documentation v3.0 · Pour toute assistance, contactez votre administrateur.
+            PyExam — Documentation v4.0 · Langages supportés : Python 3.10 & C gcc 10.2 · Pour toute assistance, contactez votre administrateur.
           </footer>
 
         </main>
