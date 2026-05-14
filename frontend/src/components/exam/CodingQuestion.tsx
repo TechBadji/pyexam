@@ -13,6 +13,7 @@ interface CodingQuestionProps {
   question: Question;
   initialCode: string | undefined;
   readOnly: boolean;
+  language?: "python" | "c";
   onCodeUpdate: (code: string) => void;
   onCodeChange: (code: string) => void;
 }
@@ -31,6 +32,7 @@ export default function CodingQuestion({
   question,
   initialCode,
   readOnly,
+  language = "python",
   onCodeUpdate,
   onCodeChange,
 }: CodingQuestionProps) {
@@ -106,6 +108,7 @@ export default function CodingQuestion({
       const { data } = await api.post<RunResult>("/code/run", {
         code,
         stdin,
+        language,
       });
       setOutput(data);
     } catch (err: unknown) {
@@ -133,7 +136,7 @@ export default function CodingQuestion({
       <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600">
         <Editor
           height="320px"
-          language="python"
+          language={language === "c" ? "c" : "python"}
           value={code}
           onChange={handleEditorChange}
           onMount={handleEditorMount}

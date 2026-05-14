@@ -13,6 +13,11 @@ class QuestionType(str, PyEnum):
     coding = "coding"
 
 
+class CodingLanguage(str, PyEnum):
+    python = "python"
+    c = "c"
+
+
 class Question(Base):
     __tablename__ = "questions"
 
@@ -23,6 +28,9 @@ class Question(Base):
         UUID(as_uuid=True), ForeignKey("exams.id"), nullable=False, index=True
     )
     type: Mapped[QuestionType] = mapped_column(Enum(QuestionType), nullable=False)
+    language: Mapped[CodingLanguage] = mapped_column(
+        Enum(CodingLanguage), nullable=False, default=CodingLanguage.python
+    )
     order_index: Mapped[int] = mapped_column(Integer, nullable=False)
     points: Mapped[float] = mapped_column(Float, nullable=False)
     statement: Mapped[str] = mapped_column(Text, nullable=False)

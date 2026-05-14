@@ -110,8 +110,9 @@ async def _grade_coding(answer: Answer, question: Question) -> tuple[float, str,
         expected = str(tc.get("expected_output", "")).strip()
         weight = float(tc.get("weight", 1))
 
+        lang = question.language.value if question.language else "python"
         try:
-            piston_result = await run_code(answer.code_written, stdin=stdin)
+            piston_result = await run_code(answer.code_written, stdin=stdin, language=lang)
             actual = _extract_actual(piston_result.stdout, expected)
             outputs.append(f"Test {i}: stdout={actual!r}, stderr={piston_result.stderr!r}")
 

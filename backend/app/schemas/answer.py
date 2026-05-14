@@ -24,6 +24,7 @@ class AnswerResponse(BaseModel):
 class CodeRunRequest(BaseModel):
     code: str
     stdin: str = ""
+    language: str = "python"
 
 
 class CodeRunResponse(BaseModel):

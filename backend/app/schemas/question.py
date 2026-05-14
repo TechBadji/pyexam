@@ -2,7 +2,7 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.question import QuestionType
+from app.models.question import CodingLanguage, QuestionType
 
 
 class TestCase(BaseModel):
@@ -38,6 +38,7 @@ class MCQOptionAdminResponse(MCQOptionResponse):
 
 class QuestionCreate(BaseModel):
     type: QuestionType
+    language: CodingLanguage = CodingLanguage.python
     order_index: int
     points: float
     statement: str
@@ -48,6 +49,7 @@ class QuestionUpdate(BaseModel):
     order_index: int | None = None
     points: float | None = None
     statement: str | None = None
+    language: CodingLanguage | None = None
     test_cases: list[TestCase] | None = None
 
 
@@ -59,6 +61,7 @@ class QuestionResponse(BaseModel):
     id: uuid.UUID
     exam_id: uuid.UUID
     type: QuestionType
+    language: CodingLanguage = CodingLanguage.python
     order_index: int
     points: float
     statement: str
@@ -73,6 +76,7 @@ class QuestionAdminResponse(BaseModel):
     id: uuid.UUID
     exam_id: uuid.UUID
     type: QuestionType
+    language: CodingLanguage = CodingLanguage.python
     order_index: int
     points: float
     statement: str

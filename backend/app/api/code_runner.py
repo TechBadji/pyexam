@@ -22,7 +22,7 @@ async def run_code(
     current_user: _StudentUser,
 ) -> CodeRunResponse:
     try:
-        return await piston_service.run_code(code=body.code, stdin=body.stdin)
+        return await piston_service.run_code(code=body.code, stdin=body.stdin, language=body.language)
     except httpx.TimeoutException:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

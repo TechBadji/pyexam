@@ -4,9 +4,12 @@ import httpx
 
 from app.config import settings
 
-_LANGUAGE = "python"
-_VERSION = "3.10.0"
 _TIMEOUT = 10.0
+
+_VERSIONS: dict[str, str] = {
+    "python": "3.10.0",
+    "c": "10.2.0",
+}
 
 
 @dataclass
@@ -17,10 +20,11 @@ class PistonResult:
     compile_output: str
 
 
-async def run_code(code: str, stdin: str = "", language: str = _LANGUAGE) -> PistonResult:
+async def run_code(code: str, stdin: str = "", language: str = "python") -> PistonResult:
+    version = _VERSIONS.get(language, _VERSIONS["python"])
     payload = {
         "language": language,
-        "version": _VERSION,
+        "version": version,
         "files": [{"content": code}],
         "stdin": stdin,
     }

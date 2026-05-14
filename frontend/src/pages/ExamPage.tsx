@@ -311,6 +311,7 @@ export default function ExamPage() {
               question={question}
               initialCode={answers[question.id]?.code_written}
               readOnly={isSubmitted}
+              language={question.language ?? "python"}
               onCodeUpdate={(code) => setAnswer(question.id, { code_written: code })}
               onCodeChange={(code) => saveAnswer(question.id, { code_written: code })}
             />

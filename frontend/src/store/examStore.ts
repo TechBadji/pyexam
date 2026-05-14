@@ -11,6 +11,7 @@ export interface Question {
   id: string;
   exam_id: string;
   type: "mcq" | "coding";
+  language: "python" | "c";
   order_index: number;
   points: number;
   statement: string;

@@ -17,6 +17,7 @@ interface OptionDraft {
 
 interface QuestionDraft {
   type: "mcq" | "coding";
+  language: "python" | "c";
   statement: string;
   points: number;
   options: OptionDraft[];
@@ -94,7 +95,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
   const addCoding = () =>
     setQuestions((q) => [
       ...q,
-      { type: "coding", statement: "", points: 3, options: [], test_cases: [] },
+      { type: "coding", language: "python", statement: "", points: 3, options: [], test_cases: [] },
     ]);
 
   const updateQ = (i: number, patch: Partial<QuestionDraft>) =>
@@ -177,6 +178,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
         const q = questions[i];
         const { data: created } = await api.post<{ id: string }>(`/admin/exams/${id}/questions`, {
           type: q.type,
+          language: q.language,
           order_index: i + 1,
           points: q.points,
           statement: q.statement,
@@ -489,6 +491,19 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
 
                   {q.type === "coding" && (
                     <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{t("exam_form.language") ?? "Langage"} :</span>
+                        {(["python", "c"] as const).map((lang) => (
+                          <button
+                            key={lang}
+                            type="button"
+                            onClick={() => updateQ(qi, { language: lang })}
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-colors ${q.language === lang ? "bg-indigo-600 text-white border-indigo-600" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-indigo-400"}`}
+                          >
+                            {lang === "python" ? "Python" : "C (gcc)"}
+                          </button>
+                        ))}
+                      </div>
                       <p className="text-xs text-amber-600 dark:text-amber-400">{t("exam_form.stdin_hint")}</p>
                       {q.test_cases.map((tc, ti) => (
                         <div key={ti} className="grid grid-cols-3 gap-2 items-start">
