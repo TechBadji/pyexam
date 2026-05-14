@@ -63,6 +63,7 @@
     "confirm_submit_body": "Are you sure you want to submit your exam? This action cannot be undone.",
     "auto_submitted": "Your exam was automatically submitted when time expired.",
     "already_submitted": "This exam has already been submitted.",
+    "paste_blocked": "Copy-paste disabled — please type your code manually.",
     "tab_switch_warning": "Warning: tab switch detected!",
     "offline_banner": "Offline — your answers are saved locally.",
     "reconnected_banner": "Back online — syncing..."

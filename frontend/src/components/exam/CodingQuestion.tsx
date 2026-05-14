@@ -1,6 +1,7 @@
 import Editor, { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import api from "../../api/axios";
 import { useAuthStore } from "../../store/authStore";
@@ -47,8 +48,27 @@ export default function CodingQuestion({
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const dark = localStorage.getItem(DARK_KEY) !== "light";
+
+  const handleEditorMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
+    editorRef.current = editor;
+    if (readOnly) return;
+
+    const blocked = () => {
+      toast(t("interface.paste_blocked") ?? "Copier-coller désactivé pendant l'examen.", {
+        icon: "🚫",
+        duration: 2500,
+      });
+    };
+
+    // Bloquer coller : Ctrl+V / Cmd+V et Shift+Insert
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, blocked);
+    editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Insert, blocked);
+    // Bloquer couper : Ctrl+X / Cmd+X
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyX, blocked);
+  };
 
   useEffect(() => {
     if (!readOnly) {
@@ -116,6 +136,7 @@ export default function CodingQuestion({
           language="python"
           value={code}
           onChange={handleEditorChange}
+          onMount={handleEditorMount}
           theme={dark ? "vs-dark" : "light"}
           options={{
             fontSize: 14,
@@ -124,6 +145,8 @@ export default function CodingQuestion({
             wordWrap: "on",
             scrollBeyondLastLine: false,
             padding: { top: 12, bottom: 12 },
+            contextmenu: readOnly,
+            dragAndDrop: false,
           }}
         />
       </div>
