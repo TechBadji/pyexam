@@ -1,3 +1,4 @@
+import html
 import uuid
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
@@ -160,11 +161,11 @@ async def send_result_email(submission_id: uuid.UUID, db: AsyncSession) -> None:
         feedback = answer.feedback or ""
         rows += f"""
         <tr>
-          <td style="padding:8px;border-bottom:1px solid #eee">{q.statement[:120]}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee">{html.escape(q.statement[:120])}</td>
           <td style="padding:8px;border-bottom:1px solid #eee;text-align:center">
             {_fmt_score(earned, lang)} / {_fmt_score(q.points, lang)} {pts_label}
           </td>
-          <td style="padding:8px;border-bottom:1px solid #eee;color:#555">{feedback}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;color:#555">{html.escape(feedback)}</td>
         </tr>
         """
 

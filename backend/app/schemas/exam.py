@@ -37,6 +37,15 @@ class ExamUpdate(BaseModel):
     grade_scale: float | None = None
     passing_threshold: float | None = None
 
+    @model_validator(mode="after")
+    def validate_dates_and_duration(self) -> "ExamUpdate":
+        if self.duration_minutes is not None and self.duration_minutes <= 0:
+            raise ValueError("duration_minutes must be greater than 0")
+        if self.start_time is not None and self.end_time is not None:
+            if self.start_time >= self.end_time:
+                raise ValueError("start_time must be before end_time")
+        return self
+
 
 class ExamResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

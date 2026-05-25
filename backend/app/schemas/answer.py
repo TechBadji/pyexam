@@ -1,11 +1,11 @@
 import uuid
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AnswerUpsert(BaseModel):
     selected_option_id: uuid.UUID | None = None
-    code_written: str | None = None
+    code_written: str | None = Field(default=None, max_length=100_000)
 
 
 class AnswerResponse(BaseModel):

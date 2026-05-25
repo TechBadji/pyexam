@@ -156,6 +156,15 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
       return;
     }
 
+    // Validate MCQ options : at least one correct answer per MCQ
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      if (q.type === "mcq" && !q.options.some((o) => o.is_correct)) {
+        setSaveError(`Q${i + 1} (QCM) : veuillez cocher au moins une réponse correcte.`);
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       const allowedGroups = form.allowed_groups

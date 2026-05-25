@@ -20,7 +20,7 @@ def _run(coro):
     return asyncio.run(coro)
 
 
-@celery.task(bind=True, max_retries=3, default_retry_delay=30, name="app.tasks.correction_task.correct_exam_task")
+@celery.task(bind=True, max_retries=3, default_retry_delay=30, soft_time_limit=3600, time_limit=3660, name="app.tasks.correction_task.correct_exam_task")
 def correct_exam_task(self, exam_id: str) -> dict:
     logger.info("Starting correction for exam %s", exam_id)
 

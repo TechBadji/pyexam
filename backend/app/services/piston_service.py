@@ -27,6 +27,8 @@ async def run_code(code: str, stdin: str = "", language: str = "python") -> Pist
         "version": version,
         "files": [{"content": code}],
         "stdin": stdin,
+        "run_timeout": int(_TIMEOUT * 1000),
+        "compile_timeout": int(_TIMEOUT * 1000),
     }
 
     # PISTON_API_URL peut être self-hosted (http://piston:2000)
