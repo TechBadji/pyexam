@@ -15,6 +15,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ResultsPage from "./pages/ResultsPage";
 import StudentDashboard from "./pages/StudentDashboard";
 import HelpPage from "./pages/HelpPage";
+import PythonCoursePage from "./pages/PythonCoursePage";
 
 function RequireAuth({ role }: { role?: "student" | "admin" }) {
   const { user, isAuthenticated } = useAuthStore();
@@ -76,6 +77,7 @@ export default function App() {
           </Route>
 
           <Route path="/aide" element={<HelpPage />} />
+          <Route path="/cours-python" element={<PythonCoursePage />} />
 
           <Route
             path="/"

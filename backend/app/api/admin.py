@@ -47,6 +47,7 @@ class DrawConfigRequest(_BaseModel):
 class AutoPopulateRequest(_BaseModel):
     tags: list[str] = []
     difficulty: str | None = None
+    language: str | None = None
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -269,6 +270,10 @@ async def auto_populate_pool(
     if body.tags:
         for tag in body.tags:
             bq_query = bq_query.where(BankQuestion.tags.contains([tag]))
+    if body.language == "c":
+        bq_query = bq_query.where(BankQuestion.tags.contains(["c"]))
+    elif body.language == "python":
+        bq_query = bq_query.where(~BankQuestion.tags.contains(["c"]))
     if body.difficulty:
         from app.models.question_bank import DifficultyLevel
         try:

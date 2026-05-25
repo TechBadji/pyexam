@@ -138,6 +138,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
       const { data } = await api.post<{ added: number; total: number }>(`/admin/exams/${id}/auto-populate`, {
         tags,
         difficulty: autoPopulateDiff || null,
+        language: codingLanguage,
       });
       setAutoPopulateResult(t("draw.auto_populate_success", { added: data.added, total: data.total }));
     } finally {
