@@ -643,7 +643,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
         <BankPicker
           onAdd={handleBankAdd}
           onClose={() => setShowBankPicker(false)}
-          defaultTag={codingLanguage === "c" ? "c" : ""}
+          defaultLanguage={codingLanguage}
         />
       )}
     </>

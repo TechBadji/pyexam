@@ -68,6 +68,7 @@ async def list_bank_questions(
     difficulty: DifficultyLevel | None = Query(default=None),
     tag: str | None = Query(default=None, max_length=100),
     search: str | None = Query(default=None, max_length=200),
+    language: str | None = Query(default=None),
 ) -> list[BankQuestion]:
     query = (
         select(BankQuestion)
@@ -80,6 +81,10 @@ async def list_bank_questions(
         query = query.where(BankQuestion.difficulty == difficulty)
     if tag:
         query = query.where(BankQuestion.tags.contains([tag]))
+    if language == "c":
+        query = query.where(BankQuestion.tags.contains(["c"]))
+    elif language == "python":
+        query = query.where(~BankQuestion.tags.contains(["c"]))
     if search:
         query = query.where(BankQuestion.statement.ilike(f"%{search}%"))
 

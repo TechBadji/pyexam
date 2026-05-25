@@ -15,7 +15,7 @@ export interface BankQuestionPreview {
 interface Props {
   onAdd: (questions: BankQuestionPreview[]) => void;
   onClose: () => void;
-  defaultTag?: string;
+  defaultLanguage?: "python" | "c";
 }
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -25,7 +25,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   culture: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200",
 };
 
-export default function BankPicker({ onAdd, onClose, defaultTag }: Props) {
+export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
   const { t } = useTranslation("admin");
 
   const [questions, setQuestions] = useState<BankQuestionPreview[]>([]);
@@ -35,7 +35,8 @@ export default function BankPicker({ onAdd, onClose, defaultTag }: Props) {
 
   const [filterType, setFilterType] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("");
-  const [filterTag, setFilterTag] = useState(defaultTag ?? "");
+  const [filterLanguage, setFilterLanguage] = useState<"python" | "c" | "">(defaultLanguage ?? "");
+  const [filterTag, setFilterTag] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function BankPicker({ onAdd, onClose, defaultTag }: Props) {
     const params = new URLSearchParams();
     if (filterType) params.append("type", filterType);
     if (filterDifficulty) params.append("difficulty", filterDifficulty);
+    if (filterLanguage) params.append("language", filterLanguage);
     if (filterTag.trim()) params.append("tag", filterTag.trim());
     if (filterSearch.trim()) params.append("search", filterSearch.trim());
 
@@ -50,7 +52,7 @@ export default function BankPicker({ onAdd, onClose, defaultTag }: Props) {
       .get<BankQuestionPreview[]>(`/admin/bank/questions?${params}`)
       .then(({ data }) => setQuestions(data))
       .finally(() => setLoading(false));
-  }, [filterType, filterDifficulty, filterTag, filterSearch]);
+  }, [filterType, filterDifficulty, filterLanguage, filterTag, filterSearch]);
 
   const toggle = (id: string) =>
     setSelected((s) => {
@@ -85,14 +87,13 @@ export default function BankPicker({ onAdd, onClose, defaultTag }: Props) {
         {/* Language quick-filter */}
         <div className="px-6 py-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400 shrink-0">Langage :</span>
-          {/* Python has no dedicated tag — "python" chip clears the tag filter to show all Python questions */}
-          {[{ label: "🐍 Python", value: "" }, { label: "⚙️ C", value: "c" }].map(({ label, value }) => (
+          {([["Tous", ""], ["Python", "python"], ["C (gcc)", "c"]] as const).map(([label, value]) => (
             <button
-              key={label}
+              key={value}
               type="button"
-              onClick={() => setFilterTag(value)}
+              onClick={() => setFilterLanguage(value)}
               className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                filterTag === value
+                filterLanguage === value
                   ? "bg-indigo-600 text-white"
                   : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900"
               }`}
