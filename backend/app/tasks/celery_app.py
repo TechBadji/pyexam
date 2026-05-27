@@ -22,6 +22,8 @@ celery.conf.update(
     task_track_started=True,
     task_acks_late=True,
     worker_prefetch_multiplier=1,
+    result_expires=3600,
+    worker_max_tasks_per_child=100,
     beat_schedule={
         "auto-close-exams": {
             "task": "app.tasks.correction_task.auto_close_exams_task",
