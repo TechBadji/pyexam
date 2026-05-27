@@ -57,9 +57,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1500m
+          memory: 2g
         reservations:
-          memory: 256m
+          memory: 512m
 
   backend:
     build:
@@ -84,9 +84,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 768m
         reservations:
-          memory: 128m
+          memory: 256m
 
   celery_worker:
     build:

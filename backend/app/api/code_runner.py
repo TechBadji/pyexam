@@ -15,7 +15,7 @@ _StudentUser = Annotated[User, Depends(require_role(UserRole.student))]
 
 
 @router.post("/run", response_model=CodeRunResponse)
-@limiter.limit("10/minute")
+@limiter.limit("20/minute")
 async def run_code(
     request: Request,  # required by slowapi rate limiter
     body: CodeRunRequest,
