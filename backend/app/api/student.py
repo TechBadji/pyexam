@@ -7,6 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -76,10 +77,10 @@ async def change_password(body: PasswordChange, current_user: _AnyUser, db: _DB)
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect",
         )
-    if len(body.new_password) < 6:
+    if len(body.new_password) < 8:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password must be at least 6 characters",
+            detail="Password must be at least 8 characters",
         )
     current_user.hashed_password = hash_password(body.new_password)
     await db.flush()
@@ -464,14 +465,23 @@ async def start_exam(
     if now > exam_end:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam window has closed")
 
-    submission = Submission(
-        student_id=current_user.id,
-        exam_id=exam_id,
-        submission_token=body.submission_token,
-        status=SubmissionStatus.in_progress,
-    )
-    db.add(submission)
-    await db.flush()
+    try:
+        submission = Submission(
+            student_id=current_user.id,
+            exam_id=exam_id,
+            submission_token=body.submission_token,
+            status=SubmissionStatus.in_progress,
+        )
+        db.add(submission)
+        await db.flush()
+    except IntegrityError:
+        await db.rollback()
+        existing = await db.execute(
+            select(Submission).where(Submission.submission_token == body.submission_token)
+        )
+        submission = existing.scalar_one_or_none()
+        if submission is None:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Submission conflict")
 
     await audit_service.log(
         user_id=current_user.id,

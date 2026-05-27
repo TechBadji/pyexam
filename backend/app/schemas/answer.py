@@ -1,4 +1,5 @@
 import uuid
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -22,9 +23,9 @@ class AnswerResponse(BaseModel):
 
 
 class CodeRunRequest(BaseModel):
-    code: str
-    stdin: str = ""
-    language: str = "python"
+    code: str = Field(max_length=100_000)
+    stdin: str = Field(default="", max_length=10_000)
+    language: Literal["python", "c"] = "python"
 
 
 class CodeRunResponse(BaseModel):

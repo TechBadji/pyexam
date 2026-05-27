@@ -28,13 +28,13 @@ async def run_code(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Le moteur d'exécution n'a pas répondu à temps. Réessayez.",
         )
-    except httpx.HTTPStatusError as e:
+    except httpx.HTTPStatusError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Erreur du moteur d'exécution : {e.response.status_code}",
+            detail="Moteur d'exécution indisponible. Réessayez.",
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Moteur d'exécution indisponible : {e}",
+            detail="Moteur d'exécution indisponible. Réessayez.",
         )
