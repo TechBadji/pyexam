@@ -230,6 +230,7 @@ async def list_sessions(current_user: _StudentUser, db: _DB) -> list[dict]:
             "id": str(exam.id),
             "title": exam.title,
             "description": exam.description,
+            "exam_type": exam.exam_type.value,
             "duration_minutes": exam.duration_minutes,
             "start_time": exam.start_time.isoformat(),
             "end_time": exam.end_time.isoformat(),
@@ -374,12 +375,21 @@ async def get_exam_detail(
                 id=q.id,
                 exam_id=q.exam_id,
                 type=q.type,
+                language=q.language,
                 order_index=q.order_index,
                 points=q.points,
                 statement=q.statement,
                 options=[
-                    MCQOptionResponse(id=o.id, question_id=o.question_id, label=o.label, text=o.text)
-                    for o in options
+                    # Shuffling reorders the options, so relabel A, B, C… in the
+                    # order the candidate reads them. Answers are keyed by
+                    # option id, so the letter is display only.
+                    MCQOptionResponse(
+                        id=o.id,
+                        question_id=o.question_id,
+                        label=chr(ord("A") + i),
+                        text=o.text,
+                    )
+                    for i, o in enumerate(options)
                 ],
             )
         )
@@ -388,6 +398,7 @@ async def get_exam_detail(
         "id": str(exam.id),
         "title": exam.title,
         "description": exam.description,
+        "exam_type": exam.exam_type.value,
         "duration_minutes": exam.duration_minutes,
         "start_time": exam.start_time.isoformat(),
         "end_time": exam.end_time.isoformat(),

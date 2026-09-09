@@ -5,7 +5,7 @@ import api from "../api/axios";
 import ReportTable from "../components/admin/ReportTable";
 import StatsPanel from "../components/admin/StatsPanel";
 import Navbar from "../components/ui/Navbar";
-import PyExamLogo from "../components/ui/PyExamLogo";
+import CertifCampLogo from "../components/ui/CertifCampLogo";
 
 interface ReportRow {
   student_id: string;
@@ -90,12 +90,12 @@ export default function AdminExamReport() {
       <Navbar />
 
       {/* ── Hero header ─────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800">
+      <div className="bg-gradient-to-br from-brand-700 via-brand-800 to-ink-950">
         <div className="max-w-6xl mx-auto px-4 pt-8 pb-6">
           <div className="flex items-center gap-3 mb-4">
             <Link
               to="/admin"
-              className="flex items-center gap-1.5 text-sm text-indigo-200 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 text-sm text-brand-200 hover:text-white transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -105,12 +105,12 @@ export default function AdminExamReport() {
           </div>
 
           <div className="flex items-center gap-4">
-            <PyExamLogo size={44} />
+            <CertifCampLogo size={44} tone="light" />
             <div>
               <h1 className="text-xl font-bold text-white">
                 {tab === "report" ? t("report.title") : t("stats.title")}
               </h1>
-              <p className="text-sm text-indigo-200 mt-0.5">PyExam · Administration</p>
+              <p className="text-sm text-brand-200 mt-0.5">CertifCamp · Administration</p>
             </div>
           </div>
 
@@ -119,19 +119,19 @@ export default function AdminExamReport() {
             <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/10 flex-wrap">
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-white">{submittedCount}</span>
-                <span className="text-xs text-indigo-200">{t("report.submissions_label")}</span>
+                <span className="text-xs text-brand-200">{t("report.submissions_label")}</span>
               </div>
               <div className="w-px h-8 bg-white/20" />
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-blue-300">{correctedCount}</span>
-                <span className="text-xs text-indigo-200">{tCommon("status.corrected")}</span>
+                <span className="text-xs text-brand-200">{tCommon("status.corrected")}</span>
               </div>
               {passedCount !== null && (
                 <>
                   <div className="w-px h-8 bg-white/20" />
                   <div className="flex flex-col">
                     <span className="text-xl font-bold text-emerald-300">{passedCount}</span>
-                    <span className="text-xs text-indigo-200">{t("report.passed_label")}</span>
+                    <span className="text-xs text-brand-200">{t("report.passed_label")}</span>
                   </div>
                 </>
               )}
@@ -140,7 +140,7 @@ export default function AdminExamReport() {
                   <div className="w-px h-8 bg-white/20" />
                   <div className="flex flex-col">
                     <span className="text-xl font-bold text-amber-300">{stats.pass_rate.toFixed(1)}%</span>
-                    <span className="text-xs text-indigo-200">{t("stats.pass_rate")}</span>
+                    <span className="text-xs text-brand-200">{t("stats.pass_rate")}</span>
                   </div>
                 </>
               )}
@@ -160,7 +160,7 @@ export default function AdminExamReport() {
                   onClick={() => setTab(tabName)}
                   className={`px-5 py-3.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
                     tab === tabName
-                      ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400"
+                      ? "border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400"
                       : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                   }`}
                 >
@@ -171,7 +171,7 @@ export default function AdminExamReport() {
             <button
               onClick={handleExportCsv}
               disabled={exporting || report.length === 0}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -186,7 +186,7 @@ export default function AdminExamReport() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         {loading ? (
           <div className="flex justify-center py-24">
-            <div className="w-9 h-9 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-9 h-9 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : tab === "report" ? (
           <ReportTable rows={report} examId={examId!} />

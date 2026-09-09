@@ -20,12 +20,12 @@ from app.models.user import User
 
 async def send_verification_email(email: str, full_name: str, code: str, lang: str) -> None:
     if lang == "fr":
-        subject = "Votre code de vérification PyExam"
+        subject = "Votre code de vérification CertifCamp"
         heading = "Vérifiez votre adresse e-mail"
         body_text = f"Bonjour {full_name}, votre code de vérification est :"
         expiry = "Ce code expire dans 15 minutes."
     else:
-        subject = "Your PyExam verification code"
+        subject = "Your CertifCamp verification code"
         heading = "Verify your email address"
         body_text = f"Hello {full_name}, your verification code is:"
         expiry = "This code expires in 15 minutes."
@@ -46,14 +46,14 @@ async def send_verification_email(email: str, full_name: str, code: str, lang: s
 
 async def send_password_reset_email(email: str, full_name: str, reset_url: str, lang: str) -> None:
     if lang == "fr":
-        subject = "Réinitialisation de votre mot de passe PyExam"
+        subject = "Réinitialisation de votre mot de passe CertifCamp"
         heading = "Réinitialisez votre mot de passe"
         body_text = f"Bonjour {full_name}, cliquez sur le bouton ci-dessous pour réinitialiser votre mot de passe :"
         button_text = "Réinitialiser mon mot de passe"
         expiry = "Ce lien expire dans 15 minutes."
         ignore = "Si vous n'avez pas demandé cette réinitialisation, ignorez cet e-mail."
     else:
-        subject = "Reset your PyExam password"
+        subject = "Reset your CertifCamp password"
         heading = "Reset your password"
         body_text = f"Hello {full_name}, click the button below to reset your password:"
         button_text = "Reset my password"

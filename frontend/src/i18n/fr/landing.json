@@ -1,0 +1,129 @@
+{
+  "nav": {
+    "tracks": "Certifications",
+    "hall": "La salle d'examen",
+    "orgs": "Organismes",
+    "help": "Aide",
+    "login": "Se connecter",
+    "register": "Créer un compte",
+    "dashboard": "Mon espace",
+    "register_short": "S'inscrire"
+  },
+  "hero": {
+    "title_line1": "Quatre certifications,",
+    "title_line2": "une même salle d'examen.",
+    "lede": "CertifCamp fait passer des épreuves chronométrées en Python, en C, en algorithmique et sur le Scrum Guide. Le sujet est tiré de la banque de questions au moment où le candidat entre en salle, puis corrigé automatiquement.",
+    "cta_primary": "Créer un compte candidat",
+    "cta_secondary": "J'ai déjà un compte",
+    "cta_dashboard": "Reprendre où j'en étais",
+    "switch_label": "Choisir la certification affichée"
+  },
+  "demo": {
+    "label": "Épreuve en cours",
+    "remaining": "Temps restant",
+    "question": "Question {{n}} sur {{total}}",
+    "watermark": "Filigrane : nom du candidat",
+    "hint": "Ce que voit un candidat pendant l'épreuve.",
+    "test": "Test {{n}}"
+  },
+  "tracks": {
+    "title": "Choisissez votre épreuve",
+    "lede": "Chaque certification a sa propre banque de questions. L'administrateur choisit le type d'épreuve, CertifCamp puise dedans.",
+    "format_mcq": "QCM",
+    "format_mixed": "QCM et code exécuté",
+    "format_coding": "Code exécuté",
+    "python": {
+      "name": "Python",
+      "blurb": "Types, structures de données, fonctions, compréhensions, classes, exceptions et modules de la bibliothèque standard."
+    },
+    "c": {
+      "name": "C",
+      "blurb": "Pointeurs, gestion de la mémoire, tableaux et chaînes, structures, compilation et arithmétique des types."
+    },
+    "algo": {
+      "name": "Algorithmique",
+      "blurb": "Tris et recherches, récursivité, chaînes et matrices, coût en temps et en mémoire, langage au choix."
+    },
+    "psm1": {
+      "name": "PSM I",
+      "blurb": "Scrum Guide 2020 : empirisme, responsabilités, événements, artefacts et engagements, plus les fondamentaux de l'agilité."
+    },
+    "questions_label": "questions en banque"
+  },
+  "steps": {
+    "title": "Le déroulé d'une session",
+    "one": {
+      "title": "L'administrateur ouvre la session",
+      "body": "Il choisit le type d'épreuve, la durée et le nombre de questions. CertifCamp compose le sujet à partir de la banque correspondante."
+    },
+    "two": {
+      "title": "Le candidat compose",
+      "body": "Chronomètre, sauvegarde à chaque réponse, exécution du code dans un bac à sable isolé. Une coupure réseau ne perd rien."
+    },
+    "three": {
+      "title": "Le résultat tombe",
+      "body": "QCM et jeux de tests sont notés à la fermeture de l'épreuve. Le candidat reçoit sa note et son détail par email."
+    }
+  },
+  "hall": {
+    "title": "Une salle d'examen, pas un formulaire",
+    "lede": "Ce qui distingue une certification d'un quiz, c'est la façon dont l'épreuve est tenue.",
+    "draw": {
+      "title": "Tirage au sort",
+      "body": "Chaque candidat reçoit un sujet différent, tiré de la banque à son entrée en salle."
+    },
+    "fullscreen": {
+      "title": "Plein écran surveillé",
+      "body": "Les sorties de plein écran sont horodatées et jointes à la copie."
+    },
+    "watermark": {
+      "title": "Filigrane nominatif",
+      "body": "Le nom du candidat est incrusté dans l'écran, contre la capture partagée."
+    },
+    "heartbeat": {
+      "title": "Battement de session",
+      "body": "La connexion est suivie en continu ; une interruption est consignée."
+    },
+    "offline": {
+      "title": "File hors-ligne",
+      "body": "Les réponses sont gardées en local puis renvoyées dès le retour du réseau."
+    },
+    "audit": {
+      "title": "Journal d'audit",
+      "body": "Chaque geste d'administration est tracé, horodaté et consultable."
+    }
+  },
+  "orgs": {
+    "title": "Pour les organismes de formation",
+    "lede": "L'espace d'administration couvre la vie d'une session, de la banque de questions au relevé de notes.",
+    "bank": {
+      "title": "Banque versionnée",
+      "body": "Questions QCM et exercices de code, par niveau et par thème. Chaque modification garde une trace de la version précédente."
+    },
+    "generate": {
+      "title": "Sujet en un clic",
+      "body": "Indiquez le type d'épreuve et le nombre de questions : le sujet est composé pour vous."
+    },
+    "reports": {
+      "title": "Rapports et exports",
+      "body": "Notes, statistiques par question, moyennes par groupe. Export CSV et PDF."
+    },
+    "students": {
+      "title": "Gestion des candidats",
+      "body": "Import CSV, groupes et classes, accès restreint à une promotion."
+    },
+    "cta": "Demander un accès administrateur"
+  },
+  "final": {
+    "title": "Prêt à passer l'épreuve ?",
+    "body": "Créez votre compte, choisissez votre certification et entrez en salle.",
+    "cta": "Créer un compte candidat"
+  },
+  "footer": {
+    "tagline": "Certifications Python, C, algorithmique et Scrum.",
+    "help": "Aide",
+    "course": "Cours Python",
+    "login": "Se connecter",
+    "rights": "Tous droits réservés."
+  }
+}

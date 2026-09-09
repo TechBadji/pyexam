@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import Navbar from "../components/ui/Navbar";
-import PyExamLogo from "../components/ui/PyExamLogo";
+import CertifCampLogo from "../components/ui/CertifCampLogo";
+import TrackBadge from "../components/ui/TrackBadge";
 import { useAuthStore, type AuthUser } from "../store/authStore";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -16,6 +17,7 @@ interface SessionCard {
   seconds_until_start: number;
   seconds_until_end: number;
   draw_config: { n_mcq: number; n_coding: number };
+  exam_type: string;
   enrolled: boolean;
 }
 
@@ -23,6 +25,7 @@ interface ExamCard {
   id: string;
   title: string;
   description: string;
+  exam_type: string;
   duration_minutes: number;
   status: string;
   seconds_until_start: number;
@@ -96,7 +99,7 @@ function UserAvatar({ user, size = 52 }: { user: AuthUser; size?: number }) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
-  const palette = ["bg-indigo-400", "bg-violet-400", "bg-pink-400", "bg-teal-400", "bg-amber-400"];
+  const palette = ["bg-brand-400", "bg-violet-400", "bg-pink-400", "bg-teal-400", "bg-amber-400"];
   const color = palette[user.full_name.charCodeAt(0) % palette.length];
   return (
     <div
@@ -157,17 +160,20 @@ function SessionsTab() {
             className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="flex items-start gap-4 flex-1 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center shrink-0 mt-0.5">
-                <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-5 h-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
               <div className="min-w-0">
-                <h2 className="font-semibold text-gray-900 dark:text-white truncate">{session.title}</h2>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="font-semibold text-gray-900 dark:text-white truncate">{session.title}</h2>
+                  <TrackBadge track={session.exam_type} />
+                </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{session.description}</p>
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <span className="text-xs text-gray-400 dark:text-gray-500">{session.duration_minutes} min</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium border border-indigo-100 dark:border-indigo-800">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 font-medium border border-brand-100 dark:border-brand-800">
                     {t("dashboard.sessions.draw_info", {
                       n_mcq: session.draw_config.n_mcq,
                       n_coding: session.draw_config.n_coding,
@@ -190,7 +196,7 @@ function SessionsTab() {
                 hasStarted ? (
                   <Link
                     to={`/exam/${session.id}`}
-                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-sm"
+                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors shadow-sm"
                   >
                     {t("dashboard.sessions.enter")}
                   </Link>
@@ -203,7 +209,7 @@ function SessionsTab() {
                 <button
                   onClick={() => handleEnroll(session.id)}
                   disabled={isEnrolling}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium transition-colors shadow-sm"
+                  className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-medium transition-colors shadow-sm"
                 >
                   {isEnrolling ? t("dashboard.sessions.enrolling") : t("dashboard.sessions.enroll")}
                 </button>
@@ -248,7 +254,10 @@ function ExamsTab() {
                 </svg>
               </div>
               <div className="min-w-0">
-                <h2 className="font-semibold text-gray-900 dark:text-white truncate">{exam.title}</h2>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="font-semibold text-gray-900 dark:text-white truncate">{exam.title}</h2>
+                  <TrackBadge track={exam.exam_type} />
+                </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{exam.description}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">{exam.duration_minutes} min</p>
               </div>
@@ -266,7 +275,7 @@ function ExamsTab() {
               ) : hasStarted ? (
                 <Link
                   to={`/exam/${exam.id}`}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-sm"
+                  className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors shadow-sm"
                 >
                   {t("dashboard.enter_exam")}
                 </Link>
@@ -328,7 +337,7 @@ function HistoryTab() {
                 <span
                   className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     row.status === "corrected"
-                      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800"
+                      ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 border border-brand-100 dark:border-brand-800"
                       : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
                   }`}
                 >
@@ -348,7 +357,7 @@ function HistoryTab() {
                 {row.status === "corrected" && (
                   <Link
                     to={`/results/${row.id}`}
-                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                    className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium"
                   >
                     {t("dashboard.history.view_results")}
                   </Link>
@@ -447,7 +456,7 @@ function StatCard({ label, value, pct }: { label: string; value: string; pct?: n
 function Spinner() {
   return (
     <div className="flex justify-center py-20">
-      <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
@@ -455,8 +464,8 @@ function Spinner() {
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 gap-3">
-      <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
-        <svg className="w-7 h-7 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <div className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center">
+        <svg className="w-7 h-7 text-brand-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       </div>
@@ -492,16 +501,16 @@ export default function StudentDashboard() {
       <Navbar />
 
       {/* ── Hero header ─────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800">
+      <div className="bg-gradient-to-br from-brand-700 via-brand-800 to-ink-950">
         <div className="max-w-5xl mx-auto px-4 pt-8 pb-0">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <PyExamLogo size={44} />
+              <CertifCampLogo size={44} tone="light" />
               <div>
                 <h1 className="text-xl font-bold text-white">
-                  {user ? t("dashboard.welcome", { name: user.full_name.split(" ")[0] }) : "PyExam"}
+                  {user ? t("dashboard.welcome", { name: user.full_name.split(" ")[0] }) : "CertifCamp"}
                 </h1>
-                <p className="text-sm text-indigo-200 mt-0.5">
+                <p className="text-sm text-brand-200 mt-0.5">
                   {user?.student_number ? `N° ${user.student_number}` : "Espace étudiant"}
                 </p>
               </div>
@@ -514,18 +523,18 @@ export default function StudentDashboard() {
             <div className="flex items-center gap-1 mt-5 border-t border-white/10 divide-x divide-white/10">
               <div className="flex flex-col items-center px-5 py-3">
                 <span className="text-xl font-bold text-white">{stats.total_exams}</span>
-                <span className="text-xs text-indigo-200">{t("dashboard.stats.total_exams")}</span>
+                <span className="text-xs text-brand-200">{t("dashboard.stats.total_exams")}</span>
               </div>
               {stats.average_score_pct !== null && (
                 <div className="flex flex-col items-center px-5 py-3">
                   <span className="text-xl font-bold text-amber-300">{stats.average_score_pct}%</span>
-                  <span className="text-xs text-indigo-200">{t("dashboard.stats.average_score")}</span>
+                  <span className="text-xs text-brand-200">{t("dashboard.stats.average_score")}</span>
                 </div>
               )}
               {stats.best_score_pct !== null && (
                 <div className="flex flex-col items-center px-5 py-3">
                   <span className="text-xl font-bold text-emerald-300">{stats.best_score_pct}%</span>
-                  <span className="text-xs text-indigo-200">{t("dashboard.stats.best_score")}</span>
+                  <span className="text-xs text-brand-200">{t("dashboard.stats.best_score")}</span>
                 </div>
               )}
             </div>
@@ -553,7 +562,7 @@ export default function StudentDashboard() {
                 className={`px-5 py-3 text-sm font-medium transition-all rounded-t-xl border-b-2 ${
                   tab === id
                     ? "bg-white/10 text-white border-white"
-                    : "text-indigo-200 border-transparent hover:text-white hover:bg-white/5"
+                    : "text-brand-200 border-transparent hover:text-white hover:bg-white/5"
                 }`}
               >
                 {label}

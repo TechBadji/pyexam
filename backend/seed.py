@@ -26,7 +26,7 @@ async def seed() -> None:
         # ── Admin ─────────────────────────────────────────────────────────────
         admin = User(
             email="admin@pyexam.com",
-            full_name="Administrateur PyExam",
+            full_name="Administrateur CertifCamp",
             hashed_password=hash_password("admin123"),
             role=UserRole.admin,
             preferred_language=PreferredLanguage.fr,

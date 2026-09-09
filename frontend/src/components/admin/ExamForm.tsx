@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import api from "../../api/axios";
 import BankPicker, { type BankQuestionPreview } from "./BankPicker";
+import { TRACKS, TRACK_IDS, trackOf, type TrackId } from "../../lib/tracks";
 
 interface TestCase {
   input: string;
@@ -31,13 +32,14 @@ interface ExamFormData {
   start_time: string;
   end_time: string;
   status: string;
+  exam_type: TrackId;
   allowed_groups: string | null;
   grade_scale: string;
   passing_threshold: string;
 }
 
 interface ExamFormProps {
-  initialData?: Partial<ExamFormData & { allowed_groups?: string[] | null; grade_scale?: number | null; passing_threshold?: number | null }>;
+  initialData?: Partial<ExamFormData & { exam_type?: string; allowed_groups?: string[] | null; grade_scale?: number | null; passing_threshold?: number | null }>;
   initialDrawConfig?: { n_mcq: number; n_coding: number } | null;
   examId?: string;
   onSuccess: () => void;
@@ -64,6 +66,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
     start_time: initialData?.start_time ?? "",
     end_time: initialData?.end_time ?? "",
     status: initialData?.status ?? "draft",
+    exam_type: trackOf(initialData?.exam_type),
     allowed_groups: initialData?.allowed_groups ? initialData.allowed_groups.join(", ") : null,
     grade_scale: initialData?.grade_scale != null ? String(initialData.grade_scale) : "",
     passing_threshold: initialData?.passing_threshold != null ? String(initialData.passing_threshold) : "",
@@ -74,10 +77,13 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
   const [showBankPicker, setShowBankPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [codingLanguage, setCodingLanguage] = useState<"python" | "c">("python");
 
-  // ── Type d'examen ──
-  const [examType, setExamType] = useState<"standard" | "session">(
+  const track = form.exam_type;
+  const codingLanguage: "python" | "c" = track === "c" ? "c" : "python";
+  const trackAllowsCoding = TRACKS[track].coding;
+
+  // ── Mode de passation ──
+  const [examMode, setExamMode] = useState<"standard" | "session">(
     initialDrawConfig ? "session" : "standard"
   );
   const [drawNMcq, setDrawNMcq] = useState(initialDrawConfig?.n_mcq ?? 5);
@@ -86,6 +92,13 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
   const [autoPopulateDiff, setAutoPopulateDiff] = useState("");
   const [autoPopulating, setAutoPopulating] = useState(false);
   const [autoPopulateResult, setAutoPopulateResult] = useState<string | null>(null);
+
+  // ── Composition automatique depuis la banque ──
+  const [genEnabled, setGenEnabled] = useState(false);
+  const [genMcq, setGenMcq] = useState(20);
+  const [genCoding, setGenCoding] = useState(2);
+  const [genDifficulty, setGenDifficulty] = useState("");
+  const [genResult, setGenResult] = useState<string | null>(null);
 
   const addMCQ = () =>
     setQuestions((q) => [
@@ -138,7 +151,6 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
       const { data } = await api.post<{ added: number; total: number }>(`/admin/exams/${id}/auto-populate`, {
         tags,
         difficulty: autoPopulateDiff || null,
-        language: codingLanguage,
       });
       setAutoPopulateResult(t("draw.auto_populate_success", { added: data.added, total: data.total }));
     } finally {
@@ -209,8 +221,21 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
         });
       }
 
+      if (genEnabled) {
+        const { data } = await api.post<{ mcq: number; coding: number; total: number }>(
+          `/admin/exams/${id}/generate`,
+          {
+            n_mcq: genMcq,
+            n_coding: trackAllowsCoding ? genCoding : 0,
+            difficulty: genDifficulty || null,
+            replace: false,
+          }
+        );
+        setGenResult(t("exam_form.generate_done", { total: data.total, mcq: data.mcq, coding: data.coding }));
+      }
+
       // Save draw config if session mode
-      if (examType === "session") {
+      if (examMode === "session") {
         await api.put(`/admin/exams/${id}/draw-config`, {
           n_mcq: drawNMcq,
           n_coding: drawNCoding,
@@ -233,7 +258,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
   };
 
   const inputCls =
-    "w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
+    "w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500";
 
   const totalQuestions = questions.length + bankImports.length;
 
@@ -250,20 +275,20 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
             {/* Carte Examen standard */}
             <button
               type="button"
-              onClick={() => setExamType("standard")}
+              onClick={() => setExamMode("standard")}
               className={`relative text-left rounded-xl border-2 p-4 transition-all ${
-                examType === "standard"
-                  ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40"
-                  : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700"
+                examMode === "standard"
+                  ? "border-brand-500 bg-brand-50 dark:bg-brand-950/40"
+                  : "border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
               }`}
             >
-              {examType === "standard" && (
-                <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center">
+              {examMode === "standard" && (
+                <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-brand-500 flex items-center justify-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-white" />
                 </span>
               )}
               <div className="flex items-center gap-2 mb-1.5">
-                <svg className="w-4 h-4 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-brand-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -278,14 +303,14 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
             {/* Carte Session */}
             <button
               type="button"
-              onClick={() => setExamType("session")}
+              onClick={() => setExamMode("session")}
               className={`relative text-left rounded-xl border-2 p-4 transition-all ${
-                examType === "session"
+                examMode === "session"
                   ? "border-violet-500 bg-violet-50 dark:bg-violet-950/40"
                   : "border-gray-200 dark:border-gray-700 hover:border-violet-300 dark:hover:border-violet-700"
               }`}
             >
-              {examType === "session" && (
+              {examMode === "session" && (
                 <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-violet-500 flex items-center justify-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-white" />
                 </span>
@@ -305,35 +330,118 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
           </div>
         </div>
 
-        {/* ── Langage de programmation ──────────────────────────────────────── */}
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 p-4">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Langage de programmation
+        {/* ── Type de certification ─────────────────────────────────────────── */}
+        <div>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {t("exam_form.track_label")}
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
-            Définit le langage par défaut des questions de code et pré-filtre la banque de questions.
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            {t("exam_form.track_hint")}
           </p>
-          <div className="flex gap-3">
-            {(["python", "c"] as const).map((lang) => (
-              <button
-                key={lang}
-                type="button"
-                onClick={() => setCodingLanguage(lang)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${
-                  codingLanguage === lang
-                    ? lang === "python"
-                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300"
-                      : "border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300"
-                    : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300"
-                }`}
-              >
-                {lang === "python" ? "🐍 Python" : "⚙️ C (gcc)"}
-                {codingLanguage === lang && (
-                  <span className={`w-2 h-2 rounded-full ${lang === "python" ? "bg-indigo-500" : "bg-amber-500"}`} />
-                )}
-              </button>
-            ))}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {TRACK_IDS.map((id) => {
+              const meta = TRACKS[id];
+              const on = track === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setForm({ ...form, exam_type: id })}
+                  aria-pressed={on}
+                  className={`relative text-left rounded-xl border-2 p-3.5 transition-colors ${
+                    on
+                      ? "bg-white dark:bg-gray-800/70"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                  }`}
+                  style={on ? { borderColor: meta.hex } : undefined}
+                >
+                  <span
+                    className="block h-1 w-8 rounded-full mb-2.5"
+                    style={{ background: on ? meta.hex : "#d1d5db" }}
+                  />
+                  <span className="block text-sm font-semibold text-gray-900 dark:text-white">
+                    {t(`exam_form.track_${id}`)}
+                  </span>
+                  <span className="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                    {t(`exam_form.track_format_${meta.format}`)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+        </div>
+
+        {/* ── Composition automatique du sujet ──────────────────────────────── */}
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 p-4 space-y-3">
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-0.5 accent-brand-600"
+              checked={genEnabled}
+              onChange={(e) => setGenEnabled(e.target.checked)}
+            />
+            <span>
+              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                {t("exam_form.generate_title")}
+              </span>
+              <span className="block text-xs text-gray-500 dark:text-gray-400">
+                {t("exam_form.generate_hint", { track: t(`exam_form.track_${track}`) })}
+              </span>
+            </span>
+          </label>
+
+          {genEnabled && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pl-7">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  {t("exam_form.generate_n_mcq")}
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  className={inputCls}
+                  value={genMcq}
+                  onChange={(e) => setGenMcq(Number(e.target.value))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  {t("exam_form.generate_n_coding")}
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  disabled={!trackAllowsCoding}
+                  className={`${inputCls} disabled:opacity-40 disabled:cursor-not-allowed`}
+                  value={trackAllowsCoding ? genCoding : 0}
+                  onChange={(e) => setGenCoding(Number(e.target.value))}
+                />
+                {!trackAllowsCoding && (
+                  <p className="mt-1 text-[11px] text-gray-400">{t("exam_form.generate_mcq_only")}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  {t("exam_form.generate_difficulty")}
+                </label>
+                <select
+                  className={inputCls}
+                  value={genDifficulty}
+                  onChange={(e) => setGenDifficulty(e.target.value)}
+                >
+                  <option value="">{t("exam_form.generate_any_difficulty")}</option>
+                  <option value="beginner">{t("bank.difficulty_beginner")}</option>
+                  <option value="intermediate">{t("bank.difficulty_intermediate")}</option>
+                  <option value="expert">{t("bank.difficulty_expert")}</option>
+                  <option value="culture">{t("bank.difficulty_culture")}</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {genResult && (
+            <p className="pl-7 text-xs font-medium text-green-700 dark:text-green-400">{genResult}</p>
+          )}
         </div>
 
         {/* ── Métadonnées ───────────────────────────────────────────────────── */}
@@ -404,7 +512,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
         </div>
 
         {/* ── Config tirage (Session uniquement) ────────────────────────────── */}
-        {examType === "session" && (
+        {examMode === "session" && (
           <div className="rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50/40 dark:bg-violet-950/20 p-4 space-y-4">
             <div>
               <p className="text-sm font-semibold text-violet-700 dark:text-violet-300 mb-0.5">
@@ -510,7 +618,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
               {questions.map((q, qi) => (
                 <div key={qi} className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-gray-800/50 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
+                    <span className="text-xs font-bold uppercase tracking-wide text-brand-600 dark:text-brand-400">
                       {q.type === "mcq" ? "QCM" : "Code"} — Q{qi + 1}
                     </span>
                     <button type="button" onClick={() => setQuestions((qs) => qs.filter((_, i) => i !== qi))} className="text-red-500 text-xs hover:underline">✕</button>
@@ -540,7 +648,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
                             key={lang}
                             type="button"
                             onClick={() => updateQ(qi, { language: lang })}
-                            className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-colors ${q.language === lang ? "bg-indigo-600 text-white border-indigo-600" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-indigo-400"}`}
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-colors ${q.language === lang ? "bg-brand-600 text-white border-brand-600" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:border-brand-400"}`}
                           >
                             {lang === "python" ? "Python" : "C (gcc)"}
                           </button>
@@ -554,7 +662,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
                           <input type="number" step={0.1} min={0.1} className={inputCls} placeholder={t("exam_form.weight")} value={tc.weight} onChange={(e) => updateTC(qi, ti, { weight: Number(e.target.value) })} />
                         </div>
                       ))}
-                      <button type="button" onClick={() => addTestCase(qi)} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+                      <button type="button" onClick={() => addTestCase(qi)} className="text-xs text-brand-600 dark:text-brand-400 hover:underline">
                         + {t("exam_form.add_test_case")}
                       </button>
                     </div>
@@ -573,10 +681,10 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
             </p>
             <div className="space-y-2">
               {bankImports.map((q, i) => (
-                <div key={q.id} className="flex items-start gap-3 border border-indigo-200 dark:border-indigo-800 rounded-xl px-4 py-3 bg-indigo-50 dark:bg-indigo-950">
+                <div key={q.id} className="flex items-start gap-3 border border-brand-200 dark:border-brand-800 rounded-xl px-4 py-3 bg-brand-50 dark:bg-brand-950">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                      <span className="text-xs font-bold text-indigo-500">Q{questions.length + i + 1}</span>
+                      <span className="text-xs font-bold text-brand-500">Q{questions.length + i + 1}</span>
                       <span className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">
                         {q.type === "mcq" ? "QCM" : "Code"}
                       </span>
@@ -585,7 +693,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
                       </span>
                       <span className="text-xs text-gray-400">{q.points} pt{q.points > 1 ? "s" : ""}</span>
                       {q.tags.map((tag) => (
-                        <span key={tag} className="text-xs px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300">{tag}</span>
+                        <span key={tag} className="text-xs px-1.5 py-0.5 rounded bg-brand-100 dark:bg-brand-900 text-brand-600 dark:text-brand-300">{tag}</span>
                       ))}
                     </div>
                     <p className="text-sm text-gray-700 dark:text-gray-200 line-clamp-2">{q.statement}</p>
@@ -606,7 +714,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
 
         {/* ── Boutons d'ajout ───────────────────────────────────────────────── */}
         <div className="flex gap-2 flex-wrap">
-          <button type="button" onClick={addMCQ} className="px-4 py-2 border-2 border-dashed border-indigo-300 text-indigo-600 dark:text-indigo-400 rounded-lg text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+          <button type="button" onClick={addMCQ} className="px-4 py-2 border-2 border-dashed border-brand-300 text-brand-600 dark:text-brand-400 rounded-lg text-sm hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors">
             + {t("exam_form.add_mcq")}
           </button>
           <button type="button" onClick={addCoding} className="px-4 py-2 border-2 border-dashed border-green-400 text-green-600 dark:text-green-400 rounded-lg text-sm hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
@@ -642,7 +750,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
           <button type="button" onClick={onCancel} className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             {t("exam_form.cancel")}
           </button>
-          <button type="submit" disabled={saving} className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-medium transition-colors">
+          <button type="submit" disabled={saving} className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white text-sm font-medium transition-colors">
             {saving ? "…" : t("exam_form.save")}
           </button>
         </div>
@@ -652,7 +760,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
         <BankPicker
           onAdd={handleBankAdd}
           onClose={() => setShowBankPicker(false)}
-          defaultLanguage={codingLanguage}
+          defaultTrack={track}
         />
       )}
     </>

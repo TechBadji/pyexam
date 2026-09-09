@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import LanguageSwitcher from "../components/ui/LanguageSwitcher";
-import PyExamLogo from "../components/ui/PyExamLogo";
+import CertifCampLogo from "../components/ui/CertifCampLogo";
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation("auth");
@@ -30,8 +30,8 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
       <div className="flex items-center justify-between px-6 pt-5 pb-2">
         <Link to="/login" className="flex items-center gap-2">
-          <PyExamLogo size={36} />
-          <span className="font-bold text-gray-900 dark:text-white text-lg">PyExam</span>
+          <CertifCampLogo size={36} />
+          <span className="font-bold text-gray-900 dark:text-white text-lg">CertifCamp</span>
         </Link>
         <LanguageSwitcher />
       </div>
@@ -40,8 +40,8 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-sm">
           {sent ? (
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mx-auto">
-                <svg className="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <div className="w-16 h-16 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
               </p>
               <Link
                 to="/login"
-                className="inline-block mt-4 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                className="inline-block mt-4 text-sm text-brand-600 hover:text-brand-700 font-medium"
               >
                 ← {t("forgot_password.back_to_login")}
               </Link>
@@ -85,14 +85,14 @@ export default function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="vous@exemple.com"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-brand-500/30 flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
                 </button>
 
                 <p className="text-center text-sm">
-                  <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                  <Link to="/login" className="text-brand-600 hover:text-brand-700 font-medium">
                     ← {t("forgot_password.back_to_login")}
                   </Link>
                 </p>

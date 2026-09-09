@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore, type AuthUser } from "../../store/authStore";
+import CertifCampLogo from "./CertifCampLogo";
 import DarkModeToggle from "./DarkModeToggle";
 import LanguageSwitcher from "./LanguageSwitcher";
 
@@ -22,7 +23,7 @@ function UserAvatar({ user, size = 32 }: { user: AuthUser; size?: number }) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
-  const palette = ["bg-indigo-500", "bg-violet-500", "bg-pink-500", "bg-teal-500", "bg-amber-500"];
+  const palette = ["bg-brand-500", "bg-violet-500", "bg-pink-500", "bg-teal-500", "bg-amber-500"];
   const color = palette[user.full_name.charCodeAt(0) % palette.length];
   return (
     <div
@@ -58,14 +59,14 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+    <nav className="sticky top-0 z-50 bg-white/90 dark:bg-ink-950/90 backdrop-blur-md border-b border-ink-200 dark:border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
-          <Link
-            to="/"
-            className="flex items-center gap-2 font-bold text-brand-600 dark:text-brand-400 text-lg"
-          >
-            PyExam
+          <Link to="/" className="flex items-center gap-2.5">
+            <CertifCampLogo size={26} />
+            <span className="font-display text-lg font-semibold tracking-tight text-ink-900 dark:text-ink-50">
+              CertifCamp
+            </span>
           </Link>
 
           {user && (

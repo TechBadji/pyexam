@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import Navbar from "../components/ui/Navbar";
-import PyExamLogo from "../components/ui/PyExamLogo";
+import CertifCampLogo from "../components/ui/CertifCampLogo";
 import { useAuthStore, type AuthUser } from "../store/authStore";
 
 // ── UserAvatar ─────────────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ function UserAvatar({ user, size = 72 }: { user: AuthUser; size?: number }) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
-  const palette = ["bg-indigo-400", "bg-violet-400", "bg-pink-400", "bg-teal-400", "bg-amber-400"];
+  const palette = ["bg-brand-400", "bg-violet-400", "bg-pink-400", "bg-teal-400", "bg-amber-400"];
   const color = palette[user.full_name.charCodeAt(0) % palette.length];
   return (
     <div
@@ -43,7 +43,7 @@ function SectionCard({ title, icon, children }: { title: string; icon: React.Rea
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
       <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-        <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center shrink-0">
           {icon}
         </div>
         <h2 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h2>
@@ -69,7 +69,7 @@ function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className={`w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${props.className ?? ""}`}
+      className={`w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition ${props.className ?? ""}`}
     />
   );
 }
@@ -79,7 +79,7 @@ function SaveButton({ loading, label }: { loading: boolean; label: string }) {
     <button
       type="submit"
       disabled={loading}
-      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium transition-colors shadow-sm"
+      className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-medium transition-colors shadow-sm"
     >
       {label}
     </button>
@@ -144,7 +144,7 @@ function AvatarSection() {
   };
 
   const avatarIcon = (
-    <svg className="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg className="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   );
@@ -209,7 +209,7 @@ function ProfileInfoSection() {
   };
 
   const infoIcon = (
-    <svg className="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg className="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
     </svg>
   );
@@ -236,7 +236,7 @@ function ProfileInfoSection() {
           <select
             value={lang}
             onChange={(e) => { setLang(e.target.value as "fr" | "en"); setSaved(false); }}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
           >
             <option value="fr">{t("info.lang_fr")}</option>
             <option value="en">{t("info.lang_en")}</option>
@@ -294,7 +294,7 @@ function PasswordSection() {
   };
 
   const lockIcon = (
-    <svg className="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg className="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
     </svg>
   );
@@ -351,12 +351,12 @@ export default function ProfilePage() {
       <Navbar />
 
       {/* ── Hero header ─────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800">
+      <div className="bg-gradient-to-br from-brand-700 via-brand-800 to-ink-950">
         <div className="max-w-2xl mx-auto px-4 pt-8 pb-8">
           <div className="flex items-center gap-2 mb-6">
             <Link
               to={user?.role === "admin" ? "/admin" : "/dashboard"}
-              className="flex items-center gap-1.5 text-sm text-indigo-200 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 text-sm text-brand-200 hover:text-white transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -366,10 +366,10 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex items-center gap-5">
-            <PyExamLogo size={44} />
+            <CertifCampLogo size={44} tone="light" />
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-white">{t("title")}</h1>
-              <p className="text-sm text-indigo-200 mt-0.5">{t("subtitle")}</p>
+              <p className="text-sm text-brand-200 mt-0.5">{t("subtitle")}</p>
             </div>
             {user && <UserAvatar user={user} size={60} />}
           </div>
@@ -377,7 +377,7 @@ export default function ProfilePage() {
           {user && (
             <div className="mt-4 pt-4 border-t border-white/10">
               <p className="text-base font-semibold text-white">{user.full_name}</p>
-              <p className="text-sm text-indigo-200 mt-0.5">
+              <p className="text-sm text-brand-200 mt-0.5">
                 {user.email}
                 {user.student_number && <span className="ml-3">· N° {user.student_number}</span>}
               </p>

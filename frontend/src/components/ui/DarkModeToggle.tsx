@@ -17,14 +17,19 @@ export function useDarkMode() {
   return { dark, setDark };
 }
 
-export default function DarkModeToggle() {
+export default function DarkModeToggle({ tone = "default" }: { tone?: "default" | "light" }) {
   const { dark, setDark } = useDarkMode();
+  const light = tone === "light";
 
   return (
     <button
       onClick={() => setDark(!dark)}
       aria-label="Toggle dark mode"
-      className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+      className={`p-2 rounded-md transition-colors ${
+        light
+          ? "text-white/70 hover:bg-white/10 hover:text-white"
+          : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+      }`}
     >
       {dark ? (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

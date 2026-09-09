@@ -1,6 +1,21 @@
-# PyExam — Online Python Examination Platform
+# CertifCamp — Plateforme de certification en ligne
 
-Plateforme d'examen en ligne pour étudiants universitaires.
+Épreuves chronométrées, surveillées et corrigées automatiquement, sur quatre
+certifications.
+
+## Certifications
+
+| Type d'épreuve | `exam_type` | Format | Banque livrée |
+|---|---|---|---|
+| Python | `python` | QCM + code exécuté (Python 3.10) | 141 questions |
+| C | `c` | QCM + code compilé (gcc 10.2) | 90 questions |
+| Algorithmique | `algo` | Exercices de code | 20 exercices |
+| PSM I — Professional Scrum Master | `psm1` | QCM (Scrum Guide 2020 + agilité) | 115 questions |
+
+L'administrateur choisit le type d'épreuve à la création de l'examen ; CertifCamp
+compose alors le sujet en tirant au sort dans la banque de questions de cette
+certification (`POST /admin/exams/{id}/generate`). Les épreuves en QCM seul
+(PSM I) ignorent tout quota d'exercices de code.
 
 ## Stack technique
 
@@ -10,7 +25,7 @@ Plateforme d'examen en ligne pour étudiants universitaires.
 | Backend | FastAPI + SQLAlchemy 2.0 async + Pydantic v2 |
 | Base de données | PostgreSQL 15 |
 | Cache / Queue | Redis 7 + Celery |
-| Exécution code | Piston API (sandbox Python) |
+| Exécution code | Piston API (sandbox Python 3.10 & C/gcc) |
 | Emails | Resend SDK |
 | Infra | Docker Compose + Nginx |
 
@@ -20,12 +35,29 @@ Plateforme d'examen en ligne pour étudiants universitaires.
 git clone https://github.com/TechBadji/pyexam.git
 cd pyexam
 cp .env.example .env          # remplir SECRET_KEY, RESEND_API_KEY
-docker-compose up --build -d
-docker-compose exec piston ppman install python=3.10.0
-docker-compose exec backend alembic upgrade head
-docker-compose exec backend python seed.py
+docker compose up --build -d
 # → http://localhost
 ```
+
+`backend/entrypoint.sh` applique les migrations, installe les runtimes Piston
+(Python 3.10, C/gcc) puis exécute les seeds — tous idempotents :
+
+```bash
+docker compose exec backend python seed.py            # admin + comptes de test
+docker compose exec backend python seed_bank.py       # banque Python
+docker compose exec backend python seed_bank_c.py     # banque C
+docker compose exec backend python seed_bank_algo.py  # banque Algorithmique
+docker compose exec backend python seed_bank_psm1.py  # banque PSM I
+```
+
+### Développement front seul
+
+```bash
+cd frontend && npm install && npm run dev   # → http://localhost:3000
+```
+
+Le serveur Vite proxifie `/api` vers `http://localhost:8000` en retirant le
+préfixe, comme le fait nginx en production.
 
 ## Déploiement Railway (production)
 

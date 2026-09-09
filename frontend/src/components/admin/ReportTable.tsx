@@ -195,7 +195,7 @@ export default function ReportTable({ rows, examId }: ReportTableProps) {
                   {fmtScore(row.total_score)} / {fmtScore(row.max_score)}
                 </td>
                 {hasGradeScale && (
-                  <td className="px-4 py-3 text-sm font-mono font-semibold text-indigo-600 dark:text-indigo-400">
+                  <td className="px-4 py-3 text-sm font-mono font-semibold text-brand-600 dark:text-brand-400">
                     {fmtGrade(row)}
                   </td>
                 )}

@@ -16,7 +16,8 @@
     "exam_published": "Examen publié — les étudiants peuvent y accéder.",
     "exam_closed": "Examen fermé.",
     "users": "Utilisateurs",
-    "audit_log": "Journal d'activité"
+    "audit_log": "Journal d'activité",
+    "exam_track": "Certification"
   },
   "exam_form": {
     "exam_title": "Titre de l'examen",
@@ -59,7 +60,24 @@
     "grading_hint": "Laissez vide pour utiliser les points bruts et le seuil global.",
     "language": "Langage",
     "error_dates": "La date de début doit être antérieure à la date de fin.",
-    "error_generic": "Une erreur est survenue lors de l'enregistrement. Vérifiez le formulaire et réessayez."
+    "error_generic": "Une erreur est survenue lors de l'enregistrement. Vérifiez le formulaire et réessayez.",
+    "track_label": "Type de certification",
+    "track_hint": "CertifCamp puise dans la banque de questions correspondant au type choisi.",
+    "track_python": "Python",
+    "track_c": "C",
+    "track_algo": "Algorithmique",
+    "track_psm1": "PSM I — Scrum",
+    "track_format_mixed": "QCM et code",
+    "track_format_mcq": "QCM uniquement",
+    "generate_title": "Composer le sujet depuis la banque",
+    "generate_hint": "Les questions sont tirées au sort dans la banque {{track}}.",
+    "generate_n_mcq": "Nombre de QCM",
+    "generate_n_coding": "Exercices de code",
+    "generate_mcq_only": "Cette certification est en QCM uniquement.",
+    "generate_difficulty": "Niveau",
+    "generate_any_difficulty": "Tous niveaux",
+    "generate_done": "{{total}} question(s) ajoutée(s) : {{mcq}} QCM, {{coding}} code.",
+    "track_format_coding": "Code uniquement"
   },
   "bank": {
     "page_title": "Banque de Questions",
@@ -130,7 +148,14 @@
     "stats_success": "réussite",
     "stats_flag": "Alerte",
     "flag_too_hard": "Trop difficile",
-    "flag_too_easy": "Trop facile"
+    "flag_too_easy": "Trop facile",
+    "filter_track": "Certification",
+    "all_tracks": "Toutes les certifications",
+    "track_python": "Python",
+    "track_c": "C",
+    "track_algo": "Algorithmique",
+    "track_psm1": "PSM I — Scrum",
+    "form_track": "Certification"
   },
   "draw": {
     "section_title": "Tirage aléatoire (Session)",

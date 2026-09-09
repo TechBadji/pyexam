@@ -18,7 +18,8 @@ from app.models.answer import Answer
 from app.models.audit_log import AuditLog
 from app.models.exam import Exam, ExamStatus
 from app.models.question import CodingLanguage, MCQOption, Question, QuestionType
-from app.models.question_bank import BankMCQOption, BankQuestion
+from app.models.question_bank import BankMCQOption, BankQuestion, DifficultyLevel
+from app.models.track import MCQ_ONLY_TRACKS, ExamTrack
 from app.models.submission import Submission, SubmissionStatus
 from app.models.user import User, UserRole
 from app.schemas.exam import ExamCreate, ExamResponse, ExamUpdate
@@ -47,10 +48,35 @@ class DrawConfigRequest(_BaseModel):
 class AutoPopulateRequest(_BaseModel):
     tags: list[str] = []
     difficulty: str | None = None
-    language: str | None = None
+
+
+class GenerateRequest(_BaseModel):
+    n_mcq: int = 20
+    n_coding: int = 0
+    difficulty: str | None = None
+    replace: bool = True
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+def _language_for(track: ExamTrack) -> CodingLanguage:
+    """Coding language implied by a certification track."""
+    return CodingLanguage.c if track == ExamTrack.c else CodingLanguage.python
+
+
+def _clone_bank_question(bq: BankQuestion, exam_id, track: ExamTrack, order_index: int) -> Question:
+    return Question(
+        exam_id=exam_id,
+        type=bq.type,
+        language=_language_for(track),
+        order_index=order_index,
+        points=bq.points,
+        statement=bq.statement,
+        test_cases=bq.test_cases,
+        source_bank_id=bq.id,
+        source_version=bq.version,
+    )
 
 _AdminUser = Annotated[User, Depends(require_role(UserRole.admin))]
 _DB = Annotated[AsyncSession, Depends(get_db)]
@@ -94,6 +120,7 @@ async def get_exam(exam_id: uuid.UUID, current_user: _AdminUser, db: _DB) -> dic
             id=q.id,
             exam_id=q.exam_id,
             type=q.type,
+            language=q.language,
             order_index=q.order_index,
             points=q.points,
             statement=q.statement,
@@ -188,7 +215,8 @@ async def import_from_bank(
     db: _DB,
 ) -> dict:
     exam_result = await db.execute(select(Exam).where(Exam.id == exam_id))
-    if exam_result.scalar_one_or_none() is None:
+    exam = exam_result.scalar_one_or_none()
+    if exam is None:
         raise HTTPException(status_code=404, detail="Exam not found")
 
     bq_result = await db.execute(
@@ -203,7 +231,7 @@ async def import_from_bank(
         bq = bank_questions.get(bq_id)
         if bq is None:
             continue
-        lang = CodingLanguage.c if "c" in (bq.tags or []) else CodingLanguage.python
+        lang = _language_for(exam.exam_type)
         q = Question(
             exam_id=exam_id,
             type=bq.type,
@@ -270,12 +298,8 @@ async def auto_populate_pool(
     if body.tags:
         for tag in body.tags:
             bq_query = bq_query.where(BankQuestion.tags.contains([tag]))
-    if body.language == "c":
-        bq_query = bq_query.where(BankQuestion.tags.contains(["c"]))
-    elif body.language == "python":
-        bq_query = bq_query.where(~BankQuestion.tags.contains(["c"]))
+    bq_query = bq_query.where(BankQuestion.exam_type == exam.exam_type)
     if body.difficulty:
-        from app.models.question_bank import DifficultyLevel
         try:
             diff = DifficultyLevel(body.difficulty)
             bq_query = bq_query.where(BankQuestion.difficulty == diff)
@@ -303,7 +327,7 @@ async def auto_populate_pool(
     for bq in bank_questions:
         if bq.id in already_imported:
             continue
-        lang = CodingLanguage.c if "c" in (bq.tags or []) else CodingLanguage.python
+        lang = _language_for(exam.exam_type)
         q = Question(
             exam_id=exam_id,
             type=bq.type,
@@ -329,6 +353,122 @@ async def auto_populate_pool(
         added += 1
 
     return {"added": added, "total_pool": len(already_imported) + added}
+
+
+@router.post("/exams/{exam_id}/generate", response_model=dict)
+async def generate_from_track(
+    exam_id: uuid.UUID,
+    body: GenerateRequest,
+    current_user: _AdminUser,
+    db: _DB,
+) -> dict:
+    """
+    Build the exam's questions by drawing at random from the bank of its own
+    certification track. MCQ-only tracks (PSM I) ignore any coding quota.
+    """
+    exam_result = await db.execute(select(Exam).where(Exam.id == exam_id))
+    exam = exam_result.scalar_one_or_none()
+    if exam is None:
+        raise HTTPException(status_code=404, detail="Exam not found")
+
+    n_mcq = max(0, body.n_mcq)
+    n_coding = 0 if exam.exam_type in MCQ_ONLY_TRACKS else max(0, body.n_coding)
+    if n_mcq + n_coding == 0:
+        raise HTTPException(status_code=400, detail="Ask for at least one question")
+
+    difficulty = None
+    if body.difficulty:
+        try:
+            difficulty = DifficultyLevel(body.difficulty)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Unknown difficulty: {body.difficulty}")
+
+    async def pick(q_type: QuestionType, count: int) -> list[BankQuestion]:
+        if count == 0:
+            return []
+        query = (
+            select(BankQuestion)
+            .options(selectinload(BankQuestion.options))
+            .where(BankQuestion.exam_type == exam.exam_type, BankQuestion.type == q_type)
+        )
+        if difficulty is not None:
+            query = query.where(BankQuestion.difficulty == difficulty)
+        query = query.order_by(func.random()).limit(count)
+        return list((await db.execute(query)).scalars().all())
+
+    picked_mcq = await pick(QuestionType.mcq, n_mcq)
+    picked_coding = await pick(QuestionType.coding, n_coding)
+    picked = picked_mcq + picked_coding
+
+    if not picked:
+        raise HTTPException(
+            status_code=409,
+            detail=f"The '{exam.exam_type.value}' bank has no question matching these criteria",
+        )
+
+    if body.replace:
+        existing = await db.execute(select(Question).where(Question.exam_id == exam_id))
+        for q in existing.scalars().all():
+            await db.delete(q)
+        await db.flush()
+        next_order = 1
+    else:
+        max_order = await db.execute(
+            select(func.coalesce(func.max(Question.order_index), 0)).where(Question.exam_id == exam_id)
+        )
+        next_order = (max_order.scalar() or 0) + 1
+
+    for bq in picked:
+        q = _clone_bank_question(bq, exam_id, exam.exam_type, next_order)
+        db.add(q)
+        await db.flush()
+        if bq.type == QuestionType.mcq:
+            for opt in bq.options:
+                db.add(MCQOption(
+                    question_id=q.id,
+                    label=opt.label,
+                    text=opt.text,
+                    is_correct=opt.is_correct,
+                ))
+        next_order += 1
+
+    await audit_service.log(
+        user_id=current_user.id,
+        action="exam.generate",
+        db=db,
+        extra_data={
+            "exam_id": str(exam_id),
+            "exam_type": exam.exam_type.value,
+            "n_mcq": len(picked_mcq),
+            "n_coding": len(picked_coding),
+        },
+    )
+
+    return {
+        "exam_type": exam.exam_type.value,
+        "mcq": len(picked_mcq),
+        "coding": len(picked_coding),
+        "total": len(picked),
+        "requested_mcq": n_mcq,
+        "requested_coding": n_coding,
+    }
+
+
+@router.get("/bank/coverage", response_model=dict)
+async def bank_coverage(current_user: _AdminUser, db: _DB) -> dict:
+    """How many MCQ / coding questions each certification track holds."""
+    result = await db.execute(
+        select(BankQuestion.exam_type, BankQuestion.type, func.count())
+        .group_by(BankQuestion.exam_type, BankQuestion.type)
+    )
+    coverage: dict[str, dict[str, int]] = {
+        track.value: {"mcq": 0, "coding": 0, "total": 0} for track in ExamTrack
+    }
+    for track, q_type, count in result.all():
+        entry = coverage[track.value]
+        entry[q_type.value] = count
+        entry["total"] += count
+    return coverage
 
 
 # ── MCQ Options ────────────────────────────────────────────────────────────────

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import api from "../../api/axios";
+import { TRACKS, TRACK_IDS, type TrackId } from "../../lib/tracks";
 
 export interface BankQuestionPreview {
   id: string;
   type: "mcq" | "coding";
   difficulty: "beginner" | "intermediate" | "expert" | "culture";
+  exam_type?: TrackId;
   tags: string[];
   statement: string;
   points: number;
@@ -15,7 +17,7 @@ export interface BankQuestionPreview {
 interface Props {
   onAdd: (questions: BankQuestionPreview[]) => void;
   onClose: () => void;
-  defaultLanguage?: "python" | "c";
+  defaultTrack?: TrackId;
 }
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -25,7 +27,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   culture: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200",
 };
 
-export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
+export default function BankPicker({ onAdd, onClose, defaultTrack }: Props) {
   const { t } = useTranslation("admin");
 
   const [questions, setQuestions] = useState<BankQuestionPreview[]>([]);
@@ -35,7 +37,7 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
 
   const [filterType, setFilterType] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("");
-  const [filterLanguage, setFilterLanguage] = useState<"python" | "c" | "">(defaultLanguage ?? "");
+  const [filterTrack, setFilterTrack] = useState<TrackId | "">(defaultTrack ?? "");
   const [filterTag, setFilterTag] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
 
@@ -44,7 +46,7 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
     const params = new URLSearchParams();
     if (filterType) params.append("type", filterType);
     if (filterDifficulty) params.append("difficulty", filterDifficulty);
-    if (filterLanguage) params.append("language", filterLanguage);
+    if (filterTrack) params.append("exam_type", filterTrack);
     if (filterTag.trim()) params.append("tag", filterTag.trim());
     if (filterSearch.trim()) params.append("search", filterSearch.trim());
 
@@ -52,7 +54,7 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
       .get<BankQuestionPreview[]>(`/admin/bank/questions?${params}`)
       .then(({ data }) => setQuestions(data))
       .finally(() => setLoading(false));
-  }, [filterType, filterDifficulty, filterLanguage, filterTag, filterSearch]);
+  }, [filterType, filterDifficulty, filterTrack, filterTag, filterSearch]);
 
   const toggle = (id: string) =>
     setSelected((s) => {
@@ -84,21 +86,35 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none">✕</button>
         </div>
 
-        {/* Language quick-filter */}
-        <div className="px-6 py-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 shrink-0">Langage :</span>
-          {([["Tous", ""], ["Python", "python"], ["C (gcc)", "c"]] as const).map(([label, value]) => (
+        {/* Certification quick-filter */}
+        <div className="px-6 py-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 shrink-0">
+            {t("bank.filter_track")} :
+          </span>
+          <button
+            type="button"
+            onClick={() => setFilterTrack("")}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+              filterTrack === ""
+                ? "bg-brand-600 text-white"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-brand-100 dark:hover:bg-brand-900"
+            }`}
+          >
+            {t("bank.all_tracks")}
+          </button>
+          {TRACK_IDS.map((id) => (
             <button
-              key={value}
+              key={id}
               type="button"
-              onClick={() => setFilterLanguage(value)}
+              onClick={() => setFilterTrack(id)}
               className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                filterLanguage === value
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900"
+                filterTrack === id
+                  ? "text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
+              style={filterTrack === id ? { background: TRACKS[id].hex } : undefined}
             >
-              {label}
+              {t(`bank.track_${id}`)}
             </button>
           ))}
         </div>
@@ -108,7 +124,7 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="">{t("bank.all_types")}</option>
             <option value="mcq">{t("bank.type_mcq")}</option>
@@ -118,7 +134,7 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
           <select
             value={filterDifficulty}
             onChange={(e) => setFilterDifficulty(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="">{t("bank.all_difficulties")}</option>
             <option value="beginner">{t("bank.difficulty_beginner")}</option>
@@ -132,7 +148,7 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
             value={filterTag}
             onChange={(e) => setFilterTag(e.target.value)}
             placeholder={t("bank.filter_tag")}
-            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
 
           <input
@@ -140,7 +156,7 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
             value={filterSearch}
             onChange={(e) => setFilterSearch(e.target.value)}
             placeholder={t("bank.search_placeholder")}
-            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
 
@@ -148,7 +164,7 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
         <div className="flex-1 overflow-y-auto px-6 py-3 space-y-2">
           {loading && (
             <div className="flex justify-center py-10">
-              <div className="w-6 h-6 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
           {!loading && questions.length === 0 && (
@@ -159,7 +175,7 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
               key={q.id}
               className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                 selected.has(q.id)
-                  ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950 dark:border-indigo-500"
+                  ? "border-brand-400 bg-brand-50 dark:bg-brand-950 dark:border-brand-500"
                   : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
               }`}
             >
@@ -167,7 +183,7 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
                 type="checkbox"
                 checked={selected.has(q.id)}
                 onChange={() => toggle(q.id)}
-                className="mt-0.5 accent-indigo-600 w-4 h-4 flex-shrink-0"
+                className="mt-0.5 accent-brand-600 w-4 h-4 flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5 mb-1">
@@ -200,12 +216,12 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
               max={questions.length || 1}
               value={randomCount}
               onChange={(e) => setRandomCount(Number(e.target.value))}
-              className="w-16 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-16 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
             <button
               type="button"
               onClick={pickRandom}
-              className="px-3 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-950 transition-colors"
+              className="px-3 py-1.5 rounded-lg border border-brand-300 dark:border-brand-700 text-brand-600 dark:text-brand-400 text-sm hover:bg-brand-50 dark:hover:bg-brand-950 transition-colors"
             >
               🎲 {t("bank.picker_random")}
             </button>
@@ -224,7 +240,7 @@ export default function BankPicker({ onAdd, onClose, defaultLanguage }: Props) {
             type="button"
             disabled={selected.size === 0}
             onClick={handleAdd}
-            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-sm font-medium transition-colors"
+            className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 text-white text-sm font-medium transition-colors"
           >
             {t("bank.picker_add", { count: selected.size })}
           </button>

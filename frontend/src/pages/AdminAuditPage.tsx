@@ -15,7 +15,7 @@ interface LogItem {
 }
 
 const ACTION_COLORS: Record<string, string> = {
-  EXAM_CREATE:        "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  EXAM_CREATE:        "bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300",
   CORRECTION_LAUNCH:  "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   EXAM_START:         "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
   ANSWER_SAVE:        "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300",
@@ -62,10 +62,10 @@ export default function AdminAuditPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
 
-      <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800">
+      <div className="bg-gradient-to-br from-brand-700 via-brand-800 to-ink-950">
         <div className="max-w-6xl mx-auto px-4 pt-8 pb-6">
           <div className="flex items-center gap-3 mb-4">
-            <Link to="/admin" className="flex items-center gap-1.5 text-sm text-indigo-200 hover:text-white transition-colors">
+            <Link to="/admin" className="flex items-center gap-1.5 text-sm text-brand-200 hover:text-white transition-colors">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
@@ -75,7 +75,7 @@ export default function AdminAuditPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-white">{t("audit.title")}</h1>
-              <p className="text-sm text-indigo-200 mt-0.5">{total} {t("audit.total_events")}</p>
+              <p className="text-sm text-brand-200 mt-0.5">{total} {t("audit.total_events")}</p>
             </div>
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function AdminAuditPage() {
           <select
             value={actionFilter}
             onChange={(e) => setActionFilter(e.target.value)}
-            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="">{t("audit.all_actions")}</option>
             {KNOWN_ACTIONS.map((a) => (
@@ -99,7 +99,7 @@ export default function AdminAuditPage() {
         {/* Table */}
         {loading ? (
           <div className="flex justify-center py-24">
-            <div className="w-9 h-9 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-9 h-9 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
@@ -131,7 +131,7 @@ export default function AdminAuditPage() {
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-400">
                         {log.extra_data ? (
-                          <span className="text-indigo-500 hover:underline">{expanded === log.id ? "▲" : "▼"} {t("audit.show_details")}</span>
+                          <span className="text-brand-500 hover:underline">{expanded === log.id ? "▲" : "▼"} {t("audit.show_details")}</span>
                         ) : "—"}
                       </td>
                     </tr>

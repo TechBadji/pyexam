@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const Section = ({ id, title, emoji, children }: { id: string; title: string; emoji: string; children: React.ReactNode }) => (
   <section id={id} className="scroll-mt-24 space-y-8">
-    <h2 className="text-2xl font-bold text-gray-900 dark:text-white pb-3 border-b-2 border-indigo-200 dark:border-indigo-800 flex items-center gap-2">
+    <h2 className="text-2xl font-bold text-gray-900 dark:text-white pb-3 border-b-2 border-brand-200 dark:border-brand-800 flex items-center gap-2">
       <span>{emoji}</span> {title}
     </h2>
     {children}
@@ -13,7 +13,7 @@ const Section = ({ id, title, emoji, children }: { id: string; title: string; em
 
 const SubSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="space-y-4">
-    <h3 className="text-base font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide">{title}</h3>
+    <h3 className="text-base font-bold text-brand-700 dark:text-brand-400 uppercase tracking-wide">{title}</h3>
     {children}
   </div>
 );
@@ -22,7 +22,7 @@ const Steps = ({ items }: { items: React.ReactNode[] }) => (
   <ol className="space-y-3">
     {items.map((item, i) => (
       <li key={i} className="flex gap-3 items-start text-sm text-gray-700 dark:text-gray-300">
-        <span className="shrink-0 w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+        <span className="shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
         <span>{item}</span>
       </li>
     ))}
@@ -51,7 +51,7 @@ const Screen = ({ title, children }: { title: string; children: React.ReactNode 
         <span className="w-3 h-3 rounded-full bg-yellow-400" />
         <span className="w-3 h-3 rounded-full bg-green-400" />
       </div>
-      <span className="text-xs text-gray-500 dark:text-gray-400 mx-auto font-mono">pyexam.digitalmatis.com — {title}</span>
+      <span className="text-xs text-gray-500 dark:text-gray-400 mx-auto font-mono">certifcamp —  — {title}</span>
     </div>
     <div className="p-4 text-sm">{children}</div>
   </div>
@@ -77,7 +77,7 @@ const FakeInput = ({ label, value, hint }: { label: string; value?: string; hint
 );
 
 const FakeBtn = ({ children, color = "indigo" }: { children: React.ReactNode; color?: string }) => (
-  <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white ${color === "green" ? "bg-green-600" : color === "red" ? "bg-red-600" : color === "gray" ? "bg-gray-500" : "bg-indigo-600"}`}>
+  <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white ${color === "green" ? "bg-green-600" : color === "red" ? "bg-red-600" : color === "gray" ? "bg-gray-500" : "bg-brand-600"}`}>
     {children}
   </span>
 );
@@ -89,16 +89,16 @@ const FakeBadge = ({ children, color }: { children: React.ReactNode; color: stri
 // ── CSV Download Button ───────────────────────────────────────────────────────
 
 const CSVDownload = ({ file, label, description, columns }: { file: string; label: string; description: string; columns: { name: string; required: boolean; desc: string }[] }) => (
-  <div className="border border-indigo-200 dark:border-indigo-700 rounded-xl overflow-hidden">
-    <div className="bg-indigo-50 dark:bg-indigo-900/30 px-5 py-4 flex items-start justify-between gap-4 flex-wrap">
+  <div className="border border-brand-200 dark:border-brand-700 rounded-xl overflow-hidden">
+    <div className="bg-brand-50 dark:bg-brand-900/30 px-5 py-4 flex items-start justify-between gap-4 flex-wrap">
       <div>
-        <p className="font-semibold text-indigo-700 dark:text-indigo-300 text-sm mb-1"> {label}</p>
+        <p className="font-semibold text-brand-700 dark:text-brand-300 text-sm mb-1"> {label}</p>
         <p className="text-xs text-gray-600 dark:text-gray-400">{description}</p>
       </div>
       <a
         href={file}
         download
-        className="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition"
+        className="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg transition"
       >
         ⬇ Télécharger le modèle (.csv)
       </a>
@@ -115,7 +115,7 @@ const CSVDownload = ({ file, label, description, columns }: { file: string; labe
         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
           {columns.map((col) => (
             <tr key={col.name} className="bg-white dark:bg-gray-900">
-              <td className="px-4 py-2 font-mono font-semibold text-indigo-600 dark:text-indigo-400">{col.name}</td>
+              <td className="px-4 py-2 font-mono font-semibold text-brand-600 dark:text-brand-400">{col.name}</td>
               <td className="px-4 py-2">
                 {col.required
                   ? <FakeBadge color="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">Requis</FakeBadge>
@@ -158,20 +158,20 @@ export default function HelpPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
 
       {/* Header */}
-      <header className="bg-gradient-to-r from-indigo-700 to-indigo-600 dark:from-indigo-900 dark:to-indigo-800 text-white py-12 px-4 print:py-6">
+      <header className="bg-gradient-to-r from-brand-700 to-brand-600 dark:from-brand-900 dark:to-brand-800 text-white py-12 px-4 print:py-6">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-3 mb-3">
             <span className="text-4xl">📘</span>
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight">Documentation PyExam</h1>
-              <p className="text-indigo-200 text-sm mt-1">Guide complet — Administrateurs · Professeurs · Étudiants</p>
+              <h1 className="text-3xl font-extrabold tracking-tight">Documentation CertifCamp</h1>
+              <p className="text-brand-200 text-sm mt-1">Guide complet — Administrateurs · Professeurs · Étudiants</p>
             </div>
           </div>
           <div className="mt-5 flex gap-3 text-sm print:hidden flex-wrap">
-            <Link to="/login" className="bg-white text-indigo-700 font-semibold px-4 py-2 rounded-lg hover:bg-indigo-50 transition">
+            <Link to="/login" className="bg-white text-brand-700 font-semibold px-4 py-2 rounded-lg hover:bg-brand-50 transition">
               ← Retour à la connexion
             </Link>
-            <button onClick={() => window.print()} className="border border-white/40 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">
+            <button onClick={() => window.print()} className="border border-white/40 text-white px-4 py-2 rounded-lg hover:bg-brand-600 transition">
               🖨 Imprimer / Exporter PDF
             </button>
           </div>
@@ -187,7 +187,7 @@ export default function HelpPage() {
             <nav className="space-y-0.5">
               {toc.map((item) => (
                 <a key={item.id} href={`#${item.id}`}
-                  className="block text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 py-1.5 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition">
+                  className="block text-sm text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 py-1.5 px-2 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/30 transition">
                   {item.label}
                 </a>
               ))}
@@ -199,16 +199,16 @@ export default function HelpPage() {
         <main className="flex-1 min-w-0 space-y-16">
 
           {/* ── PRÉSENTATION ──────────────────────────────────────────── */}
-          <Section id="intro" title="Présentation de PyExam" emoji="">
+          <Section id="intro" title="Présentation de CertifCamp" emoji="">
             <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-              <strong>PyExam</strong> est une plateforme d'examens en ligne pour organiser des évaluations
-              avec des <strong>QCM</strong> et des <strong>exercices de code Python ou C</strong>.
+              <strong>CertifCamp</strong> est une plateforme de certification en ligne pour organiser des épreuves
+              avec des <strong>QCM</strong> et des <strong>exercices de code Python ou C</strong>, sur quatre certifications : Python, C, Algorithmique et PSM I (Scrum).
               Les professeurs créent les examens, les étudiants les passent dans le navigateur,
               et les corrections sont automatiques.
             </p>
             <div className="grid sm:grid-cols-3 gap-4">
               {[
-                { icon: "", title: "Administrateur", color: "border-indigo-300 bg-indigo-50 dark:bg-indigo-950 dark:border-indigo-700", items: ["Créer et gérer les examens", "Ajouter des questions (QCM + Code Python/C)", "Piloter la banque de questions", "Importer les étudiants", "Consulter les rapports & exports"] },
+                { icon: "", title: "Administrateur", color: "border-brand-300 bg-brand-50 dark:bg-brand-950 dark:border-brand-700", items: ["Créer et gérer les examens", "Ajouter des questions (QCM + Code Python/C)", "Piloter la banque de questions", "Importer les étudiants", "Consulter les rapports & exports"] },
                 { icon: "", title: "Étudiant", color: "border-blue-300 bg-blue-50 dark:bg-blue-950 dark:border-blue-700", items: ["Passer les examens en ligne", "Écrire du code Python ou C", "Tester son code avant soumission", "Recevoir ses résultats par email"] },
                 { icon: "", title: "Système", color: "border-gray-300 bg-gray-50 dark:bg-gray-800 dark:border-gray-600", items: ["Exécution Python 3.10 & C (gcc) via Piston", "Correction automatique", "Envoi des emails de résultats", "Détection de triche (onglets, plein écran)"] },
               ].map((c) => (
@@ -216,7 +216,7 @@ export default function HelpPage() {
                   <div className="text-2xl mb-2">{c.icon}</div>
                   <p className="font-bold text-sm mb-2">{c.title}</p>
                   <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                    {c.items.map((i) => <li key={i} className="flex gap-1.5"><span className="text-indigo-400">·</span>{i}</li>)}
+                    {c.items.map((i) => <li key={i} className="flex gap-1.5"><span className="text-brand-400">·</span>{i}</li>)}
                   </ul>
                 </div>
               ))}
@@ -274,34 +274,43 @@ export default function HelpPage() {
             </SubSection>
 
             {/* Questions */}
-            <SubSection title="2 · Choisir le langage de l'examen">
+            <SubSection title="2 · Choisir le type de certification">
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                Avant d'ajouter des questions, sélectionnez le <strong>langage de programmation</strong> de l'examen.
-                Ce choix définit le langage par défaut des questions de code manuelles
-                et pré-filtre la banque de questions.
+                Sélectionnez la <strong>certification</strong> préparée par l'épreuve : Python, C,
+                Algorithmique ou PSM I. Ce choix détermine la banque de questions dans laquelle
+                CertifCamp puise, et le langage d'exécution des exercices de code.
               </p>
-              <Screen title="Admin — Sélecteur de langage">
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Langage de programmation</p>
-                  <p className="text-[11px] text-gray-400 mb-3">Définit le langage par défaut des questions de code et pré-filtre la banque de questions.</p>
-                  <div className="flex gap-3">
+              <Screen title="Admin — Type de certification">
+                <div className="space-y-3">
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Type de certification</p>
+                  <p className="text-[11px] text-gray-400">CertifCamp puise dans la banque de questions correspondant au type choisi.</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
-                      { lang: "python", label: "🐍 Python", active: true, border: "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300" },
-                      { lang: "c",      label: "⚙️ C (gcc)", active: false, border: "border-gray-200 dark:border-gray-700 text-gray-500" },
+                      { id: "python", name: "Python", fmt: "QCM et code", hex: "#0f6e5c", active: true },
+                      { id: "c", name: "C", fmt: "QCM et code", hex: "#2b4c9b", active: false },
+                      { id: "algo", name: "Algorithmique", fmt: "Code uniquement", hex: "#b4531a", active: false },
+                      { id: "psm1", name: "PSM I — Scrum", fmt: "QCM uniquement", hex: "#6a3fa0", active: false },
                     ].map((b) => (
-                      <div key={b.lang} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-semibold ${b.border}`}>
-                        {b.label}
-                        {b.active && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
+                      <div
+                        key={b.id}
+                        className={`rounded-xl border-2 p-3 ${b.active ? "bg-white dark:bg-gray-800/70" : "border-gray-200 dark:border-gray-700"}`}
+                        style={b.active ? { borderColor: b.hex } : undefined}
+                      >
+                        <span className="block h-1 w-8 rounded-full mb-2" style={{ background: b.active ? b.hex : "#d1d5db" }} />
+                        <span className="block text-xs font-semibold text-gray-900 dark:text-white">{b.name}</span>
+                        <span className="block text-[11px] text-gray-500 dark:text-gray-400">{b.fmt}</span>
                       </div>
                     ))}
                   </div>
-                  <p className="text-[11px] text-gray-400 pt-1">
-                    Sélectionner <strong>C (gcc)</strong> pré-filtre automatiquement la banque sur les questions C et définit le compilateur gcc pour l'exécution.
-                  </p>
+                  <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Composer le sujet depuis la banque</p>
+                    <p className="text-[11px] text-gray-400">Indiquez un nombre de QCM et d'exercices de code : le sujet est tiré au sort dans la banque de la certification choisie.</p>
+                  </div>
                 </div>
               </Screen>
               <Tip>
-                Le langage peut être modifié question par question dans l'éditeur. Le sélecteur global est juste un réglage par défaut pour accélérer la création.
+                PSM I est une épreuve en QCM : le champ « exercices de code » y est désactivé.
+                Pour C, les exercices sont compilés avec gcc ; pour Python et Algorithmique, exécutés avec Python 3.10.
               </Tip>
             </SubSection>
 
@@ -365,10 +374,10 @@ export default function HelpPage() {
                           <div className="border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 font-mono bg-gray-50 dark:bg-gray-800 text-xs text-gray-700 dark:text-gray-300">{tc.output}</div>
                           <div className="border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 font-mono bg-gray-50 dark:bg-gray-800 text-xs text-gray-700 dark:text-gray-300">{tc.weight}</div>
                         </div>
-                        <p className="text-[10px] text-indigo-500 -mt-1 mb-1 ml-1">← {tc.note}</p>
+                        <p className="text-[10px] text-brand-500 -mt-1 mb-1 ml-1">← {tc.note}</p>
                       </div>
                     ))}
-                    <button className="text-xs text-indigo-600 hover:underline mt-1">+ Ajouter un cas de test</button>
+                    <button className="text-xs text-brand-600 hover:underline mt-1">+ Ajouter un cas de test</button>
                   </div>
                 </div>
               </Screen>
@@ -387,7 +396,7 @@ export default function HelpPage() {
                     { label: "Python", active: false },
                     { label: "C (gcc)", active: true },
                   ].map((b) => (
-                    <span key={b.label} className={`px-3 py-1 rounded-lg text-xs font-semibold border ${b.active ? "bg-indigo-600 text-white border-indigo-600" : "bg-white dark:bg-gray-900 text-gray-500 border-gray-300 dark:border-gray-600"}`}>
+                    <span key={b.label} className={`px-3 py-1 rounded-lg text-xs font-semibold border ${b.active ? "bg-brand-600 text-white border-brand-600" : "bg-white dark:bg-gray-900 text-gray-500 border-gray-300 dark:border-gray-600"}`}>
                       {b.label}
                     </span>
                   ))}
@@ -450,7 +459,7 @@ export default function HelpPage() {
                           <td className="px-3 py-2 font-mono text-gray-500">{r.num}</td>
                           <td className="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{r.name}</td>
                           <td className="px-3 py-2 font-mono text-gray-700 dark:text-gray-300">{r.score}</td>
-                          <td className="px-3 py-2 font-mono font-bold text-indigo-600 dark:text-indigo-400">{r.grade}</td>
+                          <td className="px-3 py-2 font-mono font-bold text-brand-600 dark:text-brand-400">{r.grade}</td>
                           <td className="px-3 py-2">
                             <FakeBadge color={r.pass ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"}>
                               {r.result}
@@ -488,8 +497,8 @@ export default function HelpPage() {
               <div className="grid sm:grid-cols-2 gap-4">
                 {[
                   {
-                    lang: "🐍 Python", color: "border-indigo-200 bg-indigo-50 dark:bg-indigo-950/30 dark:border-indigo-800",
-                    badge: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300",
+                    lang: "🐍 Python", color: "border-brand-200 bg-brand-50 dark:bg-brand-950/30 dark:border-brand-800",
+                    badge: "bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300",
                     items: [
                       "20 QCM Débutant — types, opérateurs, listes, chaînes",
                       "40 QCM Intermédiaire — OOP, décorateurs, générateurs…",
@@ -534,7 +543,7 @@ export default function HelpPage() {
                       { label: "🐍 Python", active: true },
                       { label: "⚙️ C", active: false },
                     ].map((chip) => (
-                      <span key={chip.label} className={`px-3 py-1 rounded-full text-xs font-semibold ${chip.active ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"}`}>
+                      <span key={chip.label} className={`px-3 py-1 rounded-full text-xs font-semibold ${chip.active ? "bg-brand-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"}`}>
                         {chip.label}
                       </span>
                     ))}
@@ -558,8 +567,8 @@ export default function HelpPage() {
                     { type: "QCM", diff: "Expert", diffColor: "bg-red-100 text-red-700", tags: ["pointeurs", "const"], pts: 1, text: "Quelle est la différence entre `const int *p` et `int * const p` ?" },
                     { type: "Code", diff: "Intermédiaire", diffColor: "bg-blue-100 text-blue-700", tags: ["chaînes", "inversion"], pts: 2, text: "Inversion de chaîne en C — sans utiliser strrev." },
                   ].map((q, i) => (
-                    <label key={i} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer ${i === 1 ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950 dark:border-indigo-500" : "border-gray-200 dark:border-gray-700"}`}>
-                      <input type="checkbox" checked={i === 1} readOnly className="mt-0.5 w-4 h-4 accent-indigo-600 flex-shrink-0" />
+                    <label key={i} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer ${i === 1 ? "border-brand-400 bg-brand-50 dark:bg-brand-950 dark:border-brand-500" : "border-gray-200 dark:border-gray-700"}`}>
+                      <input type="checkbox" checked={i === 1} readOnly className="mt-0.5 w-4 h-4 accent-brand-600 flex-shrink-0" />
                       <div className="flex-1">
                         <div className="flex flex-wrap gap-1.5 mb-1">
                           <span className="text-xs font-bold uppercase text-gray-500">{q.type}</span>
@@ -584,7 +593,7 @@ export default function HelpPage() {
                 </div>
               </Screen>
               <Tip>
-                Le filtre <strong>🐍 Python</strong> montre toutes les questions Python. Le filtre <strong>⚙️ C</strong> filtre par tag <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">c</code> et n'affiche que les questions du langage C.
+                Le filtre <strong>Certification</strong> restreint la banque à une épreuve : Python, C, Algorithmique ou PSM I. Chaque question appartient à une seule certification.
               </Tip>
             </SubSection>
 
@@ -715,13 +724,13 @@ export default function HelpPage() {
               ]} />
               <Screen title="Inscription — Vérification par email">
                 <div className="max-w-sm mx-auto space-y-4 text-center">
-                  <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mx-auto text-2xl">📧</div>
+                  <div className="w-12 h-12 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center mx-auto text-2xl">📧</div>
                   <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Vérifiez votre adresse e-mail</p>
                   <p className="text-xs text-gray-500">Un code a été envoyé à <strong>fatou.diop@etudiant.sn</strong></p>
                   <Annotation text="Code reçu par email — valable 15 minutes">
                     <div className="flex gap-2 justify-center">
                       {["4", "7", "3", "9", "1", "2"].map((d, i) => (
-                        <div key={i} className="w-10 h-12 border-2 border-indigo-400 rounded-lg flex items-center justify-center text-xl font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900">
+                        <div key={i} className="w-10 h-12 border-2 border-brand-400 rounded-lg flex items-center justify-center text-xl font-bold text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-900">
                           {d}
                         </div>
                       ))}
@@ -739,7 +748,7 @@ export default function HelpPage() {
                   <div className="shrink-0 w-24 space-y-1">
                     <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Questions</p>
                     {[1, 2, 3, 4, 5].map((n) => (
-                      <div key={n} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs cursor-pointer ${n === 3 ? "bg-indigo-600 text-white font-bold" : n <= 2 ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500"}`}>
+                      <div key={n} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs cursor-pointer ${n === 3 ? "bg-brand-600 text-white font-bold" : n <= 2 ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500"}`}>
                         {n <= 2 ? "✓" : ""} Q{n}
                       </div>
                     ))}
@@ -787,7 +796,7 @@ export default function HelpPage() {
                         <p className="text-xs text-gray-500">Score total</p>
                         <p className="text-3xl font-bold text-gray-900 dark:text-white">3,0 / 3,0</p>
                         <Annotation text="Note calculée sur le barème configuré par le prof">
-                          <p className="text-xl font-semibold text-indigo-600 dark:text-indigo-400">20,00 / 20</p>
+                          <p className="text-xl font-semibold text-brand-600 dark:text-brand-400">20,00 / 20</p>
                         </Annotation>
                       </div>
                       <FakeBadge color="bg-green-500 text-white text-sm px-4 py-2 rounded-full font-bold">Admis</FakeBadge>
@@ -815,7 +824,7 @@ export default function HelpPage() {
           <Section id="securite" title="Sécurité & Anti-triche" emoji="">
 
             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-              PyExam intègre plusieurs mécanismes automatiques pour décourager la triche lors des examens à distance.
+              CertifCamp intègre plusieurs mécanismes automatiques pour décourager la triche lors des examens à distance.
               Ils sont <strong>transparents pour les étudiants honnêtes</strong> et génèrent des traces consultables dans le <strong>Journal d'audit</strong>.
             </p>
 
@@ -825,7 +834,7 @@ export default function HelpPage() {
                 {
                   title: "Randomisation des questions",
                   badge: "Automatique",
-                  badgeColor: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300",
+                  badgeColor: "bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300",
                   body: "L'ordre des questions et des choix QCM est mélangé de façon unique pour chaque étudiant, calculé à partir de son identifiant. Deux voisins ne voient jamais le même écran. L'ordre reste stable si l'étudiant recharge la page.",
                 },
                 {
@@ -894,7 +903,7 @@ export default function HelpPage() {
                       ["EXAM_SUBMIT", "Soumission de l'examen", "Normal — horodatage de fin"],
                     ].map(([evt, trigger, meaning]) => (
                       <tr key={evt} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td className="px-3 py-2 font-mono text-indigo-600 dark:text-indigo-400 whitespace-nowrap">{evt}</td>
+                        <td className="px-3 py-2 font-mono text-brand-600 dark:text-brand-400 whitespace-nowrap">{evt}</td>
                         <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{trigger}</td>
                         <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{meaning}</td>
                       </tr>
@@ -902,7 +911,7 @@ export default function HelpPage() {
                   </tbody>
                 </table>
               </div>
-              <Note>Les événements ne bloquent pas automatiquement l'étudiant — c'est le professeur qui interprète et décide des suites. PyExam enregistre, vous jugez.</Note>
+              <Note>Les événements ne bloquent pas automatiquement l'étudiant — c'est le professeur qui interprète et décide des suites. CertifCamp enregistre, vous jugez.</Note>
             </SubSection>
 
             {/* Mockup audit log */}
@@ -938,20 +947,20 @@ export default function HelpPage() {
           {/* ── WORKFLOW ──────────────────────────────────────────────── */}
           <Section id="workflow" title="Workflow complet" emoji="">
             <div className="relative pl-8 space-y-0">
-              <div className="absolute left-3 top-2 bottom-2 w-0.5 bg-indigo-200 dark:bg-indigo-800" />
+              <div className="absolute left-3 top-2 bottom-2 w-0.5 bg-brand-200 dark:bg-brand-800" />
               {[
-                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Crée l'examen : titre, durée, dates, barème, seuil, groupes." },
-                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Ajoute les questions (QCM et/ou Code avec cas de test)." },
-                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Importe ou crée les étudiants (CSV ou saisie manuelle)." },
-                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Active l'examen — les étudiants peuvent maintenant y accéder." },
+                { icon: "", actor: "Professeur", color: "bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300", step: "Crée l'examen : titre, durée, dates, barème, seuil, groupes." },
+                { icon: "", actor: "Professeur", color: "bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300", step: "Ajoute les questions (QCM et/ou Code avec cas de test)." },
+                { icon: "", actor: "Professeur", color: "bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300", step: "Importe ou crée les étudiants (CSV ou saisie manuelle)." },
+                { icon: "", actor: "Professeur", color: "bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300", step: "Active l'examen — les étudiants peuvent maintenant y accéder." },
                 { icon: "", actor: "Étudiant", color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", step: "Se connecte, démarre l'examen, répond, soumet." },
                 { icon: "", actor: "Système", color: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400", step: "Clôture automatique à la fin de la fenêtre horaire." },
-                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Lance la correction automatique depuis le tableau de bord." },
+                { icon: "", actor: "Professeur", color: "bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300", step: "Lance la correction automatique depuis le tableau de bord." },
                 { icon: "", actor: "Système", color: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400", step: "Envoie un email de résultats à chaque étudiant." },
-                { icon: "", actor: "Professeur", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", step: "Consulte le rapport, exporte en PDF/CSV." },
+                { icon: "", actor: "Professeur", color: "bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300", step: "Consulte le rapport, exporte en PDF/CSV." },
               ].map((s, i) => (
                 <div key={i} className="flex gap-4 pb-5 relative">
-                  <div className="absolute -left-5 top-1 w-6 h-6 rounded-full bg-white dark:bg-gray-950 border-2 border-indigo-400 flex items-center justify-center text-sm z-10">{s.icon}</div>
+                  <div className="absolute -left-5 top-1 w-6 h-6 rounded-full bg-white dark:bg-gray-950 border-2 border-brand-400 flex items-center justify-center text-sm z-10">{s.icon}</div>
                   <div className="flex gap-2 items-baseline flex-wrap">
                     <FakeBadge color={s.color}>{s.actor}</FakeBadge>
                     <span className="text-sm text-gray-700 dark:text-gray-300">{s.step}</span>
@@ -968,11 +977,11 @@ export default function HelpPage() {
               { q: "Le code de l'étudiant est noté 0 alors qu'il fonctionne", a: "Vérifiez les cas de test : l'Entrée (stdin) doit correspondre exactement à ce que le code lit avec input(). Une entrée vide cause un EOFError → sortie vide → test échoué." },
               { q: "La sortie attendue ne correspond pas", a: "Le système compare les dernières lignes du stdout. Si le code écrit '5 x 3 = 15' mais l'attendu est '5x3=15' (sans espaces), le test échoue. Respectez le format demandé dans l'énoncé." },
               { q: "Peut-on repasser un examen ?", a: "Non. La soumission est définitive. Créez un nouvel examen pour une nouvelle session." },
-              { q: "Que signifie un nombre élevé de changements d'onglet ?", a: "L'étudiant a navigué hors de l'onglet pendant l'examen. Visible dans le rapport. Seuil à définir selon votre politique — PyExam ne bloque pas automatiquement." },
+              { q: "Que signifie un nombre élevé de changements d'onglet ?", a: "L'étudiant a navigué hors de l'onglet pendant l'examen. Visible dans le rapport. Seuil à définir selon votre politique — CertifCamp ne bloque pas automatiquement." },
               { q: "Un étudiant dit ne pas pouvoir coller son code — est-ce normal ?", a: "Oui, c'est intentionnel. Le copier-coller est désactivé dans l'éditeur de code pendant l'examen pour forcer l'écriture manuelle. L'étudiant doit saisir son code à la main." },
               { q: "Peut-on désactiver le plein écran forcé ?", a: "Non, il est activé par défaut sur tous les examens. Si un étudiant ne peut pas passer en plein écran (navigateur non compatible), l'examen continue sans bloquer, mais la sortie n'est pas détectable." },
               { q: "L'étudiant a perdu sa connexion pendant l'examen — ses réponses sont-elles perdues ?", a: "Non. Les réponses sont sauvegardées localement à chaque frappe. À la reconnexion, elles sont synchronisées automatiquement. Si la coupure dure plus de 60 secondes, un événement RECONNECT_AFTER_DISCONNECTION est loggé." },
-              { q: "Quels langages de programmation sont supportés ?", a: "Python 3.10 et C (compilé avec gcc 10.2.0) via le moteur Piston. Le langage est configuré par question dans le formulaire de création d'examen. Java et autres langages ne sont pas encore disponibles." },
+              { q: "Quels langages de programmation sont supportés ?", a: "Python 3.10 et C (compilé avec gcc 10.2.0) via le moteur Piston. Le langage découle du type de certification choisi pour l'épreuve. Java et les autres langages ne sont pas encore disponibles." },
               { q: "Comment restreindre un examen à une classe ?", a: "Champ 'Groupes autorisés' dans la config de l'examen. Entrez le nom exact de la classe (ex: L3INFO). Les étudiants doivent avoir ce même nom dans leur champ class_name." },
               { q: "Que faire si un mot de passe généré à l'import est perdu ?", a: "Allez dans Admin → Utilisateurs, trouvez l'étudiant et utilisez 'Réinitialiser le mot de passe'. Un email de réinitialisation lui sera envoyé." },
               { q: "Comment créer un examen C en partant de la banque ?", a: "Dans le formulaire de création d'examen, sélectionnez 'C (gcc)' comme langage. La banque s'ouvrira automatiquement filtrée sur les questions C. Vous pouvez aussi sélectionner manuellement le filtre ⚙️ C dans le sélecteur de la banque." },
@@ -981,7 +990,7 @@ export default function HelpPage() {
             ].map(({ q, a }, i) => (
               <details key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden group">
                 <summary className="flex items-center justify-between px-5 py-4 cursor-pointer font-medium text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition list-none">
-                  <span className="flex gap-2 items-center"><span className="text-indigo-400">Q.</span>{q}</span>
+                  <span className="flex gap-2 items-center"><span className="text-brand-400">Q.</span>{q}</span>
                   <span className="text-gray-400 group-open:rotate-180 transition-transform shrink-0 ml-2">▾</span>
                 </summary>
                 <div className="px-5 pb-4 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800 pt-3">
@@ -992,7 +1001,7 @@ export default function HelpPage() {
           </Section>
 
           <footer className="text-center text-xs text-gray-400 pb-6 border-t border-gray-200 dark:border-gray-800 pt-6">
-            PyExam — Documentation v4.0 · Langages supportés : Python 3.10 & C gcc 10.2 · Pour toute assistance, contactez votre administrateur.
+            CertifCamp — Documentation v4.0 · Langages supportés : Python 3.10 & C gcc 10.2 · Pour toute assistance, contactez votre administrateur.
           </footer>
 
         </main>

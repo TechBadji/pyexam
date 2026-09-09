@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 from app.models.question import QuestionType
+from app.models.track import ExamTrack
 
 
 class DifficultyLevel(str, PyEnum):
@@ -26,6 +27,9 @@ class BankQuestion(Base):
     type: Mapped[QuestionType] = mapped_column(Enum(QuestionType), nullable=False)
     difficulty: Mapped[DifficultyLevel] = mapped_column(
         Enum(DifficultyLevel), nullable=False, default=DifficultyLevel.beginner
+    )
+    exam_type: Mapped[ExamTrack] = mapped_column(
+        Enum(ExamTrack, name="examtrack"), nullable=False, default=ExamTrack.python, index=True
     )
     tags: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
     statement: Mapped[str] = mapped_column(Text, nullable=False)

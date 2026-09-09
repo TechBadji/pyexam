@@ -19,7 +19,7 @@ const Code = ({ children, label }: { children: string; label?: string }) => (
 );
 
 const C = ({ children }: { children: React.ReactNode }) => (
-  <code className="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded text-[0.85em] font-mono">
+  <code className="bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 px-1.5 py-0.5 rounded text-[0.85em] font-mono">
     {children}
   </code>
 );
@@ -48,9 +48,9 @@ const Warn = ({ children }: { children: React.ReactNode }) => (
 const H2 = ({ id, num, title }: { id: string; num: number; title: string }) => (
   <h2
     id={id}
-    className="scroll-mt-24 flex items-center gap-3 text-xl font-extrabold text-gray-900 dark:text-white pb-3 border-b-2 border-indigo-200 dark:border-indigo-800 mt-2"
+    className="scroll-mt-24 flex items-center gap-3 text-xl font-extrabold text-gray-900 dark:text-white pb-3 border-b-2 border-brand-200 dark:border-brand-800 mt-2"
   >
-    <span className="shrink-0 w-8 h-8 rounded-lg bg-indigo-600 text-white text-sm font-black flex items-center justify-center">
+    <span className="shrink-0 w-8 h-8 rounded-lg bg-brand-600 text-white text-sm font-black flex items-center justify-center">
       {num}
     </span>
     {title}
@@ -58,7 +58,7 @@ const H2 = ({ id, num, title }: { id: string; num: number; title: string }) => (
 );
 
 const H3 = ({ children }: { children: React.ReactNode }) => (
-  <h3 className="text-base font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mt-6 mb-3">
+  <h3 className="text-base font-bold text-brand-700 dark:text-brand-400 uppercase tracking-wide mt-6 mb-3">
     {children}
   </h3>
 );
@@ -83,7 +83,7 @@ const Table = ({ headers, rows }: { headers: string[]; rows: string[][] }) => (
         {rows.map((row, i) => (
           <tr key={i} className="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
             {row.map((cell, j) => (
-              <td key={j} className={`px-4 py-2.5 text-gray-700 dark:text-gray-300 ${j === 0 ? "font-mono font-semibold text-indigo-600 dark:text-indigo-400" : ""}`}>
+              <td key={j} className={`px-4 py-2.5 text-gray-700 dark:text-gray-300 ${j === 0 ? "font-mono font-semibold text-brand-600 dark:text-brand-400" : ""}`}>
                 {cell}
               </td>
             ))}
@@ -119,7 +119,7 @@ export default function PythonCoursePage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
 
       {/* Header */}
-      <header className="bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-700 text-white py-10 px-4 print:py-6">
+      <header className="bg-gradient-to-br from-brand-700 via-brand-600 to-violet-700 text-white py-10 px-4 print:py-6">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
@@ -129,7 +129,7 @@ export default function PythonCoursePage() {
             </div>
             <div>
               <h1 className="text-2xl font-extrabold tracking-tight">Cours Python pour débutants</h1>
-              <p className="text-indigo-200 text-sm mt-1">
+              <p className="text-brand-200 text-sm mt-1">
                 De l'installation au premier programme — 13 chapitres complets
               </p>
               <div className="flex flex-wrap gap-2 mt-3 text-xs">
@@ -142,7 +142,7 @@ export default function PythonCoursePage() {
           <div className="mt-6 flex gap-3 print:hidden">
             <Link
               to="/dashboard"
-              className="inline-flex items-center gap-2 bg-white text-indigo-700 font-semibold px-4 py-2 rounded-lg hover:bg-indigo-50 transition text-sm"
+              className="inline-flex items-center gap-2 bg-white text-brand-700 font-semibold px-4 py-2 rounded-lg hover:bg-brand-50 transition text-sm"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -164,9 +164,9 @@ export default function PythonCoursePage() {
                 <a
                   key={ch.id}
                   href={`#${ch.id}`}
-                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 py-1.5 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition group"
+                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 py-1.5 px-2 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/30 transition group"
                 >
-                  <span className="shrink-0 w-5 h-5 rounded bg-gray-100 dark:bg-gray-800 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 text-gray-500 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 text-[10px] font-bold flex items-center justify-center transition">
+                  <span className="shrink-0 w-5 h-5 rounded bg-gray-100 dark:bg-gray-800 group-hover:bg-brand-100 dark:group-hover:bg-brand-900/50 text-gray-500 dark:text-gray-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 text-[10px] font-bold flex items-center justify-center transition">
                     {ch.num}
                   </span>
                   <span className="leading-snug">{ch.title}</span>
@@ -201,7 +201,7 @@ export default function PythonCoursePage() {
                 ["Indentation obligatoire", "L'indentation définit les blocs de code. Ce n'est pas une convention, c'est une règle syntaxique."],
               ].map(([titre, desc]) => (
                 <li key={titre} className="flex gap-3 items-start">
-                  <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2" />
+                  <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-brand-500 mt-2" />
                   <span><strong>{titre}</strong> — {desc}</span>
                 </li>
               ))}
@@ -1215,8 +1215,8 @@ print(c1.nom)           # "alpha"  (propre à c1)`}</Code>
 
           {/* ── Récapitulatif ───────────────────────────────────────────── */}
           <section className="space-y-5">
-            <div className="bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-950/50 dark:to-violet-950/40 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-6">
-              <h2 className="text-lg font-extrabold text-indigo-800 dark:text-indigo-200 mb-4">
+            <div className="bg-gradient-to-br from-brand-50 to-violet-50 dark:from-brand-950/50 dark:to-violet-950/40 border border-brand-200 dark:border-brand-800 rounded-2xl p-6">
+              <h2 className="text-lg font-extrabold text-brand-800 dark:text-brand-200 mb-4">
                 Récapitulatif des concepts essentiels
               </h2>
               <div className="grid sm:grid-cols-2 gap-3">
@@ -1233,8 +1233,8 @@ print(c1.nom)           # "alpha"  (propre à c1)`}</Code>
                   ["Modules", "import · from ... import · math · random · datetime · os"],
                   ["POO", "class · __init__ · self · héritage · super() · dunder"],
                 ].map(([titre, desc]) => (
-                  <div key={titre} className="flex gap-3 items-start bg-white dark:bg-gray-900/50 rounded-xl p-3 border border-indigo-100 dark:border-indigo-900">
-                    <span className="shrink-0 w-2 h-2 rounded-full bg-indigo-500 mt-1.5" />
+                  <div key={titre} className="flex gap-3 items-start bg-white dark:bg-gray-900/50 rounded-xl p-3 border border-brand-100 dark:border-brand-900">
+                    <span className="shrink-0 w-2 h-2 rounded-full bg-brand-500 mt-1.5" />
                     <div>
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{titre}</span>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{desc}</p>
@@ -1249,7 +1249,7 @@ print(c1.nom)           # "alpha"  (propre à c1)`}</Code>
           <div className="pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-center print:hidden">
             <Link
               to="/dashboard"
-              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2.5 rounded-xl transition text-sm"
+              className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-2.5 rounded-xl transition text-sm"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

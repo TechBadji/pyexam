@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.models.track import ExamTrack
 
 
 class ExamStatus(str, PyEnum):
@@ -29,6 +30,9 @@ class Exam(Base):
     end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[ExamStatus] = mapped_column(
         Enum(ExamStatus), nullable=False, default=ExamStatus.draft
+    )
+    exam_type: Mapped[ExamTrack] = mapped_column(
+        Enum(ExamTrack, name="examtrack"), nullable=False, default=ExamTrack.python
     )
     created_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False

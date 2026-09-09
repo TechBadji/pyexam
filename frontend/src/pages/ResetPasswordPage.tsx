@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api/axios";
 import LanguageSwitcher from "../components/ui/LanguageSwitcher";
-import PyExamLogo from "../components/ui/PyExamLogo";
+import CertifCampLogo from "../components/ui/CertifCampLogo";
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation("auth");
@@ -23,7 +23,7 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-6">
         <div className="text-center space-y-4 max-w-sm">
           <p className="text-sm text-red-500">{t("reset_password.invalid_token")}</p>
-          <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+          <Link to="/forgot-password" className="text-sm text-brand-600 hover:text-brand-700 font-medium">
             ← {t("forgot_password.link")}
           </Link>
         </div>
@@ -64,8 +64,8 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
       <div className="flex items-center justify-between px-6 pt-5 pb-2">
         <Link to="/login" className="flex items-center gap-2">
-          <PyExamLogo size={36} />
-          <span className="font-bold text-gray-900 dark:text-white text-lg">PyExam</span>
+          <CertifCampLogo size={36} />
+          <span className="font-bold text-gray-900 dark:text-white text-lg">CertifCamp</span>
         </Link>
         <LanguageSwitcher />
       </div>
@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
               </p>
               <button
                 onClick={() => navigate("/login", { replace: true })}
-                className="mt-4 w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors"
+                className="mt-4 w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
               >
                 {t("reset_password.go_to_login")}
               </button>
@@ -120,7 +120,7 @@ export default function ResetPasswordPage() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                      className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                     />
                     <button
                       type="button"
@@ -155,14 +155,14 @@ export default function ResetPasswordPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-brand-500/30 flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>

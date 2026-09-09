@@ -115,7 +115,7 @@ function CodingBreakdown({ item, t }: { item: BreakdownItem; t: (k: string) => s
       <div>
         <button
           onClick={() => setShowCode((v) => !v)}
-          className="flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+          className="flex items-center gap-1.5 text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium"
         >
           <svg className={`w-3.5 h-3.5 transition-transform ${showCode ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -199,7 +199,7 @@ export default function ResultsPage() {
                     {fmtScore(results.total_score)} / {fmtScore(results.max_score)}
                   </p>
                   {results.grade_scale != null && results.scaled_score != null && (
-                    <p className="text-2xl font-semibold text-indigo-600 dark:text-indigo-400">
+                    <p className="text-2xl font-semibold text-brand-600 dark:text-brand-400">
                       {fmtScore(results.scaled_score, 2)} / {results.grade_scale}
                     </p>
                   )}

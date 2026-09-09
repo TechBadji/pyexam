@@ -165,7 +165,7 @@ export default function CodingQuestion({
             onChange={(e) => setStdin(e.target.value)}
             placeholder={t("interface.stdin_placeholder")}
             rows={3}
-            className="w-full font-mono text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-y"
+            className="w-full font-mono text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400 resize-y"
             spellCheck={false}
           />
         </div>

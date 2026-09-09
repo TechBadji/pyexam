@@ -2,7 +2,8 @@ import { useTranslation } from "react-i18next";
 
 const LANGS = ["fr", "en"] as const;
 
-export default function LanguageSwitcher() {
+export default function LanguageSwitcher({ tone = "default" }: { tone?: "default" | "light" }) {
+  const light = tone === "light";
   const { i18n } = useTranslation();
   const current = i18n.language.startsWith("fr") ? "fr" : "en";
 
@@ -12,15 +13,23 @@ export default function LanguageSwitcher() {
   };
 
   return (
-    <div className="flex items-center gap-1 rounded-md border border-gray-200 dark:border-gray-600 p-0.5">
+    <div
+      className={`flex items-center gap-1 rounded-md border p-0.5 ${
+        light ? "border-white/25" : "border-gray-200 dark:border-gray-600"
+      }`}
+    >
       {LANGS.map((lang) => (
         <button
           key={lang}
           onClick={() => toggle(lang)}
           className={`px-2 py-0.5 rounded text-sm font-medium transition-colors ${
             current === lang
-              ? "bg-brand-600 text-white"
-              : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              ? light
+                ? "bg-white text-brand-800"
+                : "bg-brand-600 text-white"
+              : light
+                ? "text-white/70 hover:text-white"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
           }`}
         >
           {lang.toUpperCase()}

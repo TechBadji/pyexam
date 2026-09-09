@@ -12,6 +12,7 @@ from sqlalchemy import select
 
 from app.database import AsyncSessionLocal
 from app.models.question import QuestionType
+from app.models.track import ExamTrack
 from app.models.question_bank import BankMCQOption, BankQuestion, DifficultyLevel
 from app.models.user import User
 
@@ -757,6 +758,7 @@ async def seed_c_bank() -> None:
             q = BankQuestion(
                 type=q_data["type"],
                 difficulty=q_data["difficulty"],
+                exam_type=ExamTrack.c,
                 tags=q_data["tags"],
                 statement=q_data["statement"],
                 points=q_data["points"],

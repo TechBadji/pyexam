@@ -15,6 +15,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ResultsPage from "./pages/ResultsPage";
 import StudentDashboard from "./pages/StudentDashboard";
 import HelpPage from "./pages/HelpPage";
+import LandingPage from "./pages/LandingPage";
 import PythonCoursePage from "./pages/PythonCoursePage";
 
 function RequireAuth({ role }: { role?: "student" | "admin" }) {
@@ -34,14 +35,14 @@ function RedirectIfAuth() {
 
 function Spinner() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen flex items-center justify-center bg-ink-50 dark:bg-ink-950">
       <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
 
-// BASE_URL is set by Vite from the `base` config (/pyexam/ in production, / in dev)
-// React Router wants no trailing slash: /pyexam/ → /pyexam
+// BASE_URL is set by Vite from the `base` config (a sub-path in production, / in dev)
+// React Router wants no trailing slash: /certifcamp/ → /certifcamp
 const basename = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 
 export default function App() {
@@ -79,15 +80,7 @@ export default function App() {
           <Route path="/aide" element={<HelpPage />} />
           <Route path="/cours-python" element={<PythonCoursePage />} />
 
-          <Route
-            path="/"
-            element={
-              <Navigate
-                to={useAuthStore.getState().user?.role === "admin" ? "/admin" : "/dashboard"}
-                replace
-              />
-            }
-          />
+          <Route path="/" element={<LandingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

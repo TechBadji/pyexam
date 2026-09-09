@@ -5,12 +5,14 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import ExamForm from "../components/admin/ExamForm";
 import Navbar from "../components/ui/Navbar";
-import PyExamLogo from "../components/ui/PyExamLogo";
+import CertifCampLogo from "../components/ui/CertifCampLogo";
+import TrackBadge from "../components/ui/TrackBadge";
 
 interface ExamItem {
   id: string;
   title: string;
   status: string;
+  exam_type: string;
   duration_minutes: number;
   start_time: string;
   end_time: string;
@@ -27,7 +29,7 @@ function StatPill({ label, value, accent }: { label: string; value: number; acce
   return (
     <div className="flex flex-col items-center px-5 py-2">
       <span className={`text-2xl font-bold ${accent ?? "text-white"}`}>{value}</span>
-      <span className="text-xs text-indigo-200 mt-0.5 whitespace-nowrap">{label}</span>
+      <span className="text-xs text-brand-200 mt-0.5 whitespace-nowrap">{label}</span>
     </div>
   );
 }
@@ -92,14 +94,14 @@ export default function AdminDashboard() {
       <Navbar />
 
       {/* ── Hero header ─────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800">
+      <div className="bg-gradient-to-br from-brand-700 via-brand-800 to-ink-950">
         <div className="max-w-6xl mx-auto px-4 pt-8 pb-0">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <PyExamLogo size={48} />
+              <CertifCampLogo size={48} tone="light" />
               <div>
                 <h1 className="text-2xl font-bold text-white">{t("dashboard.title")}</h1>
-                <p className="text-sm text-indigo-200 mt-0.5">PyExam · Administration</p>
+                <p className="text-sm text-brand-200 mt-0.5">CertifCamp · Administration</p>
               </div>
             </div>
             <div className="flex items-center gap-2 pb-2 flex-wrap">
@@ -123,7 +125,7 @@ export default function AdminDashboard() {
               </Link>
               <button
                 onClick={() => setShowForm(true)}
-                className="px-4 py-2 rounded-xl bg-white text-indigo-700 text-sm font-semibold hover:bg-indigo-50 transition-colors shadow-sm"
+                className="px-4 py-2 rounded-xl bg-white text-brand-700 text-sm font-semibold hover:bg-brand-50 transition-colors shadow-sm"
               >
                 + {t("dashboard.create_exam")}
               </button>
@@ -144,9 +146,9 @@ export default function AdminDashboard() {
       {showForm && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm overflow-y-auto p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-3xl mx-auto my-8 shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-600 to-violet-700 px-6 py-4 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-brand-700 to-brand-900 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <PyExamLogo size={32} />
+                <CertifCampLogo size={32} />
                 <h2 className="text-base font-semibold text-white">{t("dashboard.create_exam")}</h2>
               </div>
               <button
@@ -167,19 +169,19 @@ export default function AdminDashboard() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         {loading ? (
           <div className="flex justify-center py-24">
-            <div className="w-9 h-9 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-9 h-9 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : exams.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
-              <svg className="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="w-16 h-16 rounded-2xl bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center">
+              <svg className="w-8 h-8 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
             <p className="text-gray-400 dark:text-gray-500 text-sm">Aucun examen. Créez-en un pour commencer.</p>
             <button
               onClick={() => setShowForm(true)}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors"
+              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-xl transition-colors"
             >
               + {t("dashboard.create_exam")}
             </button>
@@ -192,14 +194,15 @@ export default function AdminDashboard() {
                 className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
-                    <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h2 className="font-semibold text-gray-900 dark:text-white truncate">{exam.title}</h2>
+                      <TrackBadge track={exam.exam_type} />
                       <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${STATUS_COLORS[exam.status] ?? ""}`}>
                         {exam.status}
                       </span>

@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from app.models.exam import ExamStatus
+from app.models.track import ExamTrack
 
 
 class ExamCreate(BaseModel):
@@ -13,6 +14,7 @@ class ExamCreate(BaseModel):
     start_time: datetime
     end_time: datetime
     status: ExamStatus = ExamStatus.draft
+    exam_type: ExamTrack = ExamTrack.python
     allowed_groups: list[str] | None = None
     grade_scale: float | None = None
     passing_threshold: float | None = None
@@ -33,6 +35,7 @@ class ExamUpdate(BaseModel):
     start_time: datetime | None = None
     end_time: datetime | None = None
     status: ExamStatus | None = None
+    exam_type: ExamTrack | None = None
     allowed_groups: list[str] | None = None
     grade_scale: float | None = None
     passing_threshold: float | None = None
@@ -57,6 +60,7 @@ class ExamResponse(BaseModel):
     start_time: datetime
     end_time: datetime
     status: ExamStatus
+    exam_type: ExamTrack
     created_by: uuid.UUID
     created_at: datetime
     allowed_groups: list[str] | None = None

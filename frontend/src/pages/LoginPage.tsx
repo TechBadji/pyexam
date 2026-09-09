@@ -4,13 +4,13 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import LanguageSwitcher from "../components/ui/LanguageSwitcher";
-import PyExamLogo from "../components/ui/PyExamLogo";
+import CertifCampLogo from "../components/ui/CertifCampLogo";
 import { useAuthStore } from "../store/authStore";
 
 function CheckIcon() {
   return (
     <svg
-      className="w-4 h-4 text-indigo-200"
+      className="w-4 h-4 text-brand-200"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -28,7 +28,7 @@ function CheckIcon() {
 function CodeIcon() {
   return (
     <svg
-      className="w-4 h-4 text-indigo-200"
+      className="w-4 h-4 text-brand-200"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -46,7 +46,7 @@ function CodeIcon() {
 function ChartIcon() {
   return (
     <svg
-      className="w-4 h-4 text-indigo-200"
+      className="w-4 h-4 text-brand-200"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -64,7 +64,7 @@ function ChartIcon() {
 function BookIcon() {
   return (
     <svg
-      className="w-4 h-4 text-indigo-200"
+      className="w-4 h-4 text-brand-200"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -85,7 +85,7 @@ function FeatureRow({ icon, text }: { icon: JSX.Element; text: string }) {
       <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
         {icon}
       </div>
-      <span className="text-sm text-indigo-100">{text}</span>
+      <span className="text-sm text-brand-100">{text}</span>
     </div>
   );
 }
@@ -138,7 +138,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* ── Left hero panel (desktop only) ── */}
-      <div className="hidden lg:flex lg:w-[52%] bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-700 flex-col justify-between p-14 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[52%] bg-gradient-to-br from-brand-700 via-brand-800 to-ink-950 flex-col justify-between p-14 relative overflow-hidden">
         {/* Decorative circles */}
         <div className="absolute -top-28 -right-28 w-96 h-96 rounded-full bg-white/5 pointer-events-none" />
         <div className="absolute -bottom-40 -left-24 w-96 h-96 rounded-full bg-white/5 pointer-events-none" />
@@ -146,22 +146,20 @@ export default function LoginPage() {
 
         {/* Brand */}
         <div className="relative z-10 flex items-center gap-3">
-          <PyExamLogo size={52} />
+          <CertifCampLogo size={52} tone="light" />
           <div>
-            <span className="text-2xl font-bold text-white tracking-tight">PyExam</span>
-            <p className="text-indigo-300 text-xs font-medium uppercase tracking-widest mt-0.5">
-              Exam Platform
-            </p>
+            <span className="font-display text-2xl font-semibold text-white tracking-tight">CertifCamp</span>
+            <p className="text-brand-200/80 text-xs mt-0.5">{t("hero.tagline")}</p>
           </div>
         </div>
 
         {/* Hero text + features */}
         <div className="relative z-10 space-y-10">
           <div>
-            <h2 className="text-4xl font-bold text-white leading-tight">
+            <h2 className="font-display text-4xl font-semibold text-white leading-[1.1] tracking-tight">
               {t("hero.title")}
             </h2>
-            <p className="mt-4 text-indigo-200 text-base leading-relaxed max-w-sm">
+            <p className="mt-4 text-brand-200 text-base leading-relaxed max-w-sm">
               {t("hero.subtitle")}
             </p>
           </div>
@@ -174,13 +172,13 @@ export default function LoginPage() {
               <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
                 <BookIcon />
               </div>
-              <span className="text-sm text-indigo-100">Documentation PyExam</span>
+              <span className="text-sm text-brand-100">{t("hero.docs")}</span>
             </Link>
           </div>
         </div>
 
-        <p className="relative z-10 text-indigo-400 text-xs">
-          © 2025 PyExam · Python Exam Platform
+        <p className="relative z-10 text-brand-400 text-xs">
+          © 2025 CertifCamp · Python · C · Algo · PSM I
         </p>
       </div>
 
@@ -190,8 +188,8 @@ export default function LoginPage() {
         <div className="flex items-center justify-between px-6 pt-5 pb-2">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 lg:hidden">
-            <PyExamLogo size={36} />
-            <span className="font-bold text-gray-900 dark:text-white text-lg">PyExam</span>
+            <CertifCampLogo size={36} />
+            <span className="font-display font-semibold text-gray-900 dark:text-white text-lg">CertifCamp</span>
           </div>
           <div className="ml-auto">
             <LanguageSwitcher />
@@ -228,7 +226,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="vous@exemple.com"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                 />
               </div>
 
@@ -249,7 +247,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                    className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                   />
                   <button
                     type="button"
@@ -275,11 +273,11 @@ export default function LoginPage() {
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {t("login.no_account")}{" "}
-                  <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                  <Link to="/register" className="text-brand-600 hover:text-brand-700 font-medium">
                     {t("login.sign_up")}
                   </Link>
                 </p>
-                <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                <Link to="/forgot-password" className="text-sm text-brand-600 hover:text-brand-700 font-medium">
                   {t("forgot_password.link")}
                 </Link>
               </div>
@@ -287,7 +285,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-2 mt-2"
+                className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-brand-500/30 flex items-center justify-center gap-2 mt-2"
               >
                 {loading ? (
                   <>

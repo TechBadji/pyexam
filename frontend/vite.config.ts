@@ -4,18 +4,19 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   // VITE_BASE_PATH is injected at Docker build time for sub-path deployments
-  // e.g. /pyexam/ for www.digitalmatis.com/pyexam/
+  // e.g. /certifcamp/ when served from a sub-path
   base: process.env.VITE_BASE_PATH ?? "/",
   server: {
     port: 3000,
     proxy: {
-      "/auth":        { target: "http://localhost:8000", changeOrigin: true },
-      "/exams":       { target: "http://localhost:8000", changeOrigin: true },
-      "/submissions": { target: "http://localhost:8000", changeOrigin: true },
-      "/admin":       { target: "http://localhost:8000", changeOrigin: true },
-      "/student":     { target: "http://localhost:8000", changeOrigin: true },
-      "/code":        { target: "http://localhost:8000", changeOrigin: true },
-      "/api":         { target: "http://localhost:8000", changeOrigin: true },
+      // The app talks to the API through /api (see src/api/axios.ts); nginx
+      // strips that prefix in production, so mirror the rewrite here. Only /api
+      // is proxied — bare prefixes like /admin belong to the SPA router.
+      "/api": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api/, ""),
+      },
     },
   },
   build: {

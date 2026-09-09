@@ -143,7 +143,7 @@ export default function AdminUsersPage() {
     new Date(s).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US");
 
   const ROLE_COLORS: Record<string, string> = {
-    admin: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+    admin: "bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300",
     student: "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300",
   };
 
@@ -151,10 +151,10 @@ export default function AdminUsersPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
 
-      <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800">
+      <div className="bg-gradient-to-br from-brand-700 via-brand-800 to-ink-950">
         <div className="max-w-6xl mx-auto px-4 pt-8 pb-6">
           <div className="flex items-center gap-3 mb-4">
-            <Link to="/admin" className="flex items-center gap-1.5 text-sm text-indigo-200 hover:text-white transition-colors">
+            <Link to="/admin" className="flex items-center gap-1.5 text-sm text-brand-200 hover:text-white transition-colors">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
@@ -176,7 +176,7 @@ export default function AdminUsersPage() {
               </button>
               <button
                 onClick={() => setShowCreate(true)}
-                className="px-4 py-2 rounded-xl bg-white text-indigo-700 text-sm font-semibold hover:bg-indigo-50 transition-colors shadow-sm"
+                className="px-4 py-2 rounded-xl bg-white text-brand-700 text-sm font-semibold hover:bg-brand-50 transition-colors shadow-sm"
               >
                 + {t("users.create_user")}
               </button>
@@ -193,16 +193,16 @@ export default function AdminUsersPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("users.search_placeholder")}
-              className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
-            <button type="submit" className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors">
+            <button type="submit" className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm rounded-lg transition-colors">
               {t("users.search")}
             </button>
           </form>
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as "" | "student" | "admin")}
-            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="">{t("users.all_roles")}</option>
             <option value="student">{t("users.role_student")}</option>
@@ -213,7 +213,7 @@ export default function AdminUsersPage() {
         {/* Table */}
         {loading ? (
           <div className="flex justify-center py-24">
-            <div className="w-9 h-9 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-9 h-9 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
@@ -283,7 +283,7 @@ export default function AdminUsersPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder={t("users.new_password")}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
                 <div className="flex gap-3 justify-end pt-2">
                   <button onClick={closeReset} className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
@@ -357,26 +357,26 @@ export default function AdminUsersPage() {
                 value={createForm.email}
                 onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
                 placeholder="Email"
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
               <input
                 required
                 value={createForm.full_name}
                 onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })}
                 placeholder={t("users.col_name")}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
               <input
                 value={createForm.student_number}
                 onChange={(e) => setCreateForm({ ...createForm, student_number: e.target.value })}
                 placeholder={`${t("users.col_number")} (${t("users.optional")})`}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
               <input
                 value={createForm.class_name}
                 onChange={(e) => setCreateForm({ ...createForm, class_name: e.target.value })}
                 placeholder={`${t("users.col_class")} (${t("users.optional")})`}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
               <input
                 required
@@ -384,12 +384,12 @@ export default function AdminUsersPage() {
                 value={createForm.password}
                 onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
                 placeholder={t("users.new_password")}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
               <select
                 value={createForm.role}
                 onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="student">{t("users.role_student")}</option>
                 <option value="admin">{t("users.role_admin")}</option>
@@ -401,7 +401,7 @@ export default function AdminUsersPage() {
                 <button type="button" onClick={() => { setShowCreate(false); setCreateError(null); }} className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
                   {t("exam_form.cancel")}
                 </button>
-                <button type="submit" disabled={creating} className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors">
+                <button type="submit" disabled={creating} className="px-4 py-2 text-sm bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors">
                   {creating ? "…" : t("users.create_confirm")}
                 </button>
               </div>
@@ -464,7 +464,7 @@ export default function AdminUsersPage() {
                   </div>
                 )}
                 <div className="flex justify-end pt-2">
-                  <button onClick={() => { setShowImport(false); setImportResult(null); }} className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors">
+                  <button onClick={() => { setShowImport(false); setImportResult(null); }} className="px-4 py-2 text-sm bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-colors">
                     OK
                   </button>
                 </div>
@@ -473,7 +473,7 @@ export default function AdminUsersPage() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={downloadTemplate}
-                  className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                  className="flex items-center gap-2 text-sm text-brand-600 hover:text-brand-700 font-medium"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -487,7 +487,7 @@ export default function AdminUsersPage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={importing}
-                    className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
+                    className="px-4 py-2 text-sm bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
                   >
                     {importing ? t("users.import_loading") : t("users.import_confirm")}
                   </button>

@@ -16,7 +16,8 @@
     "exam_published": "Exam published — students can now access it.",
     "exam_closed": "Exam closed.",
     "users": "Users",
-    "audit_log": "Activity log"
+    "audit_log": "Activity log",
+    "exam_track": "Certification"
   },
   "exam_form": {
     "exam_title": "Exam title",
@@ -59,7 +60,24 @@
     "grading_hint": "Leave empty to use raw points and the global threshold.",
     "language": "Language",
     "error_dates": "Start time must be before end time.",
-    "error_generic": "An error occurred while saving. Please check the form and try again."
+    "error_generic": "An error occurred while saving. Please check the form and try again.",
+    "track_label": "Certification type",
+    "track_hint": "CertifCamp draws from the question bank matching the type you pick.",
+    "track_python": "Python",
+    "track_c": "C",
+    "track_algo": "Algorithms",
+    "track_psm1": "PSM I — Scrum",
+    "track_format_mixed": "Multiple choice and code",
+    "track_format_mcq": "Multiple choice only",
+    "generate_title": "Assemble the paper from the bank",
+    "generate_hint": "Questions are drawn at random from the {{track}} bank.",
+    "generate_n_mcq": "Multiple-choice questions",
+    "generate_n_coding": "Coding exercises",
+    "generate_mcq_only": "This certification is multiple choice only.",
+    "generate_difficulty": "Level",
+    "generate_any_difficulty": "Any level",
+    "generate_done": "Added {{total}} question(s): {{mcq}} multiple choice, {{coding}} coding.",
+    "track_format_coding": "Code only"
   },
   "bank": {
     "page_title": "Question Bank",
@@ -130,7 +148,14 @@
     "stats_success": "success",
     "stats_flag": "Flag",
     "flag_too_hard": "Too hard",
-    "flag_too_easy": "Too easy"
+    "flag_too_easy": "Too easy",
+    "filter_track": "Certification",
+    "all_tracks": "All certifications",
+    "track_python": "Python",
+    "track_c": "C",
+    "track_algo": "Algorithms",
+    "track_psm1": "PSM I — Scrum",
+    "form_track": "Certification"
   },
   "draw": {
     "section_title": "Random draw (Session)",

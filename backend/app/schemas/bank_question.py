@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 from app.models.question import QuestionType
 from app.models.question_bank import DifficultyLevel
+from app.models.track import ExamTrack
 
 
 class BankMCQOptionCreate(BaseModel):
@@ -32,6 +33,7 @@ class BankMCQOptionResponse(BaseModel):
 class BankQuestionCreate(BaseModel):
     type: QuestionType
     difficulty: DifficultyLevel
+    exam_type: ExamTrack = ExamTrack.python
     tags: list[str] = []
     statement: str
     points: float = 1.0
@@ -40,6 +42,7 @@ class BankQuestionCreate(BaseModel):
 
 class BankQuestionUpdate(BaseModel):
     difficulty: DifficultyLevel | None = None
+    exam_type: ExamTrack | None = None
     tags: list[str] | None = None
     statement: str | None = None
     points: float | None = None
@@ -52,6 +55,7 @@ class BankQuestionResponse(BaseModel):
     id: uuid.UUID
     type: QuestionType
     difficulty: DifficultyLevel
+    exam_type: ExamTrack
     tags: list[str]
     statement: str
     points: float

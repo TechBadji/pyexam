@@ -11,7 +11,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import text
 
-from app.api import auth, student, admin, code_runner, bank
+from app.api import auth, student, admin, code_runner, bank, public
 from app.config import settings
 from app.database import engine
 from app.limiter import limiter
@@ -34,7 +34,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 _is_prod = settings.ENV == "production"
 
 app = FastAPI(
-    title="PyExam API",
+    title="CertifCamp API",
     version="1.0.0",
     docs_url=None if _is_prod else "/api/docs",
     redoc_url=None if _is_prod else "/api/redoc",
@@ -60,6 +60,7 @@ app.include_router(student.router)
 app.include_router(admin.router)
 app.include_router(bank.router)
 app.include_router(code_runner.router)
+app.include_router(public.router)
 
 
 @app.get("/health", tags=["health"])

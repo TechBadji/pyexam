@@ -4,7 +4,9 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import Navbar from "../components/ui/Navbar";
-import PyExamLogo from "../components/ui/PyExamLogo";
+import CertifCampLogo from "../components/ui/CertifCampLogo";
+import TrackBadge from "../components/ui/TrackBadge";
+import { TRACK_IDS, trackOf, type TrackId } from "../lib/tracks";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,6 +21,7 @@ interface BankQuestion {
   id: string;
   type: QuestionType;
   difficulty: Difficulty;
+  exam_type: TrackId;
   tags: string[];
   statement: string;
   points: number;
@@ -31,6 +34,7 @@ interface BankQuestion {
 interface QuestionFormState {
   type: QuestionType;
   difficulty: Difficulty;
+  exam_type: TrackId;
   tags: string;
   statement: string;
   points: number;
@@ -60,6 +64,7 @@ const OPTION_LABELS = ["A", "B", "C", "D"];
 const emptyForm = (): QuestionFormState => ({
   type: "mcq",
   difficulty: "beginner",
+  exam_type: "python",
   tags: "",
   statement: "",
   points: 1,
@@ -84,6 +89,7 @@ export default function QuestionBankPage() {
   // ── Filters ──
   const [filterType, setFilterType] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("");
+  const [filterTrack, setFilterTrack] = useState("");
   const [filterTag, setFilterTag] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
 
@@ -108,6 +114,7 @@ export default function QuestionBankPage() {
     const params = new URLSearchParams();
     if (filterType) params.append("type", filterType);
     if (filterDifficulty) params.append("difficulty", filterDifficulty);
+    if (filterTrack) params.append("exam_type", filterTrack);
     if (filterTag.trim()) params.append("tag", filterTag.trim());
     if (filterSearch.trim()) params.append("search", filterSearch.trim());
     api
@@ -124,7 +131,7 @@ export default function QuestionBankPage() {
       .finally(() => setStatsLoading(false));
   };
 
-  useEffect(() => { loadQuestions(); }, [filterType, filterDifficulty, filterTag, filterSearch]);
+  useEffect(() => { loadQuestions(); }, [filterType, filterDifficulty, filterTrack, filterTag, filterSearch]);
   useEffect(() => { if (activeTab === "stats") loadStats(); }, [activeTab]);
 
   // ── Selection helpers ──
@@ -172,6 +179,7 @@ export default function QuestionBankPage() {
     setForm({
       type: q.type,
       difficulty: q.difficulty,
+      exam_type: trackOf(q.exam_type),
       tags: q.tags.join(", "),
       statement: q.statement,
       points: q.points,
@@ -199,6 +207,7 @@ export default function QuestionBankPage() {
       const payload = {
         type: form.type,
         difficulty: form.difficulty,
+        exam_type: form.exam_type,
         tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
         statement: form.statement,
         points: form.points,
@@ -233,7 +242,7 @@ export default function QuestionBankPage() {
     setForm((f) => ({ ...f, test_cases: f.test_cases.map((tc, j) => (j === i ? { ...tc, ...patch } : tc)) }));
 
   const inputCls =
-    "w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
+    "w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500";
 
   // ── Stats lookup map ──
   const statsMap = new Map(stats.map((s) => [s.bank_question_id, s]));
@@ -243,16 +252,16 @@ export default function QuestionBankPage() {
       <Navbar />
 
       {/* ── Hero header ────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800">
+      <div className="bg-gradient-to-br from-brand-700 via-brand-800 to-ink-950">
         <div className="max-w-5xl mx-auto px-4 pt-8 pb-0">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Link to="/admin" className="opacity-80 hover:opacity-100 transition-opacity">
-                <PyExamLogo size={44} />
+                <CertifCampLogo size={44} tone="light" />
               </Link>
               <div>
                 <h1 className="text-xl font-bold text-white">{t("bank.page_title")}</h1>
-                <p className="text-sm text-indigo-200 mt-0.5">{t("bank.page_subtitle")}</p>
+                <p className="text-sm text-brand-200 mt-0.5">{t("bank.page_subtitle")}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 pb-2">
@@ -267,7 +276,7 @@ export default function QuestionBankPage() {
               </Link>
               <button
                 onClick={openCreate}
-                className="px-4 py-2 rounded-xl bg-white text-indigo-700 text-sm font-semibold hover:bg-indigo-50 transition-colors shadow-sm"
+                className="px-4 py-2 rounded-xl bg-white text-brand-700 text-sm font-semibold hover:bg-brand-50 transition-colors shadow-sm"
               >
                 + {t("bank.add_question")}
               </button>
@@ -283,7 +292,7 @@ export default function QuestionBankPage() {
                 className={`px-5 py-3 text-sm font-medium transition-all rounded-t-xl border-b-2 ${
                   activeTab === tab
                     ? "bg-white/10 text-white border-white"
-                    : "text-indigo-200 border-transparent hover:text-white hover:bg-white/5"
+                    : "text-brand-200 border-transparent hover:text-white hover:bg-white/5"
                 }`}
               >
                 {t(`bank.tab_${tab}`)}
@@ -300,7 +309,13 @@ export default function QuestionBankPage() {
           <>
             {/* Filters + bulk actions */}
             <div className="flex flex-col sm:flex-row gap-2 mb-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 flex-1">
+                <select value={filterTrack} onChange={(e) => setFilterTrack(e.target.value)} className={inputCls}>
+                  <option value="">{t("bank.all_tracks")}</option>
+                  {TRACK_IDS.map((id) => (
+                    <option key={id} value={id}>{t(`bank.track_${id}`)}</option>
+                  ))}
+                </select>
                 <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className={inputCls}>
                   <option value="">{t("bank.all_types")}</option>
                   <option value="mcq">{t("bank.type_mcq")}</option>
@@ -326,13 +341,13 @@ export default function QuestionBankPage() {
                     type="checkbox"
                     checked={selectedIds.size === questions.length && questions.length > 0}
                     onChange={toggleAll}
-                    className="rounded accent-indigo-600"
+                    className="rounded accent-brand-600"
                   />
                   {selectedIds.size === questions.length
                     ? t("bank.deselect_all")
                     : t("bank.select_all")}
                   {selectedIds.size > 0 && (
-                    <span className="ml-1 text-indigo-600 dark:text-indigo-400 font-medium">
+                    <span className="ml-1 text-brand-600 dark:text-brand-400 font-medium">
                       ({selectedIds.size})
                     </span>
                   )}
@@ -341,7 +356,7 @@ export default function QuestionBankPage() {
                 {selectedIds.size > 0 && (
                   <button
                     onClick={() => setShowBulkTag(true)}
-                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg transition-colors"
+                    className="px-3 py-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-lg transition-colors"
                   >
                     🏷 {t("bank.bulk_tag_button", { count: selectedIds.size })}
                   </button>
@@ -352,7 +367,7 @@ export default function QuestionBankPage() {
             {/* Question list */}
             {loading ? (
               <div className="flex justify-center py-20">
-                <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : questions.length === 0 ? (
               <div className="text-center py-20 text-gray-400 dark:text-gray-500 text-sm">
@@ -374,7 +389,7 @@ export default function QuestionBankPage() {
                             type="checkbox"
                             checked={selectedIds.has(q.id)}
                             onChange={() => toggleSelect(q.id)}
-                            className="rounded accent-indigo-600 w-4 h-4"
+                            className="rounded accent-brand-600 w-4 h-4"
                           />
                         </div>
 
@@ -383,6 +398,7 @@ export default function QuestionBankPage() {
                             <span className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">
                               {q.type === "mcq" ? t("bank.type_mcq") : t("bank.type_coding")}
                             </span>
+                            <TrackBadge track={q.exam_type} />
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLORS[q.difficulty]}`}>
                               {t(`bank.difficulty_${q.difficulty}`)}
                             </span>
@@ -477,7 +493,7 @@ export default function QuestionBankPage() {
           <div>
             {statsLoading ? (
               <div className="flex justify-center py-20">
-                <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : stats.length === 0 ? (
               <div className="text-center py-20 text-gray-400 dark:text-gray-500 text-sm">
@@ -554,7 +570,7 @@ export default function QuestionBankPage() {
               value={bulkTagInput}
               onChange={(e) => setBulkTagInput(e.target.value)}
               placeholder={t("bank.bulk_tag_placeholder")}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 mb-4"
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleBulkTag(); } }}
             />
             <div className="flex justify-end gap-3">
@@ -569,7 +585,7 @@ export default function QuestionBankPage() {
                 type="button"
                 disabled={bulkTagging || !bulkTagInput.trim()}
                 onClick={handleBulkTag}
-                className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium transition-colors"
+                className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-medium transition-colors"
               >
                 {bulkTagging ? "…" : t("bank.bulk_tag_apply")}
               </button>
@@ -591,6 +607,18 @@ export default function QuestionBankPage() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("bank.form_track")}</label>
+                  <select
+                    value={form.exam_type}
+                    onChange={(e) => setForm((f) => ({ ...f, exam_type: e.target.value as TrackId }))}
+                    className={inputCls}
+                  >
+                    {TRACK_IDS.map((id) => (
+                      <option key={id} value={id}>{t(`bank.track_${id}`)}</option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("bank.form_type")}</label>
                   <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as QuestionType }))} className={inputCls} disabled={!!editingId}>
@@ -637,7 +665,7 @@ export default function QuestionBankPage() {
                       </label>
                     </div>
                   ))}
-                  <button type="button" onClick={() => setForm((f) => ({ ...f, options: [...f.options, { label: String.fromCharCode(65 + f.options.length), text: "", is_correct: false }] }))} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, options: [...f.options, { label: String.fromCharCode(65 + f.options.length), text: "", is_correct: false }] }))} className="text-xs text-brand-600 dark:text-brand-400 hover:underline">
                     + {t("bank.form_add_option")}
                   </button>
                 </div>
@@ -653,7 +681,7 @@ export default function QuestionBankPage() {
                       <input type="number" min={0.1} step={0.1} value={tc.weight} onChange={(e) => updateTC(i, { weight: Number(e.target.value) })} placeholder={t("bank.form_weight")} className={inputCls} />
                     </div>
                   ))}
-                  <button type="button" onClick={() => setForm((f) => ({ ...f, test_cases: [...f.test_cases, { input: "", expected_output: "", weight: 1 }] }))} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, test_cases: [...f.test_cases, { input: "", expected_output: "", weight: 1 }] }))} className="text-xs text-brand-600 dark:text-brand-400 hover:underline">
                     + {t("bank.form_add_test_case")}
                   </button>
                 </div>
@@ -663,7 +691,7 @@ export default function QuestionBankPage() {
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   {t("bank.form_cancel")}
                 </button>
-                <button type="submit" disabled={saving} className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-medium transition-colors">
+                <button type="submit" disabled={saving} className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white text-sm font-medium transition-colors">
                   {saving ? t("bank.form_saving") : t("bank.form_save")}
                 </button>
               </div>

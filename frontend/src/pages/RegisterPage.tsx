@@ -3,19 +3,8 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import CertifCampLogo from "../components/ui/CertifCampLogo";
 import LanguageSwitcher from "../components/ui/LanguageSwitcher";
-
-function PyExamLogo({ size = 52 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-label="PyExam logo">
-      <rect width="64" height="64" rx="16" fill="#4f46e5" />
-      <polygon points="32,11 53,22 32,33 11,22" fill="white" opacity="0.95" />
-      <path d="M21 28 L21 39 Q21 43 25 44 L39 44 Q43 44 43 39 L43 28 Z" fill="white" opacity="0.85" />
-      <line x1="53" y1="22" x2="53" y2="37" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.9" />
-      <circle cx="53" cy="40" r="3" fill="white" opacity="0.9" />
-    </svg>
-  );
-}
 
 type Step = "form" | "verify" | "success";
 
@@ -102,32 +91,32 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       {/* ── Left hero panel ── */}
-      <div className="hidden lg:flex lg:w-[52%] bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-700 flex-col justify-between p-14 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[52%] bg-gradient-to-br from-brand-700 via-brand-800 to-ink-950 flex-col justify-between p-14 relative overflow-hidden">
         <div className="absolute -top-28 -right-28 w-96 h-96 rounded-full bg-white/5 pointer-events-none" />
         <div className="absolute -bottom-40 -left-24 w-96 h-96 rounded-full bg-white/5 pointer-events-none" />
 
         <div className="relative z-10 flex items-center gap-3">
-          <PyExamLogo size={52} />
+          <CertifCampLogo size={52} tone="light" />
           <div>
-            <span className="text-2xl font-bold text-white tracking-tight">PyExam</span>
-            <p className="text-indigo-300 text-xs font-medium uppercase tracking-widest mt-0.5">Exam Platform</p>
+            <span className="font-display text-2xl font-semibold text-white tracking-tight">CertifCamp</span>
+            <p className="text-brand-200/80 text-xs mt-0.5">{t("hero.tagline")}</p>
           </div>
         </div>
 
         <div className="relative z-10 space-y-6">
-          <h2 className="text-4xl font-bold text-white leading-tight">{t("hero.title")}</h2>
-          <p className="text-indigo-200 text-base leading-relaxed max-w-sm">{t("hero.subtitle")}</p>
+          <h2 className="font-display text-4xl font-semibold text-white leading-[1.1] tracking-tight">{t("hero.title")}</h2>
+          <p className="text-brand-200 text-base leading-relaxed max-w-sm">{t("hero.subtitle")}</p>
         </div>
 
-        <p className="relative z-10 text-indigo-400 text-xs">© 2025 PyExam · Python Exam Platform</p>
+        <p className="relative z-10 text-brand-400 text-xs">© 2025 CertifCamp · Python · C · Algo · PSM I</p>
       </div>
 
       {/* ── Right panel ── */}
       <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-950 min-h-screen">
         <div className="flex items-center justify-between px-6 pt-5 pb-2">
           <div className="flex items-center gap-2 lg:hidden">
-            <PyExamLogo size={36} />
-            <span className="font-bold text-gray-900 dark:text-white text-lg">PyExam</span>
+            <CertifCampLogo size={36} />
+            <span className="font-display font-semibold text-gray-900 dark:text-white text-lg">CertifCamp</span>
           </div>
           <div className="ml-auto">
             <LanguageSwitcher />
@@ -159,7 +148,7 @@ export default function RegisterPage() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder={t("register.full_name_placeholder")}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                     />
                   </div>
 
@@ -175,7 +164,7 @@ export default function RegisterPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="vous@exemple.com"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                     />
                   </div>
 
@@ -190,7 +179,7 @@ export default function RegisterPage() {
                       value={studentNumber}
                       onChange={(e) => setStudentNumber(e.target.value)}
                       placeholder={t("register.student_number_placeholder")}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                     />
                   </div>
 
@@ -208,7 +197,7 @@ export default function RegisterPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                        className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                       />
                       <button
                         type="button"
@@ -242,14 +231,14 @@ export default function RegisterPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-2 mt-1"
+                    className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-brand-500/30 flex items-center justify-center gap-2 mt-1"
                   >
                     {loading ? (
                       <>
@@ -267,7 +256,7 @@ export default function RegisterPage() {
 
                 <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
                   {t("register.have_account")}{" "}
-                  <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                  <Link to="/login" className="text-brand-600 hover:text-brand-700 font-medium">
                     {t("register.sign_in")}
                   </Link>
                 </p>
@@ -278,8 +267,8 @@ export default function RegisterPage() {
             {step === "verify" && (
               <>
                 <div className="mb-7">
-                  <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center mb-5">
-                    <svg className="w-7 h-7 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-brand-950 flex items-center justify-center mb-5">
+                    <svg className="w-7 h-7 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                     </svg>
                   </div>
@@ -319,14 +308,14 @@ export default function RegisterPage() {
                       value={code}
                       onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
                       placeholder={t("register.verify_placeholder")}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-2xl font-bold tracking-[0.4em] text-center placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-2xl font-bold tracking-[0.4em] text-center placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading || code.length !== 6}
-                    className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-brand-500/30 flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <>
@@ -345,7 +334,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={handleResend}
-                  className="mt-4 w-full text-sm text-indigo-600 hover:text-indigo-700 font-medium text-center"
+                  className="mt-4 w-full text-sm text-brand-600 hover:text-brand-700 font-medium text-center"
                 >
                   {t("register.resend")}
                 </button>
@@ -368,7 +357,7 @@ export default function RegisterPage() {
                 </p>
                 <button
                   onClick={() => navigate("/login")}
-                  className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/30"
+                  className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-brand-500/30"
                 >
                   {t("register.success_button")}
                 </button>

@@ -1,3 +1,51 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --hall: #f7f5f7;
+  }
+  .dark {
+    color-scheme: dark;
+    --hall: #1c1520;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background: var(--hall);
+  }
+
+  /* Fraunces ships variable axes Tailwind cannot reach from font-family alone. */
+  .font-display {
+    font-variation-settings: "SOFT" 0, "WONK" 1;
+    letter-spacing: -0.018em;
+  }
+
+  ::selection {
+    background: #8e2a63;
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid #8e2a63;
+    outline-offset: 2px;
+  }
+  .dark :focus-visible {
+    outline-color: #ca6e9f;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

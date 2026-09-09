@@ -49,6 +49,7 @@ def snapshot_bank_question(bq) -> dict:
         "id": str(bq.id),
         "type": bq.type.value,
         "difficulty": bq.difficulty.value,
+        "exam_type": bq.exam_type.value,
         "tags": list(bq.tags),
         "statement": bq.statement,
         "points": bq.points,

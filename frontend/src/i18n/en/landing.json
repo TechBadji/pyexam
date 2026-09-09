@@ -1,0 +1,129 @@
+{
+  "nav": {
+    "tracks": "Certifications",
+    "hall": "The exam room",
+    "orgs": "For training bodies",
+    "help": "Help",
+    "login": "Sign in",
+    "register": "Create an account",
+    "dashboard": "My space",
+    "register_short": "Sign up"
+  },
+  "hero": {
+    "title_line1": "Four certifications,",
+    "title_line2": "one exam room.",
+    "lede": "CertifCamp runs timed exams in Python, C, algorithms and the Scrum Guide. The paper is drawn from the question bank the moment a candidate walks in, then marked automatically.",
+    "cta_primary": "Create a candidate account",
+    "cta_secondary": "I already have an account",
+    "cta_dashboard": "Pick up where I left off",
+    "switch_label": "Choose the certification shown"
+  },
+  "demo": {
+    "label": "Exam in progress",
+    "remaining": "Time left",
+    "question": "Question {{n}} of {{total}}",
+    "watermark": "Watermark: candidate name",
+    "hint": "What a candidate sees during the exam.",
+    "test": "Test {{n}}"
+  },
+  "tracks": {
+    "title": "Choose your exam",
+    "lede": "Each certification has its own question bank. The administrator picks the exam type, CertifCamp draws from it.",
+    "format_mcq": "Multiple choice",
+    "format_mixed": "Multiple choice and executed code",
+    "format_coding": "Executed code",
+    "python": {
+      "name": "Python",
+      "blurb": "Types, data structures, functions, comprehensions, classes, exceptions and the standard library."
+    },
+    "c": {
+      "name": "C",
+      "blurb": "Pointers, memory management, arrays and strings, structs, compilation and type arithmetic."
+    },
+    "algo": {
+      "name": "Algorithms",
+      "blurb": "Sorting and searching, recursion, strings and matrices, time and space cost, in the language of your choice."
+    },
+    "psm1": {
+      "name": "PSM I",
+      "blurb": "Scrum Guide 2020: empiricism, accountabilities, events, artifacts and commitments, plus agile fundamentals."
+    },
+    "questions_label": "questions in the bank"
+  },
+  "steps": {
+    "title": "How a session runs",
+    "one": {
+      "title": "The administrator opens the session",
+      "body": "They pick the exam type, the duration and the number of questions. CertifCamp assembles the paper from the matching bank."
+    },
+    "two": {
+      "title": "The candidate sits the exam",
+      "body": "Countdown, save on every answer, code run in an isolated sandbox. A dropped connection loses nothing."
+    },
+    "three": {
+      "title": "The result arrives",
+      "body": "Multiple choice and test suites are marked when the exam closes. The candidate gets the score and the breakdown by email."
+    }
+  },
+  "hall": {
+    "title": "An exam room, not a web form",
+    "lede": "What separates a certification from a quiz is how the exam is invigilated.",
+    "draw": {
+      "title": "Random draw",
+      "body": "Every candidate gets a different paper, drawn from the bank as they enter."
+    },
+    "fullscreen": {
+      "title": "Full screen watched",
+      "body": "Every exit from full screen is timestamped and attached to the paper."
+    },
+    "watermark": {
+      "title": "Named watermark",
+      "body": "The candidate's name is burned into the screen, against shared captures."
+    },
+    "heartbeat": {
+      "title": "Session heartbeat",
+      "body": "The connection is tracked continuously; any interruption is recorded."
+    },
+    "offline": {
+      "title": "Offline queue",
+      "body": "Answers are kept locally and resent the moment the network returns."
+    },
+    "audit": {
+      "title": "Audit log",
+      "body": "Every administrative action is traced, timestamped and searchable."
+    }
+  },
+  "orgs": {
+    "title": "For training bodies",
+    "lede": "The admin space covers the life of a session, from the question bank to the mark sheet.",
+    "bank": {
+      "title": "Versioned bank",
+      "body": "Multiple-choice questions and coding exercises, by level and topic. Every edit keeps the previous version."
+    },
+    "generate": {
+      "title": "One-click paper",
+      "body": "Give the exam type and the number of questions: the paper is assembled for you."
+    },
+    "reports": {
+      "title": "Reports and exports",
+      "body": "Scores, per-question statistics, group averages. CSV and PDF export."
+    },
+    "students": {
+      "title": "Candidate management",
+      "body": "CSV import, groups and classes, access restricted to a cohort."
+    },
+    "cta": "Request administrator access"
+  },
+  "final": {
+    "title": "Ready to sit the exam?",
+    "body": "Create your account, choose your certification and walk into the room.",
+    "cta": "Create a candidate account"
+  },
+  "footer": {
+    "tagline": "Certifications in Python, C, algorithms and Scrum.",
+    "help": "Help",
+    "course": "Python course",
+    "login": "Sign in",
+    "rights": "All rights reserved."
+  }
+}

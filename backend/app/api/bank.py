@@ -12,6 +12,7 @@ from app.middleware.auth_middleware import require_role
 from app.models.answer import Answer
 from app.models.question import Question, QuestionType
 from app.models.question_bank import BankMCQOption, BankQuestion, BankQuestionVersion, DifficultyLevel
+from app.models.track import ExamTrack
 from app.models.user import User, UserRole
 from app.schemas.bank_question import (
     BankMCQOptionCreate,
@@ -68,7 +69,7 @@ async def list_bank_questions(
     difficulty: DifficultyLevel | None = Query(default=None),
     tag: str | None = Query(default=None, max_length=100),
     search: str | None = Query(default=None, max_length=200),
-    language: str | None = Query(default=None),
+    exam_type: ExamTrack | None = Query(default=None),
 ) -> list[BankQuestion]:
     query = (
         select(BankQuestion)
@@ -81,10 +82,8 @@ async def list_bank_questions(
         query = query.where(BankQuestion.difficulty == difficulty)
     if tag:
         query = query.where(BankQuestion.tags.contains([tag]))
-    if language == "c":
-        query = query.where(BankQuestion.tags.contains(["c"]))
-    elif language == "python":
-        query = query.where(~BankQuestion.tags.contains(["c"]))
+    if exam_type is not None:
+        query = query.where(BankQuestion.exam_type == exam_type)
     if search:
         query = query.where(BankQuestion.statement.ilike(f"%{search}%"))
 

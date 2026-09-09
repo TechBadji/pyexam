@@ -249,7 +249,7 @@ export default function ExamPage() {
             </p>
             <button
               onClick={enterFullscreen}
-              className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition-colors"
+              className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition-colors"
             >
               {t("interface.fullscreen_resume") ?? "Reprendre en plein écran"}
             </button>
