@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
+import { TRACKS, TRACK_IDS } from "../lib/tracks";
 import Navbar from "../components/ui/Navbar";
 
 interface UserRow {
@@ -12,6 +13,7 @@ interface UserRow {
   role: "student" | "admin";
   student_number: string | null;
   class_name: string | null;
+  module: string | null;
   preferred_language: string;
   created_at: string;
 }
@@ -35,7 +37,7 @@ export default function AdminUsersPage() {
   const [deleting, setDeleting] = useState(false);
 
   const [showCreate, setShowCreate] = useState(false);
-  const [createForm, setCreateForm] = useState({ email: "", full_name: "", password: "", role: "student", student_number: "", class_name: "" });
+  const [createForm, setCreateForm] = useState({ email: "", full_name: "", password: "", role: "student", student_number: "", class_name: "", module: "psm1" });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -55,6 +57,15 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => { load(); }, [roleFilter]);
+
+  const changeModule = (userId: string, module: string) => {
+    if (!module) return;
+    const previous = users;
+    setUsers((rows) => rows.map((r) => (r.id === userId ? { ...r, module } : r)));
+    api
+      .put(`/admin/users/${userId}/module`, { module })
+      .catch(() => setUsers(previous));
+  };
 
   const handleSearch = (e: React.FormEvent) => { e.preventDefault(); load(); };
 
@@ -81,7 +92,7 @@ export default function AdminUsersPage() {
   };
 
   const downloadTemplate = () => {
-    const csv = "full_name,email,student_number,class_name,password\nJean Dupont,jean.dupont@email.com,20240001,L3-INFO,\nMarie Martin,marie.martin@email.com,,M1-MATHS,";
+    const csv = "full_name,email,student_number,class_name,module,password\nJean Dupont,jean.dupont@email.com,20240001,L3-INFO,psm1,\nMarie Martin,marie.martin@email.com,,M1-MATHS,python,";
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -127,9 +138,10 @@ export default function AdminUsersPage() {
         ...createForm,
         student_number: createForm.student_number || null,
         class_name: createForm.class_name || null,
+        module: createForm.module,
       });
       setShowCreate(false);
-      setCreateForm({ email: "", full_name: "", password: "", role: "student", student_number: "", class_name: "" });
+      setCreateForm({ email: "", full_name: "", password: "", role: "student", student_number: "", class_name: "", module: "psm1" });
       load();
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
@@ -220,7 +232,7 @@ export default function AdminUsersPage() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  {[t("users.col_name"), t("users.col_email"), t("users.col_number"), t("users.col_class"), t("users.col_role"), t("users.col_created"), t("users.col_actions")].map((h) => (
+                  {[t("users.col_name"), t("users.col_email"), t("users.col_number"), t("users.col_class"), t("users.col_module"), t("users.col_role"), t("users.col_created"), t("users.col_actions")].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{h}</th>
                   ))}
                 </tr>
@@ -232,6 +244,22 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{u.email}</td>
                     <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{u.student_number ?? "—"}</td>
                     <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{u.class_name ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      {u.role === "student" ? (
+                        <select
+                          value={u.module ?? ""}
+                          onChange={(e) => changeModule(u.id, e.target.value)}
+                          className="text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1 text-gray-700 dark:text-gray-200"
+                        >
+                          {!u.module && <option value="">—</option>}
+                          {TRACK_IDS.map((id) => (
+                            <option key={id} value={id}>{TRACKS[id].short}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="text-sm text-gray-400">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLORS[u.role]}`}>
                         {u.role === "admin" ? t("users.role_admin") : t("users.role_student")}

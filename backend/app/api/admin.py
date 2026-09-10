@@ -818,6 +818,11 @@ class AdminUserCreate(_BaseModel):
     student_number: str | None = None
     preferred_language: str = "fr"
     class_name: str | None = None
+    module: ExamTrack | None = ExamTrack.psm1
+
+
+class AdminUserModuleUpdate(_BaseModel):
+    module: ExamTrack
 
 
 class AdminPasswordReset(_BaseModel):
@@ -849,6 +854,7 @@ async def list_users(
             "role": u.role.value,
             "student_number": u.student_number,
             "class_name": u.class_name,
+            "module": u.module.value if u.module else None,
             "preferred_language": u.preferred_language.value,
             "created_at": u.created_at.isoformat(),
         }
@@ -869,6 +875,7 @@ async def create_user(body: AdminUserCreate, current_user: _AdminUser, db: _DB) 
         role=UserRole(body.role),
         student_number=body.student_number,
         class_name=body.class_name,
+        module=body.module,
         preferred_language=body.preferred_language,
         is_verified=True,
     )
@@ -881,6 +888,28 @@ async def create_user(body: AdminUserCreate, current_user: _AdminUser, db: _DB) 
         extra_data={"new_user_id": str(user.id), "role": body.role, "email": body.email},
     )
     return {"id": str(user.id), "email": user.email, "role": user.role.value}
+
+
+@router.put("/users/{user_id}/module", response_model=dict)
+async def set_user_module(
+    user_id: uuid.UUID, body: AdminUserModuleUpdate, current_user: _AdminUser, db: _DB
+) -> dict:
+    """Move a candidate to another certification module."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    previous = user.module.value if user.module else None
+    user.module = body.module
+    await db.flush()
+    await audit_service.log(
+        user_id=current_user.id,
+        action="USER_MODULE_CHANGE",
+        db=db,
+        extra_data={"target_user_id": str(user_id), "from": previous, "to": body.module.value},
+    )
+    return {"id": str(user.id), "module": user.module.value}
 
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -956,6 +985,12 @@ async def import_students_csv(
         full_name = (row.get("full_name") or "").strip()
         student_number = (row.get("student_number") or "").strip() or None
         class_name = (row.get("class_name") or "").strip() or None
+        raw_module = (row.get("module") or "").strip().lower()
+        try:
+            module = ExamTrack(raw_module) if raw_module else ExamTrack.psm1
+        except ValueError:
+            errors.append({"row": i, "reason": f"unknown module: {raw_module}"})
+            continue
         password = (row.get("password") or "").strip()
 
         if not email or not full_name:
@@ -981,6 +1016,7 @@ async def import_students_csv(
             role=UserRole.student,
             student_number=student_number,
             class_name=class_name,
+            module=module,
             preferred_language=PreferredLanguage.fr,
             is_verified=True,
         ))

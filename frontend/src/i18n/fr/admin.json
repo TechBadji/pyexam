@@ -264,6 +264,7 @@
     "import_passwords_title": "Mots de passe générés",
     "import_passwords_hint": "Ces mots de passe ne seront plus affichés — copiez-les maintenant.",
     "import_errors_title": "Erreurs",
-    "import_no_file": "Sélectionnez un fichier CSV."
+    "import_no_file": "Sélectionnez un fichier CSV.",
+    "col_module": "Module"
   }
 }
