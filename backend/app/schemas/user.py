@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
+from app.models.track import ExamTrack
 from app.models.user import PreferredLanguage, UserRole
 
 
@@ -11,6 +12,7 @@ class UserBase(BaseModel):
     full_name: str
     role: UserRole = UserRole.student
     student_number: str | None = None
+    module: ExamTrack | None = None
     preferred_language: PreferredLanguage = PreferredLanguage.fr
 
 
@@ -21,6 +23,7 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     full_name: str | None = None
     student_number: str | None = None
+    module: ExamTrack | None = None
     preferred_language: PreferredLanguage | None = None
 
 
@@ -40,6 +43,7 @@ class UserPublic(BaseModel):
     email: EmailStr
     role: UserRole
     student_number: str | None
+    module: ExamTrack | None = None
     preferred_language: PreferredLanguage
     avatar_url: str | None = None
 
@@ -47,6 +51,7 @@ class UserPublic(BaseModel):
 class ProfileUpdate(BaseModel):
     full_name: str | None = None
     student_number: str | None = None
+    module: ExamTrack | None = None
     preferred_language: PreferredLanguage | None = None
 
 

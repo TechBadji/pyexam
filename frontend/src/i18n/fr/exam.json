@@ -12,7 +12,8 @@
       "exams": "Examens",
       "sessions": "Sessions",
       "history": "Historique",
-      "stats": "Statistiques"
+      "stats": "Statistiques",
+      "exercises": "Exercices"
     },
     "sessions": {
       "title": "Sessions disponibles",
@@ -45,7 +46,21 @@
       "best_score": "Meilleur score",
       "no_stats": "Aucune statistique pour le moment. Passez un examen pour voir vos progrès.",
       "progression": "Progression des scores",
-      "no_progression": "Aucun examen corrigé pour le moment."
+      "no_progression": "Aucun examen corrigé pour le moment.",
+      "practice_title": "Entraînement",
+      "practice_attempts": "Tentatives",
+      "practice_hint": "Vos exercices sont comptés à part : ils n'influencent pas vos résultats d'examen."
+    },
+    "exercises": {
+      "none": "Aucun exercice disponible pour votre module pour l'instant.",
+      "lede": "Entraînez-vous autant de fois que vous voulez. Chaque copie est corrigée dès la remise.",
+      "questions": "{{count}} questions",
+      "attempts_one": "{{count}} tentative",
+      "attempts_other": "{{count}} tentatives",
+      "best": "Meilleur :",
+      "start": "Commencer",
+      "retry": "Refaire",
+      "resume": "Reprendre"
     }
   },
   "interface": {
@@ -101,6 +116,7 @@
     "col_got": "Obtenu",
     "col_status": "Statut",
     "no_output": "(aucune sortie)",
-    "mcq_feedback": "Correction"
+    "mcq_feedback": "Correction",
+    "grading": "Correction en cours…"
   }
 }

@@ -6,7 +6,7 @@ from app.models.submission import Submission
 from app.models.answer import Answer
 from app.models.audit_log import AuditLog
 from app.models.enrollment import ExamEnrollment
-from app.models.track import ExamTrack
+from app.models.track import ExamKind, ExamTrack
 
 __all__ = [
     "User",
@@ -22,4 +22,5 @@ __all__ = [
     "AuditLog",
     "ExamEnrollment",
     "ExamTrack",
+    "ExamKind",
 ]

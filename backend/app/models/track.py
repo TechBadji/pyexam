@@ -1,6 +1,13 @@
 from enum import Enum as PyEnum
 
 
+class ExamKind(str, PyEnum):
+    """An exam is sat once under invigilation; an exercise is practised freely."""
+
+    exam = "exam"
+    exercise = "exercise"
+
+
 class ExamTrack(str, PyEnum):
     python = "python"
     c = "c"
@@ -16,6 +23,9 @@ TRACK_LABELS: dict[ExamTrack, str] = {
 }
 
 MCQ_ONLY_TRACKS: frozenset[ExamTrack] = frozenset({ExamTrack.psm1})
+
+# Practice sessions run shorter than the real thing.
+DEFAULT_EXERCISE_MINUTES = 45
 
 
 def track_of_tags(tags: list[str] | None) -> ExamTrack:

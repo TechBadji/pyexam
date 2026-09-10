@@ -8,6 +8,7 @@ export interface AuthUser {
   email: string;
   role: "student" | "admin";
   student_number: string | null;
+  module: "python" | "c" | "algo" | "psm1" | null;
   preferred_language: "fr" | "en";
   avatar_url: string | null;
 }

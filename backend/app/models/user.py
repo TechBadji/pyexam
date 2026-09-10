@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.models.track import ExamTrack
 
 
 class UserRole(str, PyEnum):
@@ -36,6 +37,9 @@ class User(Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     avatar_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     class_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    module: Mapped[ExamTrack | None] = mapped_column(
+        Enum(ExamTrack, name="examtrack"), nullable=True, index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

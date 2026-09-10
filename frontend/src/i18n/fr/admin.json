@@ -77,7 +77,14 @@
     "generate_difficulty": "Niveau",
     "generate_any_difficulty": "Tous niveaux",
     "generate_done": "{{total}} question(s) ajoutée(s) : {{mcq}} QCM, {{coding}} code.",
-    "track_format_coding": "Code uniquement"
+    "track_format_coding": "Code uniquement",
+    "kind_label": "Nature de l'épreuve",
+    "kind_hint": "Un examen se passe une fois, dans une fenêtre horaire. Un exercice s'entraîne librement.",
+    "kind_exam": "Examen",
+    "kind_exam_desc": "Fenêtre horaire imposée, une seule copie, correction lancée par vous.",
+    "kind_exercise": "Exercice",
+    "kind_exercise_desc": "Disponible en permanence, refaisable à volonté, corrigé automatiquement à la remise.",
+    "exercise_no_window": "Pas de fenêtre horaire : l'exercice reste disponible tant qu'il est actif."
   },
   "bank": {
     "page_title": "Banque de Questions",

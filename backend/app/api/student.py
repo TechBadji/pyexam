@@ -16,6 +16,7 @@ from app.middleware.auth_middleware import require_role
 from app.models.answer import Answer
 from app.models.enrollment import ExamEnrollment
 from app.models.exam import Exam, ExamStatus
+from app.models.track import ExamKind, ExamTrack
 from app.models.question import Question, QuestionType
 from app.models.submission import Submission, SubmissionStatus
 from app.models.user import User, UserRole
@@ -45,6 +46,7 @@ async def get_me(current_user: _AnyUser, db: _DB) -> dict:
         "email": current_user.email,
         "role": current_user.role.value,
         "student_number": current_user.student_number,
+        "module": current_user.module.value if current_user.module else None,
         "preferred_language": current_user.preferred_language.value,
         "avatar_url": current_user.avatar_url,
     }
@@ -56,6 +58,8 @@ async def update_profile(body: ProfileUpdate, current_user: _AnyUser, db: _DB) -
         current_user.full_name = body.full_name
     if body.student_number is not None:
         current_user.student_number = body.student_number
+    if body.module is not None:
+        current_user.module = body.module
     if body.preferred_language is not None:
         current_user.preferred_language = body.preferred_language
     await db.flush()
@@ -65,6 +69,7 @@ async def update_profile(body: ProfileUpdate, current_user: _AnyUser, db: _DB) -
         "email": current_user.email,
         "role": current_user.role.value,
         "student_number": current_user.student_number,
+        "module": current_user.module.value if current_user.module else None,
         "preferred_language": current_user.preferred_language.value,
         "avatar_url": current_user.avatar_url,
     }
@@ -111,6 +116,7 @@ async def get_stats(current_user: _StudentUser, db: _DB) -> dict:
             Submission.submitted_at,
             Submission.status,
             Submission.total_score,
+            Exam.kind,
             max_score_subq.label("max_score"),
         )
         .join(Exam, Submission.exam_id == Exam.id)
@@ -120,31 +126,47 @@ async def get_stats(current_user: _StudentUser, db: _DB) -> dict:
     )
     rows = result.all()
 
-    total_exams = len(rows)
-    corrected = [r for r in rows if r.status == SubmissionStatus.corrected and r.total_score is not None and r.max_score > 0]
-
-    avg_pct = None
-    best_pct = None
-    progression = []
-
-    if corrected:
-        pcts = [r.total_score / r.max_score * 100 for r in corrected]
-        avg_pct = round(sum(pcts) / len(pcts), 1)
-        best_pct = round(max(pcts), 1)
-        progression = [
-            {
-                "exam_title": r.title,
-                "submitted_at": r.submitted_at.isoformat() if r.submitted_at else None,
-                "score_pct": round(r.total_score / r.max_score * 100, 1),
-            }
-            for r in corrected[-6:]
+    def summarise(subset):
+        """Averages over graded papers, plus the last few scores as a trend line."""
+        graded = [
+            r for r in subset
+            if r.status == SubmissionStatus.corrected and r.total_score is not None and r.max_score > 0
         ]
+        if not graded:
+            return None, None, []
+        pcts = [r.total_score / r.max_score * 100 for r in graded]
+        return (
+            round(sum(pcts) / len(pcts), 1),
+            round(max(pcts), 1),
+            [
+                {
+                    "exam_title": r.title,
+                    "submitted_at": r.submitted_at.isoformat() if r.submitted_at else None,
+                    "score_pct": round(r.total_score / r.max_score * 100, 1),
+                }
+                for r in graded[-6:]
+            ],
+        )
+
+    # Practice is tracked apart so it never skews the real exam average.
+    exam_rows = [r for r in rows if r.kind == ExamKind.exam]
+    exercise_rows = [r for r in rows if r.kind == ExamKind.exercise]
+
+    total_exams = len(exam_rows)
+    avg_pct, best_pct, progression = summarise(exam_rows)
+    ex_avg, ex_best, ex_progression = summarise(exercise_rows)
 
     return {
         "total_exams": total_exams,
         "average_score_pct": avg_pct,
         "best_score_pct": best_pct,
         "progression": progression,
+        "exercises": {
+            "attempts": len(exercise_rows),
+            "average_score_pct": ex_avg,
+            "best_score_pct": ex_best,
+            "progression": ex_progression,
+        },
     }
 
 
@@ -193,6 +215,11 @@ async def get_history(current_user: _StudentUser, db: _DB) -> list[dict]:
     ]
 
 
+
+def _module_allows(user, exam) -> bool:
+    """A student only sees the exams and exercises of the module they signed up for."""
+    return user.module is None or exam.exam_type == user.module
+
 # ── Sessions & Enrollment ──────────────────────────────────────────────────────
 
 @router.get("/student/sessions")
@@ -205,6 +232,7 @@ async def list_sessions(current_user: _StudentUser, db: _DB) -> list[dict]:
         select(Exam).where(
             Exam.status == ExamStatus.active,
             Exam.draw_config.is_not(None),
+            Exam.kind == ExamKind.exam,
         )
     )
     exams = result.scalars().all()
@@ -224,6 +252,8 @@ async def list_sessions(current_user: _StudentUser, db: _DB) -> list[dict]:
     now = datetime.now(timezone.utc)
     out = []
     for exam in exams:
+        if not _module_allows(current_user, exam):
+            continue
         start = exam.start_time.replace(tzinfo=timezone.utc) if exam.start_time.tzinfo is None else exam.start_time
         end = exam.end_time.replace(tzinfo=timezone.utc) if exam.end_time.tzinfo is None else exam.end_time
         out.append({
@@ -304,11 +334,15 @@ async def enroll_in_session(
 
 @router.get("/exams/available", response_model=list[ExamWithCountdown])
 async def list_available_exams(current_user: _StudentUser, db: _DB) -> list[ExamWithCountdown]:
-    result = await db.execute(select(Exam).where(Exam.status == ExamStatus.active))
+    result = await db.execute(
+        select(Exam).where(Exam.status == ExamStatus.active, Exam.kind == ExamKind.exam)
+    )
     exams = result.scalars().all()
     now = datetime.now(timezone.utc)
     out = []
     for exam in exams:
+        if not _module_allows(current_user, exam):
+            continue
         # Group access filter: if exam has allowed_groups, student must have a matching class_name
         if exam.allowed_groups:
             if not current_user.class_name or current_user.class_name not in exam.allowed_groups:
@@ -322,6 +356,61 @@ async def list_available_exams(current_user: _StudentUser, db: _DB) -> list[Exam
                 seconds_until_end=max(0, int((end - now).total_seconds())),
             )
         )
+    return out
+
+
+@router.get("/exercises/available", response_model=list[dict])
+async def list_available_exercises(current_user: _StudentUser, db: _DB) -> list[dict]:
+    """
+    Exercises open to this student, each with their own attempt history so the
+    dashboard can show progress across retries.
+    """
+    result = await db.execute(
+        select(Exam).where(Exam.status == ExamStatus.active, Exam.kind == ExamKind.exercise)
+    )
+    exercises = [e for e in result.scalars().all() if _module_allows(current_user, e)]
+    if not exercises:
+        return []
+
+    attempts_result = await db.execute(
+        select(Submission)
+        .where(
+            Submission.student_id == current_user.id,
+            Submission.exam_id.in_([e.id for e in exercises]),
+        )
+        .order_by(Submission.started_at)
+    )
+    by_exam: dict[uuid.UUID, list[Submission]] = {}
+    for sub in attempts_result.scalars().all():
+        by_exam.setdefault(sub.exam_id, []).append(sub)
+
+    counts_result = await db.execute(
+        select(Question.exam_id, func.count())
+        .where(Question.exam_id.in_([e.id for e in exercises]))
+        .group_by(Question.exam_id)
+    )
+    question_counts = {eid: n for eid, n in counts_result.all()}
+
+    out = []
+    for exercise in exercises:
+        attempts = by_exam.get(exercise.id, [])
+        scored = [a.total_score for a in attempts if a.total_score is not None]
+        running = next(
+            (a for a in attempts if a.status == SubmissionStatus.in_progress), None
+        )
+        out.append({
+            "id": str(exercise.id),
+            "title": exercise.title,
+            "description": exercise.description,
+            "exam_type": exercise.exam_type.value,
+            "duration_minutes": exercise.duration_minutes,
+            "question_count": question_counts.get(exercise.id, 0),
+            "attempt_count": len(attempts),
+            "best_score": max(scored) if scored else None,
+            "last_score": scored[-1] if scored else None,
+            "scores": scored,
+            "in_progress_submission_id": str(running.id) if running else None,
+        })
     return out
 
 
@@ -462,19 +551,26 @@ async def start_exam(
     if exam.status != ExamStatus.active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam is not active")
 
+    if not _module_allows(current_user, exam):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This belongs to another certification module",
+        )
+
     # Group access check
     if exam.allowed_groups:
         if not current_user.class_name or current_user.class_name not in exam.allowed_groups:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to take this exam")
 
-    # Time window enforcement
-    now = datetime.now(timezone.utc)
-    exam_start = exam.start_time.replace(tzinfo=timezone.utc) if exam.start_time.tzinfo is None else exam.start_time
-    exam_end = exam.end_time.replace(tzinfo=timezone.utc) if exam.end_time.tzinfo is None else exam.end_time
-    if now < exam_start:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam has not started yet")
-    if now > exam_end:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam window has closed")
+    # Exercises are practised freely: only real exams have a sitting window.
+    if exam.kind == ExamKind.exam:
+        now = datetime.now(timezone.utc)
+        exam_start = exam.start_time.replace(tzinfo=timezone.utc) if exam.start_time.tzinfo is None else exam.start_time
+        exam_end = exam.end_time.replace(tzinfo=timezone.utc) if exam.end_time.tzinfo is None else exam.end_time
+        if now < exam_start:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam has not started yet")
+        if now > exam_end:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam window has closed")
 
     try:
         submission = Submission(
@@ -706,14 +802,24 @@ async def submit_exam(
     submission.status = SubmissionStatus.submitted
     await db.flush()
 
+    exam_result = await db.execute(select(Exam).where(Exam.id == submission.exam_id))
+    exam = exam_result.scalar_one_or_none()
+    is_exercise = exam is not None and exam.kind == ExamKind.exercise
+
     await audit_service.log(
         user_id=current_user.id,
-        action="EXAM_SUBMIT",
+        action="EXERCISE_SUBMIT" if is_exercise else "EXAM_SUBMIT",
         db=db,
         extra_data={"submission_id": str(submission_id), "exam_id": str(submission.exam_id)},
     )
 
-    return {"message": "Submitted successfully"}
+    if is_exercise:
+        # The student waits on this result, so grade it now rather than at exam close.
+        from app.tasks.correction_task import correct_submission_task
+        correct_submission_task.delay(str(submission_id))
+        return {"message": "Submitted successfully", "auto_correcting": True}
+
+    return {"message": "Submitted successfully", "auto_correcting": False}
 
 
 def _parse_test_results(

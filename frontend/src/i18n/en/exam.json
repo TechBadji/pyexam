@@ -12,7 +12,8 @@
       "exams": "Exams",
       "sessions": "Sessions",
       "history": "History",
-      "stats": "Stats"
+      "stats": "Stats",
+      "exercises": "Exercises"
     },
     "sessions": {
       "title": "Available Sessions",
@@ -45,7 +46,21 @@
       "best_score": "Best score",
       "no_stats": "No statistics yet. Take an exam to see your progress.",
       "progression": "Score progression",
-      "no_progression": "No graded exams yet."
+      "no_progression": "No graded exams yet.",
+      "practice_title": "Practice",
+      "practice_attempts": "Attempts",
+      "practice_hint": "Practice is counted separately: it does not affect your exam results."
+    },
+    "exercises": {
+      "none": "No exercise available for your module yet.",
+      "lede": "Practise as often as you like. Every attempt is marked as soon as you hand it in.",
+      "questions": "{{count}} questions",
+      "attempts_one": "{{count}} attempt",
+      "attempts_other": "{{count}} attempts",
+      "best": "Best:",
+      "start": "Start",
+      "retry": "Try again",
+      "resume": "Resume"
     }
   },
   "interface": {
@@ -101,6 +116,7 @@
     "col_got": "Got",
     "col_status": "Status",
     "no_output": "(no output)",
-    "mcq_feedback": "Feedback"
+    "mcq_feedback": "Feedback",
+    "grading": "Grading your answers…"
   }
 }

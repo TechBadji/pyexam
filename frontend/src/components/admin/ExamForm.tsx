@@ -33,13 +33,14 @@ interface ExamFormData {
   end_time: string;
   status: string;
   exam_type: TrackId;
+  kind: "exam" | "exercise";
   allowed_groups: string | null;
   grade_scale: string;
   passing_threshold: string;
 }
 
 interface ExamFormProps {
-  initialData?: Partial<ExamFormData & { exam_type?: string; allowed_groups?: string[] | null; grade_scale?: number | null; passing_threshold?: number | null }>;
+  initialData?: Partial<ExamFormData & { exam_type?: string; kind?: string; allowed_groups?: string[] | null; grade_scale?: number | null; passing_threshold?: number | null }>;
   initialDrawConfig?: { n_mcq: number; n_coding: number } | null;
   examId?: string;
   onSuccess: () => void;
@@ -67,6 +68,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
     end_time: initialData?.end_time ?? "",
     status: initialData?.status ?? "draft",
     exam_type: trackOf(initialData?.exam_type),
+    kind: (initialData?.kind as "exam" | "exercise") ?? "exam",
     allowed_groups: initialData?.allowed_groups ? initialData.allowed_groups.join(", ") : null,
     grade_scale: initialData?.grade_scale != null ? String(initialData.grade_scale) : "",
     passing_threshold: initialData?.passing_threshold != null ? String(initialData.passing_threshold) : "",
@@ -79,6 +81,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const track = form.exam_type;
+  const isExercise = form.kind === "exercise";
   const codingLanguage: "python" | "c" = track === "c" ? "c" : "python";
   const trackAllowsCoding = TRACKS[track].coding;
 
@@ -163,7 +166,7 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
     setSaveError(null);
 
     // Client-side date validation
-    if (form.start_time && form.end_time && form.start_time >= form.end_time) {
+    if (!isExercise && form.start_time && form.end_time && form.start_time >= form.end_time) {
       setSaveError(t("exam_form.error_dates"));
       return;
     }
@@ -184,6 +187,8 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
         : null;
       const payload = {
         ...form,
+        start_time: isExercise ? null : form.start_time,
+        end_time: isExercise ? null : form.end_time,
         allowed_groups: allowedGroups?.length ? allowedGroups : null,
         grade_scale: form.grade_scale ? parseFloat(form.grade_scale) : null,
         passing_threshold: form.passing_threshold ? parseFloat(form.passing_threshold) : null,
@@ -266,8 +271,50 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* ── Type d'examen ─────────────────────────────────────────────────── */}
+        {/* ── Examen ou exercice ────────────────────────────────────────────── */}
         <div>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {t("exam_form.kind_label")}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            {t("exam_form.kind_hint")}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {(["exam", "exercise"] as const).map((k) => {
+              const on = form.kind === k;
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() =>
+                    setForm((f) => ({
+                      ...f,
+                      kind: k,
+                      duration_minutes:
+                        k === "exercise" && f.duration_minutes === 60 ? 45 : f.duration_minutes,
+                    }))
+                  }
+                  aria-pressed={on}
+                  className={`relative text-left rounded-xl border-2 p-4 transition-colors ${
+                    on
+                      ? "border-brand-500 bg-brand-50 dark:bg-brand-950/40"
+                      : "border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-700"
+                  }`}
+                >
+                  <span className="block text-sm font-semibold text-gray-900 dark:text-white">
+                    {t(`exam_form.kind_${k}`)}
+                  </span>
+                  <span className="block mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                    {t(`exam_form.kind_${k}_desc`)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Type d'examen ─────────────────────────────────────────────────── */}
+        <div className={isExercise ? "hidden" : undefined}>
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             {t("exam_form.type_label")}
           </p>
@@ -458,14 +505,22 @@ export default function ExamForm({ initialData, initialDrawConfig, examId, onSuc
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("exam_form.duration")}</label>
             <input type="number" min={1} className={inputCls} value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })} required />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("exam_form.start_time")}</label>
-            <input type="datetime-local" className={inputCls} value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("exam_form.end_time")}</label>
-            <input type="datetime-local" className={inputCls} value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} required />
-          </div>
+          {isExercise ? (
+            <div className="md:col-span-1 self-end pb-2 text-xs text-gray-500 dark:text-gray-400">
+              {t("exam_form.exercise_no_window")}
+            </div>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("exam_form.start_time")}</label>
+                <input type="datetime-local" className={inputCls} value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("exam_form.end_time")}</label>
+                <input type="datetime-local" className={inputCls} value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} required />
+              </div>
+            </>
+          )}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("exam_form.allowed_groups")}</label>
             <input

@@ -20,7 +20,12 @@
     "lang_en": "Anglais",
     "save": "Enregistrer les modifications",
     "saving": "Enregistrement…",
-    "saved": "Profil mis à jour !"
+    "saved": "Profil mis à jour !",
+    "module": "Module de certification",
+    "module_python": "Python",
+    "module_c": "C",
+    "module_algo": "Algorithmique",
+    "module_psm1": "PSM I — Scrum"
   },
   "password": {
     "title": "Changer le mot de passe",

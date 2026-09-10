@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import CertifCampLogo from "../components/ui/CertifCampLogo";
+import { TRACKS, TRACK_IDS, type TrackId } from "../lib/tracks";
 import LanguageSwitcher from "../components/ui/LanguageSwitcher";
 
 type Step = "form" | "verify" | "success";
@@ -18,6 +19,7 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [studentNumber, setStudentNumber] = useState("");
+  const [module, setModule] = useState<TrackId>("psm1");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +45,7 @@ export default function RegisterPage() {
         email,
         password,
         student_number: studentNumber.trim() || null,
+        module,
         preferred_language: lang,
       });
       setDevCode(data.dev_code);
@@ -166,6 +169,40 @@ export default function RegisterPage() {
                       placeholder="vous@exemple.com"
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
                     />
+                  </div>
+
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      {t("register.module")}
+                      <span className="ml-1.5 text-xs font-normal text-gray-400">
+                        {t("register.module_hint")}
+                      </span>
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {TRACK_IDS.map((id) => {
+                        const on = module === id;
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => setModule(id)}
+                            aria-pressed={on}
+                            className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-sm font-semibold transition-colors ${
+                              on
+                                ? "bg-white dark:bg-gray-900"
+                                : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600"
+                            }`}
+                            style={on ? { borderColor: TRACKS[id].hex, color: TRACKS[id].hex } : undefined}
+                          >
+                            <span
+                              className="h-2 w-2 rounded-full"
+                              style={{ background: on ? TRACKS[id].hex : "#d1d5db" }}
+                            />
+                            {t(`register.module_${id}`)}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <div>

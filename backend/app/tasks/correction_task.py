@@ -10,6 +10,7 @@ from app.tasks.celery_app import celery
 from app.database import task_db_session
 from app.models.exam import Exam, ExamStatus
 from app.models.submission import Submission, SubmissionStatus
+from app.models.track import ExamKind
 from app.services.correction_service import correct_submission
 
 logger = get_task_logger(__name__)
@@ -73,6 +74,44 @@ def correct_exam_task(self, exam_id: str) -> dict:
     return {"corrected": corrected_ids, "failed": failed_ids}
 
 
+@celery.task(
+    bind=True, max_retries=3, default_retry_delay=15,
+    soft_time_limit=600, time_limit=660,
+    name="app.tasks.correction_task.correct_submission_task",
+)
+def correct_submission_task(self, submission_id: str) -> dict:
+    """
+    Grade a single submission on the spot. Used by exercises, where the student
+    gets the result immediately and the exercise stays open for the next attempt.
+    """
+    logger.info("Correcting single submission %s", submission_id)
+
+    async def _correct():
+        sid = uuid.UUID(submission_id)
+        async with task_db_session() as db:
+            result = await db.execute(
+                select(Submission).where(
+                    Submission.id == sid,
+                    Submission.status == SubmissionStatus.submitted,
+                )
+            )
+            submission = result.scalar_one_or_none()
+            if submission is None:
+                return False
+            await correct_submission(submission.id, db)
+            await db.commit()
+            return True
+
+    try:
+        graded = _run(_correct())
+    except Exception as exc:
+        logger.error("Single correction failed for %s: %s", submission_id, exc)
+        raise self.retry(exc=exc, countdown=15 * (2 ** self.request.retries))
+
+    logger.info("Submission %s graded: %s", submission_id, graded)
+    return {"submission_id": submission_id, "graded": graded}
+
+
 @celery.task(name="app.tasks.correction_task.auto_close_exams_task")
 def auto_close_exams_task() -> dict:
     """Beat task — closes exams whose end_time has passed."""
@@ -84,6 +123,7 @@ def auto_close_exams_task() -> dict:
                 select(Exam).where(
                     Exam.status == ExamStatus.active,
                     Exam.end_time < now,
+                    Exam.kind == ExamKind.exam,
                 )
             )
             exams = result.scalars().all()

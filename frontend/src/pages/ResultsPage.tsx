@@ -147,14 +147,40 @@ export default function ResultsPage() {
   const [results, setResults] = useState<Results | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [grading, setGrading] = useState(false);
 
   useEffect(() => {
     if (!submissionId) return;
-    api
-      .get<Results>(`/submissions/${submissionId}/results`)
-      .then(({ data }) => setResults(data))
-      .catch(() => setError(t("results.not_available")))
-      .finally(() => setLoading(false));
+    let alive = true;
+    let timer: number | undefined;
+
+    // An exercise is graded the moment it is handed in, so the result lands a
+    // beat later. Wait for it rather than showing "not available".
+    const fetchResults = (attempt: number) => {
+      api
+        .get<Results>(`/submissions/${submissionId}/results`)
+        .then(({ data }) => {
+          if (!alive) return;
+          setResults(data);
+          setLoading(false);
+        })
+        .catch(() => {
+          if (!alive) return;
+          if (attempt < 20) {
+            setGrading(true);
+            timer = window.setTimeout(() => fetchResults(attempt + 1), 1500);
+            return;
+          }
+          setError(t("results.not_available"));
+          setLoading(false);
+        });
+    };
+
+    fetchResults(0);
+    return () => {
+      alive = false;
+      if (timer) window.clearTimeout(timer);
+    };
   }, [submissionId]);
 
   const fmtScore = (v: number | null, decimals = 1) => {
@@ -171,8 +197,11 @@ export default function ResultsPage() {
         </Link>
 
         {loading && (
-          <div className="flex justify-center py-20">
+          <div className="flex flex-col items-center gap-4 py-20">
             <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
+            {grading && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t("results.grading")}</p>
+            )}
           </div>
         )}
 

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import Navbar from "../components/ui/Navbar";
 import CertifCampLogo from "../components/ui/CertifCampLogo";
+import { TRACK_IDS, trackOf, type TrackId } from "../lib/tracks";
 import { useAuthStore, type AuthUser } from "../store/authStore";
 
 // ── UserAvatar ─────────────────────────────────────────────────────────────────
@@ -182,6 +183,7 @@ function ProfileInfoSection() {
   const [fullName, setFullName] = useState(user?.full_name ?? "");
   const [studentNumber, setStudentNumber] = useState(user?.student_number ?? "");
   const [lang, setLang] = useState<"fr" | "en">(user?.preferred_language ?? "fr");
+  const [module, setModule] = useState<TrackId>(trackOf(user?.module));
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -197,6 +199,7 @@ function ProfileInfoSection() {
       const { data } = await api.put<AuthUser>("/student/profile", {
         full_name: fullName.trim() || undefined,
         student_number: studentNumber.trim() || undefined,
+        module,
         preferred_language: lang,
       });
       updateUser(data);
@@ -231,6 +234,17 @@ function ProfileInfoSection() {
             value={studentNumber}
             onChange={(e) => { setStudentNumber(e.target.value); setSaved(false); }}
           />
+        </Field>
+        <Field label={t("info.module")}>
+          <select
+            value={module}
+            onChange={(e) => { setModule(e.target.value as TrackId); setSaved(false); }}
+            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+          >
+            {TRACK_IDS.map((id) => (
+              <option key={id} value={id}>{t(`info.module_${id}`)}</option>
+            ))}
+          </select>
         </Field>
         <Field label={t("info.preferred_language")}>
           <select

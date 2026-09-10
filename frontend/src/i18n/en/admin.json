@@ -77,7 +77,14 @@
     "generate_difficulty": "Level",
     "generate_any_difficulty": "Any level",
     "generate_done": "Added {{total}} question(s): {{mcq}} multiple choice, {{coding}} coding.",
-    "track_format_coding": "Code only"
+    "track_format_coding": "Code only",
+    "kind_label": "Kind of assessment",
+    "kind_hint": "An exam is sat once inside a time window. An exercise is practised freely.",
+    "kind_exam": "Exam",
+    "kind_exam_desc": "Fixed time window, one paper per candidate, you launch the marking.",
+    "kind_exercise": "Exercise",
+    "kind_exercise_desc": "Always available, retake as often as you like, marked automatically on hand-in.",
+    "exercise_no_window": "No time window: the exercise stays available while it is active."
   },
   "bank": {
     "page_title": "Question Bank",

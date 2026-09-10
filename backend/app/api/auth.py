@@ -15,6 +15,7 @@ from app.config import settings
 from app.database import get_db
 from app.limiter import limiter
 from app.middleware.auth_middleware import get_current_user
+from app.models.track import ExamTrack
 from app.models.user import PreferredLanguage, User, UserRole
 from app.services import audit_service, auth_service, redis_service
 from app.services.email_service import send_password_reset_email, send_verification_email
@@ -47,6 +48,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
     student_number: str | None = None
+    module: ExamTrack = ExamTrack.psm1
     preferred_language: PreferredLanguage = PreferredLanguage.fr
 
     @field_validator("password")
@@ -129,6 +131,7 @@ async def login(
             "email": user.email,
             "role": user.role.value,
             "student_number": user.student_number,
+            "module": user.module.value if user.module else None,
             "preferred_language": user.preferred_language.value,
             "avatar_url": user.avatar_url,
         },
@@ -182,6 +185,7 @@ async def register(
         hashed_password=auth_service.hash_password(body.password),
         role=UserRole.student,
         student_number=body.student_number,
+        module=body.module,
         preferred_language=body.preferred_language,
         is_verified=False,
     )

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import api from "../api/axios";
 import Navbar from "../components/ui/Navbar";
 import CertifCampLogo from "../components/ui/CertifCampLogo";
@@ -50,6 +50,12 @@ interface StatsData {
   average_score_pct: number | null;
   best_score_pct: number | null;
   progression: { exam_title: string; submitted_at: string; score_pct: number }[];
+  exercises?: {
+    attempts: number;
+    average_score_pct: number | null;
+    best_score_pct: number | null;
+    progression: { exam_title: string; submitted_at: string; score_pct: number }[];
+  };
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -113,7 +119,21 @@ function UserAvatar({ user, size = 52 }: { user: AuthUser; size?: number }) {
 
 // ── Tab types ─────────────────────────────────────────────────────────────────
 
-type Tab = "exams" | "sessions" | "history" | "stats";
+type Tab = "exams" | "exercises" | "sessions" | "history" | "stats";
+
+interface ExerciseCard {
+  id: string;
+  title: string;
+  description: string;
+  exam_type: string;
+  duration_minutes: number;
+  question_count: number;
+  attempt_count: number;
+  best_score: number | null;
+  last_score: number | null;
+  scores: number[];
+  in_progress_submission_id: string | null;
+}
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -215,6 +235,92 @@ function SessionsTab() {
                 </button>
               )}
             </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ExercisesTab() {
+  const { t } = useTranslation("exam");
+  const [exercises, setExercises] = useState<ExerciseCard[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api
+      .get<ExerciseCard[]>("/exercises/available")
+      .then(({ data }) => setExercises(data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <Spinner />;
+  if (exercises.length === 0) return <EmptyState message={t("dashboard.exercises.none")} />;
+
+  return (
+    <div className="grid gap-4">
+      <p className="text-sm text-gray-500 dark:text-gray-400">
+        {t("dashboard.exercises.lede")}
+      </p>
+      {exercises.map((ex) => {
+        const trend =
+          ex.scores.length >= 2 ? ex.scores[ex.scores.length - 1] - ex.scores[0] : null;
+        return (
+          <div
+            key={ex.id}
+            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-start gap-4 flex-1 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-5 h-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="font-semibold text-gray-900 dark:text-white truncate">{ex.title}</h2>
+                  <TrackBadge track={ex.exam_type} />
+                </div>
+                {ex.description && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{ex.description}</p>
+                )}
+                <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-gray-400 dark:text-gray-500">
+                  <span>{ex.duration_minutes} min</span>
+                  <span>{t("dashboard.exercises.questions", { count: ex.question_count })}</span>
+                  {ex.attempt_count > 0 && (
+                    <span>{t("dashboard.exercises.attempts", { count: ex.attempt_count })}</span>
+                  )}
+                </div>
+                {ex.attempt_count > 0 && (
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 font-medium">
+                      {t("dashboard.exercises.best")} {ex.best_score}
+                    </span>
+                    {trend !== null && trend !== 0 && (
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          trend > 0
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                            : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                        }`}
+                      >
+                        {trend > 0 ? "\u2191" : "\u2193"} {Math.abs(trend)}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            <Link
+              to={`/exam/${ex.id}`}
+              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors text-center shrink-0"
+            >
+              {ex.in_progress_submission_id
+                ? t("dashboard.exercises.resume")
+                : ex.attempt_count > 0
+                  ? t("dashboard.exercises.retry")
+                  : t("dashboard.exercises.start")}
+            </Link>
           </div>
         );
       })}
@@ -384,7 +490,8 @@ function StatsTab() {
   }, []);
 
   if (loading) return <Spinner />;
-  if (!stats || stats.total_exams === 0)
+  const practice = stats?.exercises;
+  if (!stats || (stats.total_exams === 0 && (practice?.attempts ?? 0) === 0))
     return <EmptyState message={t("dashboard.stats.no_stats")} />;
 
   return (
@@ -402,6 +509,33 @@ function StatsTab() {
           pct={stats.best_score_pct}
         />
       </div>
+
+      {practice && practice.attempts > 0 && (
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            {t("dashboard.stats.practice_title")}
+          </h3>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {t("dashboard.stats.practice_hint")}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5">
+            <StatCard
+              label={t("dashboard.stats.practice_attempts")}
+              value={String(practice.attempts)}
+            />
+            <StatCard
+              label={t("dashboard.stats.average_score")}
+              value={practice.average_score_pct !== null ? `${practice.average_score_pct}%` : "—"}
+              pct={practice.average_score_pct}
+            />
+            <StatCard
+              label={t("dashboard.stats.best_score")}
+              value={practice.best_score_pct !== null ? `${practice.best_score_pct}%` : "—"}
+              pct={practice.best_score_pct}
+            />
+          </div>
+        </div>
+      )}
 
       {stats.progression.length > 0 && (
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
@@ -479,7 +613,17 @@ function EmptyState({ message }: { message: string }) {
 export default function StudentDashboard() {
   const { t } = useTranslation("exam");
   const { user } = useAuthStore();
-  const [tab, setTab] = useState<Tab>("exams");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = searchParams.get("tab") as Tab | null;
+  const [tab, setTabState] = useState<Tab>(
+    urlTab && ["exams", "exercises", "sessions", "history", "stats"].includes(urlTab)
+      ? urlTab
+      : "exams"
+  );
+  const setTab = (next: Tab) => {
+    setTabState(next);
+    setSearchParams(next === "exams" ? {} : { tab: next }, { replace: true });
+  };
   const [stats, setStats] = useState<StatsData | null>(null);
 
   useEffect(() => {
@@ -491,6 +635,7 @@ export default function StudentDashboard() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "exams", label: t("dashboard.tabs.exams") },
+    { id: "exercises", label: t("dashboard.tabs.exercises") },
     { id: "sessions", label: t("dashboard.tabs.sessions") },
     { id: "history", label: t("dashboard.tabs.history") },
     { id: "stats", label: t("dashboard.tabs.stats") },
@@ -575,6 +720,7 @@ export default function StudentDashboard() {
       {/* ── Tab content ──────────────────────────────────────────────────────── */}
       <main className="max-w-5xl mx-auto px-4 py-8">
         {tab === "exams" && <ExamsTab />}
+        {tab === "exercises" && <ExercisesTab />}
         {tab === "sessions" && <SessionsTab />}
         {tab === "history" && <HistoryTab />}
         {tab === "stats" && <StatsTab />}
