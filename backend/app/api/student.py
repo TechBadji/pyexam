@@ -503,20 +503,56 @@ async def start_exam(
     current_user: _StudentUser,
     db: _DB,
 ) -> dict:
-    existing = await db.execute(
+    exam_result = await db.execute(select(Exam).where(Exam.id == exam_id))
+    exam = exam_result.scalar_one_or_none()
+    if exam is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exam not found")
+
+    def _serialise(sub: Submission) -> dict:
+        return {
+            "submission_id": str(sub.id),
+            "started_at": sub.started_at.isoformat(),
+            "status": sub.status.value,
+            "answers": [
+                {
+                    "question_id": str(a.question_id),
+                    "selected_option_id": str(a.selected_option_id) if a.selected_option_id else None,
+                    "code_written": a.code_written,
+                }
+                for a in sub.answers
+            ],
+        }
+
+    # A paper belongs to the candidate, not to their browser. Look it up by who
+    # they are, so losing the local token — a logout, another device, cleared
+    # site data — never costs them the answers they already gave.
+    prior_result = await db.execute(
         select(Submission)
         .options(selectinload(Submission.answers))
         .where(
-            Submission.submission_token == body.submission_token,
             Submission.student_id == current_user.id,
+            Submission.exam_id == exam_id,
         )
+        .order_by(Submission.started_at.desc())
     )
-    submission = existing.scalar_one_or_none()
-    if submission is not None:
-        # Grace period: if last heartbeat was > 60s ago, log reconnect after disconnection
+    prior = list(prior_result.scalars().all())
+    running = next((s for s in prior if s.status == SubmissionStatus.in_progress), None)
+
+    if running is not None:
         now = datetime.now(timezone.utc)
-        if submission.last_heartbeat is not None:
-            hb = submission.last_heartbeat
+        # A different token on the same paper means another browser or device.
+        if running.submission_token != body.submission_token:
+            await audit_service.log(
+                user_id=current_user.id,
+                action="RESUMED_FROM_ANOTHER_DEVICE",
+                db=db,
+                extra_data={
+                    "submission_id": str(running.id),
+                    "exam_id": str(exam_id),
+                },
+            )
+        if running.last_heartbeat is not None:
+            hb = running.last_heartbeat
             if hb.tzinfo is None:
                 hb = hb.replace(tzinfo=timezone.utc)
             gap = (now - hb).total_seconds()
@@ -526,28 +562,18 @@ async def start_exam(
                     action="RECONNECT_AFTER_DISCONNECTION",
                     db=db,
                     extra_data={
-                        "submission_id": str(submission.id),
+                        "submission_id": str(running.id),
                         "gap_seconds": int(gap),
+                        "token_changed": running.submission_token != body.submission_token,
                     },
                 )
-        return {
-            "submission_id": str(submission.id),
-            "started_at": submission.started_at.isoformat(),
-            "status": submission.status.value,
-            "answers": [
-                {
-                    "question_id": str(a.question_id),
-                    "selected_option_id": str(a.selected_option_id) if a.selected_option_id else None,
-                    "code_written": a.code_written,
-                }
-                for a in submission.answers
-            ],
-        }
+        return _serialise(running)
 
-    exam_result = await db.execute(select(Exam).where(Exam.id == exam_id))
-    exam = exam_result.scalar_one_or_none()
-    if exam is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exam not found")
+    # An exam is sat once. A handed-in paper is returned as-is so the client
+    # sends the candidate to their results instead of opening a blank one.
+    if prior and exam.kind == ExamKind.exam:
+        return _serialise(prior[0])
+
     if exam.status != ExamStatus.active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam is not active")
 
