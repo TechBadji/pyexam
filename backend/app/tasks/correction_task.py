@@ -97,19 +97,27 @@ def correct_submission_task(self, submission_id: str) -> dict:
             )
             submission = result.scalar_one_or_none()
             if submission is None:
-                return False
+                return False, False
+            exam_result = await db.execute(select(Exam).where(Exam.id == submission.exam_id))
+            exam = exam_result.scalar_one_or_none()
             await correct_submission(submission.id, db)
             await db.commit()
-            return True
+            # Exam results are mailed out like everyone else's. Practice is not:
+            # a student retaking an exercise would drown in messages.
+            return True, exam is not None and exam.kind == ExamKind.exam
 
     try:
-        graded = _run(_correct())
+        graded, notify = _run(_correct())
     except Exception as exc:
         logger.error("Single correction failed for %s: %s", submission_id, exc)
         raise self.retry(exc=exc, countdown=15 * (2 ** self.request.retries))
 
-    logger.info("Submission %s graded: %s", submission_id, graded)
-    return {"submission_id": submission_id, "graded": graded}
+    if graded and notify:
+        from app.tasks.email_task import send_result_email_task
+        send_result_email_task.delay(submission_id)
+
+    logger.info("Submission %s graded: %s (email: %s)", submission_id, graded, notify)
+    return {"submission_id": submission_id, "graded": graded, "emailed": notify}
 
 
 @celery.task(name="app.tasks.correction_task.auto_close_exams_task")
@@ -137,4 +145,8 @@ def auto_close_exams_task() -> dict:
     closed = _run(_close())
     if closed:
         logger.info("Auto-closed exams: %s", closed)
-    return {"closed": closed}
+        # Marking papers was a manual step, and papers were being forgotten.
+        # Closing the window now grades what was handed in.
+        for exam_id in closed:
+            correct_exam_task.delay(exam_id)
+    return {"closed": closed, "correcting": closed}

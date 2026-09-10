@@ -831,6 +831,9 @@ async def submit_exam(
     exam_result = await db.execute(select(Exam).where(Exam.id == submission.exam_id))
     exam = exam_result.scalar_one_or_none()
     is_exercise = exam is not None and exam.kind == ExamKind.exercise
+    # Handed in after the exam was closed and graded — nothing else will pick
+    # this paper up, so grade it here rather than leaving it unmarked.
+    is_late = exam is not None and exam.status in (ExamStatus.closed, ExamStatus.corrected)
 
     await audit_service.log(
         user_id=current_user.id,
@@ -839,7 +842,7 @@ async def submit_exam(
         extra_data={"submission_id": str(submission_id), "exam_id": str(submission.exam_id)},
     )
 
-    if is_exercise:
+    if is_exercise or is_late:
         # The student waits on this result, so grade it now rather than at exam close.
         from app.tasks.correction_task import correct_submission_task
         correct_submission_task.delay(str(submission_id))
