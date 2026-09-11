@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api/axios";
 import Navbar from "../components/ui/Navbar";
 import CertifCampLogo from "../components/ui/CertifCampLogo";
@@ -120,6 +120,13 @@ function UserAvatar({ user, size = 52 }: { user: AuthUser; size?: number }) {
 // ── Tab types ─────────────────────────────────────────────────────────────────
 
 type Tab = "exams" | "exercises" | "sessions" | "history" | "stats";
+
+interface Mastery {
+  themes: { theme: string; seen: number; rate: number }[];
+  weakest: { theme: string; seen: number; rate: number }[];
+  strongest: { theme: string; seen: number; rate: number }[];
+  missed_count: number;
+}
 
 interface Overview {
   exam_count: number;
@@ -251,6 +258,87 @@ function SessionsTab() {
   );
 }
 
+function PracticeActions() {
+  const { t } = useTranslation("exam");
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState<"review" | "mock" | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [missed, setMissed] = useState<number | null>(null);
+
+  useEffect(() => {
+    api
+      .get<Mastery>("/student/mastery")
+      .then(({ data }) => setMissed(data.missed_count))
+      .catch(() => undefined);
+  }, []);
+
+  const launch = async (what: "review" | "mock") => {
+    setBusy(what);
+    setNote(null);
+    try {
+      const path = what === "review" ? "/student/practice/review" : "/student/practice/mock";
+      const body = what === "review" ? { limit: 20 } : undefined;
+      const { data } = await api.post<{ exam_id: string }>(path, body);
+      navigate(`/exam/${data.exam_id}`);
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      setNote(
+        status === 409
+          ? what === "review"
+            ? t("dashboard.practice.no_mistakes")
+            : t("dashboard.practice.empty_bank")
+          : t("dashboard.practice.failed")
+      );
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <button
+        onClick={() => launch("review")}
+        disabled={busy !== null || missed === 0}
+        className="group text-left rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-950/25 p-5 transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60 disabled:hover:translate-y-0"
+      >
+        <span className="block text-sm font-semibold text-amber-900 dark:text-amber-200">
+          {t("dashboard.practice.review_title")}
+        </span>
+        <span className="block mt-1 text-xs leading-relaxed text-amber-800/80 dark:text-amber-300/80">
+          {missed === 0
+            ? t("dashboard.practice.no_mistakes")
+            : missed === null
+              ? t("dashboard.practice.review_body")
+              : t("dashboard.practice.review_count", { count: missed })}
+        </span>
+        <span className="mt-3 inline-block text-xs font-semibold text-amber-900 dark:text-amber-200">
+          {busy === "review" ? "…" : t("dashboard.practice.review_cta")}
+        </span>
+      </button>
+
+      <button
+        onClick={() => launch("mock")}
+        disabled={busy !== null}
+        className="group text-left rounded-2xl border border-brand-200 dark:border-brand-800 bg-brand-50/70 dark:bg-brand-950/25 p-5 transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60 disabled:hover:translate-y-0"
+      >
+        <span className="block text-sm font-semibold text-brand-800 dark:text-brand-200">
+          {t("dashboard.practice.mock_title")}
+        </span>
+        <span className="block mt-1 text-xs leading-relaxed text-brand-800/80 dark:text-brand-300/80">
+          {t("dashboard.practice.mock_body")}
+        </span>
+        <span className="mt-3 inline-block text-xs font-semibold text-brand-800 dark:text-brand-200">
+          {busy === "mock" ? "…" : t("dashboard.practice.mock_cta")}
+        </span>
+      </button>
+
+      {note && (
+        <p className="sm:col-span-2 text-xs text-gray-500 dark:text-gray-400">{note}</p>
+      )}
+    </div>
+  );
+}
+
 function ExercisesTab() {
   const { t } = useTranslation("exam");
   const [exercises, setExercises] = useState<ExerciseCard[]>([]);
@@ -264,13 +352,17 @@ function ExercisesTab() {
   }, []);
 
   if (loading) return <Spinner />;
-  if (exercises.length === 0) return <EmptyState message={t("dashboard.exercises.none")} />;
 
   return (
     <div className="grid gap-4">
+      <PracticeActions />
+      {exercises.length === 0 ? (
+        <EmptyState message={t("dashboard.exercises.none")} />
+      ) : (
       <p className="text-sm text-gray-500 dark:text-gray-400">
         {t("dashboard.exercises.lede")}
       </p>
+      )}
       {exercises.map((ex) => {
         const trend =
           ex.scores.length >= 2 ? ex.scores[ex.scores.length - 1] - ex.scores[0] : null;
@@ -486,6 +578,53 @@ function HistoryTab() {
   );
 }
 
+function MasteryPanel() {
+  const { t } = useTranslation("exam");
+  const [mastery, setMastery] = useState<Mastery | null>(null);
+
+  useEffect(() => {
+    api
+      .get<Mastery>("/student/mastery")
+      .then(({ data }) => setMastery(data))
+      .catch(() => undefined);
+  }, []);
+
+  if (!mastery || mastery.themes.length === 0) return null;
+
+  const colour = (rate: number) =>
+    rate >= 80 ? "#0f6e5c" : rate >= 50 ? "#c08a2e" : "#8e2a63";
+
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
+      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        {t("dashboard.mastery.title")}
+      </h3>
+      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        {t("dashboard.mastery.hint")}
+      </p>
+
+      <div className="mt-5 space-y-3">
+        {mastery.themes.map((th) => (
+          <div key={th.theme} className="flex items-center gap-3">
+            <div className="w-36 shrink-0 truncate text-xs text-gray-600 dark:text-gray-300">
+              {th.theme}
+            </div>
+            <div className="flex-1 h-2.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-[width] duration-700"
+                style={{ width: `${Math.max(2, th.rate)}%`, background: colour(th.rate) }}
+              />
+            </div>
+            <div className="w-24 shrink-0 text-right text-xs tabular-nums text-gray-500 dark:text-gray-400">
+              {th.rate}% · {th.seen}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function StatsTab() {
   const { t } = useTranslation("exam");
   const [stats, setStats] = useState<StatsData | null>(null);
@@ -518,6 +657,8 @@ function StatsTab() {
           pct={stats.best_score_pct}
         />
       </div>
+
+      <MasteryPanel />
 
       {practice && practice.attempts > 0 && (
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">

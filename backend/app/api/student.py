@@ -11,14 +11,17 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from pydantic import BaseModel as _BaseModel
+
 from app.database import get_db
 from app.middleware.auth_middleware import require_role
 from app.models.answer import Answer
 from app.models.banner import Banner
 from app.models.enrollment import ExamEnrollment
 from app.models.exam import Exam, ExamStatus
-from app.models.track import ExamKind, ExamTrack
+from app.models.track import MOCK_FORMATS, NON_THEME_TAGS, ExamKind, ExamTrack
 from app.models.question import Question, QuestionType
+from app.models.question_bank import BankQuestion
 from app.models.submission import Submission, SubmissionStatus
 from app.models.user import User, UserRole
 from app.schemas.answer import AnswerResponse, AnswerUpsert
@@ -27,6 +30,7 @@ from app.schemas.question import QuestionResponse, MCQOptionResponse
 from app.schemas.submission import SubmissionStart
 from app.schemas.user import AvatarUpdate, PasswordChange, ProfileUpdate
 from app.services import audit_service
+from app.services.practice_service import build_mock, build_review, missed_bank_question_ids
 from app.services.auth_service import hash_password, verify_password
 from app.services.draw_service import draw_questions
 
@@ -217,6 +221,11 @@ async def get_history(current_user: _StudentUser, db: _DB) -> list[dict]:
 
 
 
+def _owner_allows(user, exam) -> bool:
+    """Personal practice is private to the student it was built for."""
+    return exam.owner_id is None or exam.owner_id == user.id
+
+
 def _module_allows(user, exam) -> bool:
     """A student only sees the exams and exercises of the module they signed up for."""
     return user.module is None or exam.exam_type == user.module
@@ -244,7 +253,11 @@ async def student_overview(current_user: _StudentUser, db: _DB) -> dict:
             open_exams.append(exam)
 
     ex_result = await db.execute(
-        select(Exam).where(Exam.status == ExamStatus.active, Exam.kind == ExamKind.exercise)
+        select(Exam).where(
+            Exam.status == ExamStatus.active,
+            Exam.kind == ExamKind.exercise,
+            Exam.owner_id.is_(None),
+        )
     )
     exercises = [e for e in ex_result.scalars().all() if _module_allows(current_user, e)]
 
@@ -304,6 +317,90 @@ async def student_banners(current_user: _StudentUser, db: _DB) -> list[dict]:
             "image_url": b.image_url,
         })
     return out
+
+
+@router.get("/student/mastery", response_model=dict)
+async def student_mastery(current_user: _StudentUser, db: _DB) -> dict:
+    """
+    How well this student does on each theme of their module, weakest first —
+    the order in which they should revise.
+    """
+    result = await db.execute(
+        select(BankQuestion.tags, Answer.score, Question.points)
+        .join(Question, Question.source_bank_id == BankQuestion.id)
+        .join(Answer, Answer.question_id == Question.id)
+        .join(Submission, Submission.id == Answer.submission_id)
+        .where(
+            Submission.student_id == current_user.id,
+            Submission.status == SubmissionStatus.corrected,
+        )
+    )
+
+    tally: dict[str, dict[str, float]] = {}
+    for tags, score, points in result.all():
+        earned = float(score or 0.0)
+        total = float(points or 0.0)
+        if total <= 0:
+            continue
+        for tag in tags or []:
+            if tag in NON_THEME_TAGS:
+                continue
+            entry = tally.setdefault(tag, {"seen": 0.0, "earned": 0.0, "total": 0.0})
+            entry["seen"] += 1
+            entry["earned"] += earned
+            entry["total"] += total
+
+    themes = [
+        {
+            "theme": tag,
+            "seen": int(v["seen"]),
+            "rate": round(v["earned"] / v["total"] * 100, 1) if v["total"] else 0.0,
+        }
+        for tag, v in tally.items()
+        if v["seen"] >= 2  # one question is not a verdict on a theme
+    ]
+    themes.sort(key=lambda t: (t["rate"], -t["seen"]))
+
+    missed = await missed_bank_question_ids(current_user.id, db)
+    return {
+        "themes": themes,
+        "weakest": themes[:3],
+        "strongest": sorted(themes, key=lambda t: -t["rate"])[:3],
+        "missed_count": len(missed),
+    }
+
+
+class PracticeRequest(_BaseModel):
+    limit: int = 20
+
+
+@router.post("/student/practice/review", response_model=dict)
+async def start_review(body: PracticeRequest, current_user: _StudentUser, db: _DB) -> dict:
+    """Build a revision set from this student's own mistakes."""
+    if current_user.module is None:
+        raise HTTPException(status_code=400, detail="Choose your certification module first")
+    exam = await build_review(current_user, current_user.module, max(5, min(body.limit, 50)), db)
+    if exam is None:
+        raise HTTPException(status_code=409, detail="No mistake to revise yet")
+    await db.flush()
+    return {"exam_id": str(exam.id), "title": exam.title, "questions": exam.duration_minutes}
+
+
+@router.post("/student/practice/mock", response_model=dict)
+async def start_mock(current_user: _StudentUser, db: _DB) -> dict:
+    """Build a mock sitting at the real certification format."""
+    if current_user.module is None:
+        raise HTTPException(status_code=400, detail="Choose your certification module first")
+    exam = await build_mock(current_user, current_user.module, db)
+    if exam is None:
+        raise HTTPException(status_code=409, detail="The bank is empty for this module")
+    await db.flush()
+    fmt = MOCK_FORMATS[current_user.module]
+    return {
+        "exam_id": str(exam.id),
+        "minutes": fmt.minutes,
+        "pass_pct": fmt.pass_pct,
+    }
 
 
 # ── Sessions & Enrollment ──────────────────────────────────────────────────────
@@ -452,7 +549,11 @@ async def list_available_exercises(current_user: _StudentUser, db: _DB) -> list[
     dashboard can show progress across retries.
     """
     result = await db.execute(
-        select(Exam).where(Exam.status == ExamStatus.active, Exam.kind == ExamKind.exercise)
+        select(Exam).where(
+            Exam.status == ExamStatus.active,
+            Exam.kind == ExamKind.exercise,
+            Exam.owner_id.is_(None),
+        )
     )
     exercises = [e for e in result.scalars().all() if _module_allows(current_user, e)]
     if not exercises:
@@ -513,6 +614,9 @@ async def get_exam_detail(
     )
     exam = result.scalar_one_or_none()
     if exam is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exam not found")
+
+    if not _owner_allows(current_user, exam):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exam not found")
 
     all_questions = exam.questions
@@ -662,6 +766,12 @@ async def start_exam(
 
     if exam.status != ExamStatus.active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam is not active")
+
+    if not _owner_allows(current_user, exam):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This practice set belongs to another student",
+        )
 
     if not _module_allows(current_user, exam):
         raise HTTPException(

@@ -48,5 +48,7 @@ class User(Base):
     )
 
     submissions: Mapped[list["Submission"]] = relationship("Submission", back_populates="student")
-    exams_created: Mapped[list["Exam"]] = relationship("Exam", back_populates="creator")
+    exams_created: Mapped[list["Exam"]] = relationship(
+        "Exam", back_populates="creator", foreign_keys="Exam.created_by"
+    )
     audit_logs: Mapped[list["AuditLog"]] = relationship("AuditLog", back_populates="user")

@@ -61,6 +61,22 @@
       "start": "Start",
       "retry": "Try again",
       "resume": "Resume"
+    },
+    "practice": {
+      "review_title": "Revise my mistakes",
+      "review_body": "An exercise built from the questions you got wrong.",
+      "review_count": "{{count}} missed question(s) to work through.",
+      "review_cta": "Start revising →",
+      "no_mistakes": "Nothing to revise yet. Nicely done.",
+      "mock_title": "Mock exam",
+      "mock_body": "The real certification format, timed, with a verdict at the end.",
+      "mock_cta": "Sit the mock exam →",
+      "empty_bank": "The question bank for your module is empty.",
+      "failed": "Could not build it. Try again."
+    },
+    "mastery": {
+      "title": "Mastery by theme",
+      "hint": "Weakest themes first: start at the top."
     }
   },
   "interface": {

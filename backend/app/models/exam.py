@@ -37,6 +37,12 @@ class Exam(Base):
     kind: Mapped[ExamKind] = mapped_column(
         Enum(ExamKind, name="examkind"), nullable=False, default=ExamKind.exam, index=True
     )
+    # Personal practice built for one student: a revision set of their own
+    # mistakes, or a mock exam. Never listed for anyone else.
+    owner_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True
+    )
+    purpose: Mapped[str | None] = mapped_column(String(20), nullable=True)
     created_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
     )
@@ -48,7 +54,9 @@ class Exam(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    creator: Mapped["User"] = relationship("User", back_populates="exams_created")
+    creator: Mapped["User"] = relationship(
+        "User", back_populates="exams_created", foreign_keys=[created_by]
+    )
     questions: Mapped[list["Question"]] = relationship(
         "Question", back_populates="exam", cascade="all, delete-orphan", order_by="Question.order_index"
     )

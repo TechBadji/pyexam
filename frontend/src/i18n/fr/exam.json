@@ -61,6 +61,22 @@
       "start": "Commencer",
       "retry": "Refaire",
       "resume": "Reprendre"
+    },
+    "practice": {
+      "review_title": "Réviser mes erreurs",
+      "review_body": "Un exercice bâti sur les questions que vous avez manquées.",
+      "review_count": "{{count}} question(s) manquée(s) à retravailler.",
+      "review_cta": "Lancer la révision →",
+      "no_mistakes": "Aucune erreur à réviser pour l'instant. Beau parcours.",
+      "mock_title": "Examen blanc",
+      "mock_body": "Le format réel de la certification, chronométré, avec un verdict à la fin.",
+      "mock_cta": "Passer l'examen blanc →",
+      "empty_bank": "La banque de questions de votre module est vide.",
+      "failed": "La génération a échoué. Réessayez."
+    },
+    "mastery": {
+      "title": "Maîtrise par thème",
+      "hint": "Les thèmes les plus faibles en premier : commencez par le haut."
     }
   },
   "interface": {
