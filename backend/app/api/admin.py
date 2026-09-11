@@ -16,6 +16,7 @@ from app.database import get_db
 from app.middleware.auth_middleware import get_current_user, require_role
 from app.models.answer import Answer
 from app.models.audit_log import AuditLog
+from app.models.banner import Banner
 from app.models.exam import Exam, ExamStatus
 from app.models.question import CodingLanguage, MCQOption, Question, QuestionType
 from app.models.question_bank import BankMCQOption, BankQuestion, DifficultyLevel
@@ -48,6 +49,17 @@ class DrawConfigRequest(_BaseModel):
 class AutoPopulateRequest(_BaseModel):
     tags: list[str] = []
     difficulty: str | None = None
+
+
+class BannerPayload(_BaseModel):
+    text: str
+    link_url: str | None = None
+    image_url: str | None = None
+    module: ExamTrack | None = None
+    is_active: bool = True
+    order_index: int = 0
+    starts_at: datetime | None = None
+    ends_at: datetime | None = None
 
 
 class GenerateRequest(_BaseModel):
@@ -558,6 +570,70 @@ async def launch_correction(
     )
 
     return {"task_id": task.id, "message": "Correction lancée / Correction started"}
+
+
+# ── Banners ────────────────────────────────────────────────────────────────────
+
+def _banner_dict(b: Banner) -> dict:
+    return {
+        "id": str(b.id),
+        "text": b.text,
+        "link_url": b.link_url,
+        "image_url": b.image_url,
+        "module": b.module.value if b.module else None,
+        "is_active": b.is_active,
+        "order_index": b.order_index,
+        "starts_at": b.starts_at.isoformat() if b.starts_at else None,
+        "ends_at": b.ends_at.isoformat() if b.ends_at else None,
+        "created_at": b.created_at.isoformat(),
+    }
+
+
+@router.get("/banners", response_model=list[dict])
+async def list_banners(current_user: _AdminUser, db: _DB) -> list[dict]:
+    result = await db.execute(
+        select(Banner).order_by(Banner.order_index, Banner.created_at.desc())
+    )
+    return [_banner_dict(b) for b in result.scalars().all()]
+
+
+@router.post("/banners", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def create_banner(body: BannerPayload, current_user: _AdminUser, db: _DB) -> dict:
+    banner = Banner(**body.model_dump(), created_by=current_user.id)
+    db.add(banner)
+    await db.flush()
+    await audit_service.log(
+        user_id=current_user.id, action="BANNER_CREATE", db=db,
+        extra_data={"banner_id": str(banner.id), "text": banner.text},
+    )
+    return _banner_dict(banner)
+
+
+@router.put("/banners/{banner_id}", response_model=dict)
+async def update_banner(
+    banner_id: uuid.UUID, body: BannerPayload, current_user: _AdminUser, db: _DB
+) -> dict:
+    result = await db.execute(select(Banner).where(Banner.id == banner_id))
+    banner = result.scalar_one_or_none()
+    if banner is None:
+        raise HTTPException(status_code=404, detail="Banner not found")
+    for field, value in body.model_dump().items():
+        setattr(banner, field, value)
+    await db.flush()
+    return _banner_dict(banner)
+
+
+@router.delete("/banners/{banner_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_banner(banner_id: uuid.UUID, current_user: _AdminUser, db: _DB) -> None:
+    result = await db.execute(select(Banner).where(Banner.id == banner_id))
+    banner = result.scalar_one_or_none()
+    if banner is None:
+        raise HTTPException(status_code=404, detail="Banner not found")
+    await audit_service.log(
+        user_id=current_user.id, action="BANNER_DELETE", db=db,
+        extra_data={"banner_id": str(banner_id), "text": banner.text},
+    )
+    await db.delete(banner)
 
 
 # ── Reports & Stats ────────────────────────────────────────────────────────────

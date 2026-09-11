@@ -17,7 +17,8 @@
     "exam_closed": "Exam closed.",
     "users": "Users",
     "audit_log": "Activity log",
-    "exam_track": "Certification"
+    "exam_track": "Certification",
+    "banners": "Banners"
   },
   "exam_form": {
     "exam_title": "Exam title",

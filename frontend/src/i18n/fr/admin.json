@@ -17,7 +17,8 @@
     "exam_closed": "Examen fermé.",
     "users": "Utilisateurs",
     "audit_log": "Journal d'activité",
-    "exam_track": "Certification"
+    "exam_track": "Certification",
+    "banners": "Bandeaux"
   },
   "exam_form": {
     "exam_title": "Titre de l'examen",

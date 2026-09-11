@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import AdminAuditPage from "./pages/AdminAuditPage";
+import AdminBannersPage from "./pages/AdminBannersPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminExamReport from "./pages/AdminExamReport";
 import AdminUsersPage from "./pages/AdminUsersPage";
@@ -69,6 +70,7 @@ export default function App() {
             <Route path="/admin/bank" element={<QuestionBankPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/audit" element={<AdminAuditPage />} />
+            <Route path="/admin/banners" element={<AdminBannersPage />} />
             <Route path="/admin/exams/:examId/report" element={<AdminExamReport />} />
             <Route path="/admin/exams/:examId/stats" element={<AdminExamReport />} />
           </Route>

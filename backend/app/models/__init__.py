@@ -7,6 +7,7 @@ from app.models.answer import Answer
 from app.models.audit_log import AuditLog
 from app.models.enrollment import ExamEnrollment
 from app.models.track import ExamKind, ExamTrack
+from app.models.banner import Banner
 
 __all__ = [
     "User",
@@ -23,4 +24,5 @@ __all__ = [
     "ExamEnrollment",
     "ExamTrack",
     "ExamKind",
+    "Banner",
 ]

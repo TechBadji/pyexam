@@ -121,6 +121,15 @@ function UserAvatar({ user, size = 52 }: { user: AuthUser; size?: number }) {
 
 type Tab = "exams" | "exercises" | "sessions" | "history" | "stats";
 
+interface Overview {
+  exam_count: number;
+  exercise_count: number;
+  resume_submission_id: string | null;
+  resume_exam_id: string | null;
+  landing_tab: Tab;
+  module: string | null;
+}
+
 interface ExerciseCard {
   id: string;
   title: string;
@@ -615,11 +624,23 @@ export default function StudentDashboard() {
   const { user } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const urlTab = searchParams.get("tab") as Tab | null;
-  const [tab, setTabState] = useState<Tab>(
+  const pinnedTab =
     urlTab && ["exams", "exercises", "sessions", "history", "stats"].includes(urlTab)
       ? urlTab
-      : "exams"
-  );
+      : null;
+  const [tab, setTabState] = useState<Tab>(pinnedTab ?? "exams");
+  const [overview, setOverview] = useState<Overview | null>(null);
+
+  useEffect(() => {
+    api
+      .get<Overview>("/student/overview")
+      .then(({ data }) => {
+        setOverview(data);
+        // An explicit ?tab= wins; otherwise open where the work is.
+        if (!pinnedTab) setTabState(data.landing_tab);
+      })
+      .catch(() => undefined);
+  }, [pinnedTab]);
   const setTab = (next: Tab) => {
     setTabState(next);
     setSearchParams(next === "exams" ? {} : { tab: next }, { replace: true });
@@ -633,9 +654,9 @@ export default function StudentDashboard() {
       .catch(() => {});
   }, []);
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "exams", label: t("dashboard.tabs.exams") },
-    { id: "exercises", label: t("dashboard.tabs.exercises") },
+  const tabs: { id: Tab; label: string; count?: number }[] = [
+    { id: "exams", label: t("dashboard.tabs.exams"), count: overview?.exam_count },
+    { id: "exercises", label: t("dashboard.tabs.exercises"), count: overview?.exercise_count },
     { id: "sessions", label: t("dashboard.tabs.sessions") },
     { id: "history", label: t("dashboard.tabs.history") },
     { id: "stats", label: t("dashboard.tabs.stats") },
@@ -685,7 +706,8 @@ export default function StudentDashboard() {
             </div>
           )}
 
-          {/* Cours Python */}
+          {/* Cours Python — réservé aux candidats de la certification Python */}
+          {user?.module === "python" && (
           <div className="mt-4 mb-1">
             <Link
               to="/cours-python"
@@ -697,20 +719,30 @@ export default function StudentDashboard() {
               Cours Python pour débutants
             </Link>
           </div>
+          )}
 
           {/* Tab bar anchored to bottom of gradient */}
           <div className="flex gap-0 mt-4">
-            {tabs.map(({ id, label }) => (
+            {tabs.map(({ id, label, count }) => (
               <button
                 key={id}
                 onClick={() => setTab(id)}
-                className={`px-5 py-3 text-sm font-medium transition-all rounded-t-xl border-b-2 ${
+                className={`px-5 py-3 text-sm font-medium transition-all rounded-t-xl border-b-2 inline-flex items-center gap-2 ${
                   tab === id
                     ? "bg-white/10 text-white border-white"
                     : "text-brand-200 border-transparent hover:text-white hover:bg-white/5"
                 }`}
               >
                 {label}
+                {count !== undefined && count > 0 && (
+                  <span
+                    className={`min-w-[1.25rem] px-1.5 py-0.5 rounded-full text-[11px] font-bold leading-none ${
+                      tab === id ? "bg-white text-brand-800" : "bg-white/20 text-white"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                )}
               </button>
             ))}
           </div>

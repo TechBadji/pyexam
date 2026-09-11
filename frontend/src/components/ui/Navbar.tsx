@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore, type AuthUser } from "../../store/authStore";
+import BannerStrip from "./BannerStrip";
 import CertifCampLogo from "./CertifCampLogo";
 import DarkModeToggle from "./DarkModeToggle";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -69,19 +70,15 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {user && (
+          {user?.role === "admin" && (
             <div className="hidden md:flex items-center gap-6 text-sm text-gray-600 dark:text-gray-300">
-              {user.role === "admin" ? (
-                <Link to="/admin" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
-                  {t("nav.admin")}
-                </Link>
-              ) : (
-                <Link to="/dashboard" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
-                  {t("nav.dashboard")}
-                </Link>
-              )}
+              <Link to="/admin" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                {t("nav.admin")}
+              </Link>
             </div>
           )}
+
+          {user?.role === "student" && <BannerStrip />}
 
           <div className="flex items-center gap-3">
             <LanguageSwitcher />

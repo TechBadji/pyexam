@@ -123,6 +123,12 @@ export default function AdminDashboard() {
               >
                 {t("dashboard.audit_log")}
               </Link>
+              <Link
+                to="/admin/banners"
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors border border-white/20"
+              >
+                {t("dashboard.banners")}
+              </Link>
               <button
                 onClick={() => setShowForm(true)}
                 className="px-4 py-2 rounded-xl bg-white text-brand-700 text-sm font-semibold hover:bg-brand-50 transition-colors shadow-sm"

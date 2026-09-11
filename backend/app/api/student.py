@@ -14,6 +14,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.middleware.auth_middleware import require_role
 from app.models.answer import Answer
+from app.models.banner import Banner
 from app.models.enrollment import ExamEnrollment
 from app.models.exam import Exam, ExamStatus
 from app.models.track import ExamKind, ExamTrack
@@ -219,6 +220,91 @@ async def get_history(current_user: _StudentUser, db: _DB) -> list[dict]:
 def _module_allows(user, exam) -> bool:
     """A student only sees the exams and exercises of the module they signed up for."""
     return user.module is None or exam.exam_type == user.module
+
+@router.get("/student/overview", response_model=dict)
+async def student_overview(current_user: _StudentUser, db: _DB) -> dict:
+    """
+    What is waiting for this student right now. Drives which tab the dashboard
+    opens on, and the counts shown beside each tab.
+    """
+    now = datetime.now(timezone.utc)
+
+    exams_result = await db.execute(
+        select(Exam).where(Exam.status == ExamStatus.active, Exam.kind == ExamKind.exam)
+    )
+    open_exams = []
+    for exam in exams_result.scalars().all():
+        if not _module_allows(current_user, exam):
+            continue
+        if exam.allowed_groups:
+            if not current_user.class_name or current_user.class_name not in exam.allowed_groups:
+                continue
+        end = exam.end_time.replace(tzinfo=timezone.utc) if exam.end_time.tzinfo is None else exam.end_time
+        if end > now:
+            open_exams.append(exam)
+
+    ex_result = await db.execute(
+        select(Exam).where(Exam.status == ExamStatus.active, Exam.kind == ExamKind.exercise)
+    )
+    exercises = [e for e in ex_result.scalars().all() if _module_allows(current_user, e)]
+
+    running_result = await db.execute(
+        select(Submission.id, Submission.exam_id)
+        .where(
+            Submission.student_id == current_user.id,
+            Submission.status == SubmissionStatus.in_progress,
+        )
+        .order_by(Submission.started_at.desc())
+    )
+    running = running_result.first()
+
+    # Land where the student actually has something to do.
+    if running is not None or open_exams:
+        landing = "exams"
+    elif exercises:
+        landing = "exercises"
+    else:
+        landing = "exams"
+
+    return {
+        "exam_count": len(open_exams),
+        "exercise_count": len(exercises),
+        "resume_submission_id": str(running.id) if running else None,
+        "resume_exam_id": str(running.exam_id) if running else None,
+        "landing_tab": landing,
+        "module": current_user.module.value if current_user.module else None,
+    }
+
+
+@router.get("/student/banners", response_model=list[dict])
+async def student_banners(current_user: _StudentUser, db: _DB) -> list[dict]:
+    """Active banners for this student's module, in display order."""
+    now = datetime.now(timezone.utc)
+    result = await db.execute(
+        select(Banner)
+        .where(Banner.is_active.is_(True))
+        .order_by(Banner.order_index, Banner.created_at.desc())
+    )
+    out = []
+    for b in result.scalars().all():
+        if b.module is not None and current_user.module is not None and b.module != current_user.module:
+            continue
+        if b.starts_at is not None:
+            start = b.starts_at.replace(tzinfo=timezone.utc) if b.starts_at.tzinfo is None else b.starts_at
+            if start > now:
+                continue
+        if b.ends_at is not None:
+            end = b.ends_at.replace(tzinfo=timezone.utc) if b.ends_at.tzinfo is None else b.ends_at
+            if end < now:
+                continue
+        out.append({
+            "id": str(b.id),
+            "text": b.text,
+            "link_url": b.link_url,
+            "image_url": b.image_url,
+        })
+    return out
+
 
 # ── Sessions & Enrollment ──────────────────────────────────────────────────────
 
