@@ -19,6 +19,7 @@ from app.models.user import User
 
 
 async def send_verification_email(email: str, full_name: str, code: str, lang: str) -> None:
+    full_name = _html.escape(full_name)
     if lang == "fr":
         subject = "Votre code de vérification CertifCamp"
         heading = "Vérifiez votre adresse e-mail"
@@ -45,6 +46,7 @@ async def send_verification_email(email: str, full_name: str, code: str, lang: s
 
 
 async def send_password_reset_email(email: str, full_name: str, reset_url: str, lang: str) -> None:
+    full_name = _html.escape(full_name)
     if lang == "fr":
         subject = "Réinitialisation de votre mot de passe CertifCamp"
         heading = "Réinitialisez votre mot de passe"
@@ -144,9 +146,11 @@ async def send_result_email(submission_id: uuid.UUID, db: AsyncSession) -> None:
     if exam.grade_scale and max_score > 0:
         scaled_score = round(total / max_score * exam.grade_scale, 2)
 
+    safe_title = _html.escape(exam.title)
+    safe_name = _html.escape(student.full_name)
     subject = get_translation("email.subject", lang, exam_title=exam.title)
-    greeting = get_translation("email.greeting", lang, full_name=student.full_name)
-    announcement = get_translation("email.results_announcement", lang, exam_title=exam.title)
+    greeting = get_translation("email.greeting", lang, full_name=safe_name)
+    announcement = get_translation("email.results_announcement", lang, exam_title=safe_title)
     score_label = get_translation("email.total_score_label", lang)
     pts_label = get_translation("email.points_label", lang)
     status_msg = get_translation("email.pass_message" if passed else "email.fail_message", lang)

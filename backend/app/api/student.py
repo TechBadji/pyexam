@@ -2,7 +2,7 @@ import ast
 import random as _random
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -224,6 +224,17 @@ async def get_history(current_user: _StudentUser, db: _DB) -> list[dict]:
 def _owner_allows(user, exam) -> bool:
     """Personal practice is private to the student it was built for."""
     return exam.owner_id is None or exam.owner_id == user.id
+
+
+def _expired(submission: Submission, exam: Exam) -> bool:
+    """Has this candidate's own clock run out, independent of the exam's window?"""
+    if exam.duration_minutes <= 0:
+        return False
+    started = submission.started_at
+    if started.tzinfo is None:
+        started = started.replace(tzinfo=timezone.utc)
+    deadline = started + timedelta(minutes=exam.duration_minutes)
+    return datetime.now(timezone.utc) > deadline
 
 
 def _module_allows(user, exam) -> bool:
@@ -804,13 +815,23 @@ async def start_exam(
         db.add(submission)
         await db.flush()
     except IntegrityError:
+        # Two tabs, or a retried request, raced past the checks above —
+        # the database's own unique index caught it. Whichever request lost
+        # simply resumes the paper the winner created.
         await db.rollback()
         existing = await db.execute(
-            select(Submission).where(Submission.submission_token == body.submission_token)
+            select(Submission)
+            .options(selectinload(Submission.answers))
+            .where(
+                Submission.student_id == current_user.id,
+                Submission.exam_id == exam_id,
+                Submission.status == SubmissionStatus.in_progress,
+            )
         )
         submission = existing.scalar_one_or_none()
         if submission is None:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Submission conflict")
+        return _serialise(submission)
 
     await audit_service.log(
         user_id=current_user.id,
@@ -838,7 +859,9 @@ async def upsert_answer(
     db: _DB,
 ) -> Answer:
     sub_result = await db.execute(
-        select(Submission).where(
+        select(Submission)
+        .options(selectinload(Submission.answers))
+        .where(
             Submission.id == submission_id,
             Submission.student_id == current_user.id,
         )
@@ -848,6 +871,20 @@ async def upsert_answer(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
     if submission.status != SubmissionStatus.in_progress:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Submission is closed")
+
+    # The client's own countdown auto-submits at zero; this is the backstop
+    # for a candidate who bypasses it and keeps answering past their own time.
+    exam_result = await db.execute(select(Exam).where(Exam.id == submission.exam_id))
+    exam = exam_result.scalar_one_or_none()
+    if exam is not None and _expired(submission, exam):
+        await _finalize_submission(submission, current_user, db, reason="EXAM_AUTO_SUBMIT_EXPIRED")
+        # The route is about to end in an exception, and get_db() rolls back
+        # on any exception — commit now or the auto-submit above never sticks.
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Time is up — your paper has been submitted.",
+        )
 
     ans_result = await db.execute(
         select(Answer).where(
@@ -990,6 +1027,54 @@ async def heartbeat(
     await db.flush()
 
 
+async def _finalize_submission(
+    submission: Submission,
+    current_user: User,
+    db: AsyncSession,
+    *,
+    reason: str,
+) -> dict:
+    """
+    Hand in a paper: fill in blanks, close it, and grade it immediately if
+    nothing else will — a closed exam, practice, or a clock that ran out.
+    Shared by an explicit submit and a server-side auto-submit on expiry.
+    """
+    questions_result = await db.execute(
+        select(Question).where(Question.exam_id == submission.exam_id)
+    )
+    answered_ids = {a.question_id for a in submission.answers}
+    for q in questions_result.scalars().all():
+        if q.id not in answered_ids:
+            db.add(Answer(submission_id=submission.id, question_id=q.id))
+
+    submission.submitted_at = datetime.now(timezone.utc)
+    submission.status = SubmissionStatus.submitted
+    await db.flush()
+
+    exam_result = await db.execute(select(Exam).where(Exam.id == submission.exam_id))
+    exam = exam_result.scalar_one_or_none()
+    is_exercise = exam is not None and exam.kind == ExamKind.exercise
+    # Handed in after the exam was closed and graded — nothing else will pick
+    # this paper up, so grade it here rather than leaving it unmarked.
+    is_late = exam is not None and exam.status in (ExamStatus.closed, ExamStatus.corrected)
+    is_expired = exam is not None and _expired(submission, exam) and reason != "submit"
+
+    await audit_service.log(
+        user_id=current_user.id,
+        action="EXERCISE_SUBMIT" if is_exercise else reason,
+        db=db,
+        extra_data={"submission_id": str(submission.id), "exam_id": str(submission.exam_id)},
+    )
+
+    if is_exercise or is_late or is_expired:
+        # The student waits on this result, so grade it now rather than at exam close.
+        from app.tasks.correction_task import correct_submission_task
+        correct_submission_task.delay(str(submission.id))
+        return {"message": "Submitted successfully", "auto_correcting": True}
+
+    return {"message": "Submitted successfully", "auto_correcting": False}
+
+
 @router.post("/submissions/{submission_id}/submit", status_code=status.HTTP_200_OK)
 async def submit_exam(
     submission_id: uuid.UUID,
@@ -1011,40 +1096,7 @@ async def submit_exam(
     if submission.status != SubmissionStatus.in_progress:
         return {"message": "Already submitted"}
 
-    # Ensure every exam question has an Answer record so the corrector counts all points.
-    questions_result = await db.execute(
-        select(Question).where(Question.exam_id == submission.exam_id)
-    )
-    answered_ids = {a.question_id for a in submission.answers}
-    for q in questions_result.scalars().all():
-        if q.id not in answered_ids:
-            db.add(Answer(submission_id=submission.id, question_id=q.id))
-
-    submission.submitted_at = datetime.now(timezone.utc)
-    submission.status = SubmissionStatus.submitted
-    await db.flush()
-
-    exam_result = await db.execute(select(Exam).where(Exam.id == submission.exam_id))
-    exam = exam_result.scalar_one_or_none()
-    is_exercise = exam is not None and exam.kind == ExamKind.exercise
-    # Handed in after the exam was closed and graded — nothing else will pick
-    # this paper up, so grade it here rather than leaving it unmarked.
-    is_late = exam is not None and exam.status in (ExamStatus.closed, ExamStatus.corrected)
-
-    await audit_service.log(
-        user_id=current_user.id,
-        action="EXERCISE_SUBMIT" if is_exercise else "EXAM_SUBMIT",
-        db=db,
-        extra_data={"submission_id": str(submission_id), "exam_id": str(submission.exam_id)},
-    )
-
-    if is_exercise or is_late:
-        # The student waits on this result, so grade it now rather than at exam close.
-        from app.tasks.correction_task import correct_submission_task
-        correct_submission_task.delay(str(submission_id))
-        return {"message": "Submitted successfully", "auto_correcting": True}
-
-    return {"message": "Submitted successfully", "auto_correcting": False}
+    return await _finalize_submission(submission, current_user, db, reason="EXAM_SUBMIT")
 
 
 def _parse_test_results(

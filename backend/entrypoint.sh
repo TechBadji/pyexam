@@ -64,4 +64,4 @@ python seed_bank_algo.py
 python seed_bank_c.py
 python seed_bank_psm1.py
 
-exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}"
+exec uvicorn app.main:app --host 0.0.0.0 --proxy-headers --forwarded-allow-ips="*" --port "${PORT:-8000}"

@@ -98,7 +98,11 @@ _DB = Annotated[AsyncSession, Depends(get_db)]
 
 @router.get("/exams", response_model=list[ExamResponse])
 async def list_exams(current_user: _AdminUser, db: _DB) -> list[Exam]:
-    result = await db.execute(select(Exam).order_by(Exam.created_at.desc()))
+    # Personal practice (a student's own revision set or mock exam) is not
+    # something to manage here — it would swamp this list as students use it.
+    result = await db.execute(
+        select(Exam).where(Exam.owner_id.is_(None)).order_by(Exam.created_at.desc())
+    )
     return list(result.scalars().all())
 
 

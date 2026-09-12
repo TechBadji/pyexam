@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.models.track import ExamTrack
 from app.models.user import PreferredLanguage, UserRole
@@ -61,4 +61,11 @@ class PasswordChange(BaseModel):
 
 
 class AvatarUpdate(BaseModel):
-    avatar_url: str
+    avatar_url: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("avatar_url")
+    @classmethod
+    def avatar_url_scheme(cls, v: str | None) -> str | None:
+        if v is not None and not v.startswith(("http://", "https://", "data:image/")):
+            raise ValueError("avatar_url must be an http(s) or image data URL")
+        return v
