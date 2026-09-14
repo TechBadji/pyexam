@@ -29,5 +29,9 @@ celery.conf.update(
             "task": "app.tasks.correction_task.auto_close_exams_task",
             "schedule": 60.0,
         },
+        "close-expired-submissions": {
+            "task": "app.tasks.correction_task.close_expired_submissions_task",
+            "schedule": 120.0,
+        },
     },
 )

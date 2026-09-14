@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -9,6 +9,8 @@ from sqlalchemy import select
 from app.tasks.celery_app import celery
 from app.database import task_db_session
 from app.models.exam import Exam, ExamStatus
+from app.models.answer import Answer
+from app.models.question import Question
 from app.models.submission import Submission, SubmissionStatus
 from app.models.track import ExamKind
 from app.services.correction_service import correct_submission
@@ -150,3 +152,64 @@ def auto_close_exams_task() -> dict:
         for exam_id in closed:
             correct_exam_task.delay(exam_id)
     return {"closed": closed, "correcting": closed}
+
+
+# A candidate mid-request when their clock turns over should hand in their own
+# paper; this sweep is only for papers nobody is coming back to.
+_EXPIRY_GRACE = timedelta(minutes=2)
+
+
+@celery.task(name="app.tasks.correction_task.close_expired_submissions_task")
+def close_expired_submissions_task() -> dict:
+    """
+    Beat task — hands in and grades papers whose candidate's own clock ran out.
+
+    A paper is time-boxed by duration_minutes counted from when the candidate
+    started it. Walk away without submitting and nothing else would ever mark
+    it: the exam sweep only fires when the whole window closes, and practice
+    has no window at all.
+    """
+
+    async def _close():
+        now = datetime.now(timezone.utc)
+        async with task_db_session() as db:
+            result = await db.execute(
+                select(Submission, Exam)
+                .join(Exam, Exam.id == Submission.exam_id)
+                .where(
+                    Submission.status == SubmissionStatus.in_progress,
+                    Exam.duration_minutes > 0,
+                )
+            )
+            closed: list[str] = []
+            for submission, exam in result.all():
+                started = submission.started_at
+                if started.tzinfo is None:
+                    started = started.replace(tzinfo=timezone.utc)
+                deadline = started + timedelta(minutes=exam.duration_minutes) + _EXPIRY_GRACE
+                if now <= deadline:
+                    continue
+
+                # Every question needs an Answer row or the grader silently
+                # leaves it out of the total.
+                q_rows = await db.execute(select(Question.id).where(Question.exam_id == exam.id))
+                a_rows = await db.execute(
+                    select(Answer.question_id).where(Answer.submission_id == submission.id)
+                )
+                answered = {row[0] for row in a_rows.all()}
+                for (qid,) in q_rows.all():
+                    if qid not in answered:
+                        db.add(Answer(submission_id=submission.id, question_id=qid))
+
+                submission.submitted_at = now
+                submission.status = SubmissionStatus.submitted
+                closed.append(str(submission.id))
+            await db.commit()
+        return closed
+
+    closed = _run(_close())
+    if closed:
+        logger.info("Closed %d expired submission(s): %s", len(closed), closed)
+        for submission_id in closed:
+            correct_submission_task.delay(submission_id)
+    return {"closed": closed}

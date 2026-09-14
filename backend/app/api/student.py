@@ -739,6 +739,14 @@ async def start_exam(
     prior = list(prior_result.scalars().all())
     running = next((s for s in prior if s.status == SubmissionStatus.in_progress), None)
 
+    # A paper whose clock ran out while the candidate was away is not
+    # resumable: close it and grade it, then let them move on — to their
+    # results for an exam, or to a fresh attempt for practice.
+    if running is not None and _expired(running, exam):
+        await _finalize_submission(running, current_user, db, reason="EXAM_AUTO_SUBMIT_EXPIRED")
+        await db.commit()
+        running = None
+
     if running is not None:
         now = datetime.now(timezone.utc)
         # A different token on the same paper means another browser or device.
