@@ -1056,13 +1056,32 @@ async def _finalize_submission(
     nothing else will — a closed exam, practice, or a clock that ran out.
     Shared by an explicit submit and a server-side auto-submit on expiry.
     """
-    questions_result = await db.execute(
-        select(Question).where(Question.exam_id == submission.exam_id)
+    # Every question the candidate was actually set needs an Answer row, so the
+    # grader counts it — blank ones included, they score zero.
+    #
+    # On a draw-based session each candidate sits their own subset, not the
+    # whole pool. Filling in the pool would mark them on questions they were
+    # never shown and cap the achievable score at the drawn fraction.
+    scope = select(Question.id).where(Question.exam_id == submission.exam_id)
+    exam_row = await db.execute(
+        select(Exam.draw_config).where(Exam.id == submission.exam_id)
     )
+    if exam_row.scalar_one_or_none() is not None:
+        enrollment = await db.execute(
+            select(ExamEnrollment.drawn_question_ids).where(
+                ExamEnrollment.exam_id == submission.exam_id,
+                ExamEnrollment.student_id == submission.student_id,
+            )
+        )
+        drawn = enrollment.scalar_one_or_none()
+        if drawn:
+            scope = scope.where(Question.id.in_([uuid.UUID(q) for q in drawn]))
+
+    question_ids = (await db.execute(scope)).scalars().all()
     answered_ids = {a.question_id for a in submission.answers}
-    for q in questions_result.scalars().all():
-        if q.id not in answered_ids:
-            db.add(Answer(submission_id=submission.id, question_id=q.id))
+    for qid in question_ids:
+        if qid not in answered_ids:
+            db.add(Answer(submission_id=submission.id, question_id=qid))
 
     submission.submitted_at = datetime.now(timezone.utc)
     submission.status = SubmissionStatus.submitted
