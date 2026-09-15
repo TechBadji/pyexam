@@ -188,7 +188,12 @@ def close_expired_submissions_task() -> dict:
                 started = submission.started_at
                 if started.tzinfo is None:
                     started = started.replace(tzinfo=timezone.utc)
-                deadline = started + timedelta(minutes=exam.duration_minutes) + _EXPIRY_GRACE
+                end = exam.end_time
+                if end.tzinfo is None:
+                    end = end.replace(tzinfo=timezone.utc)
+                # Same rule as the request path: a paper ends at whichever
+                # comes first, the candidate's own clock or the window.
+                deadline = min(started + timedelta(minutes=exam.duration_minutes), end) + _EXPIRY_GRACE
                 if now <= deadline:
                     continue
 

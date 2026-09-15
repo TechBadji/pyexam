@@ -227,15 +227,29 @@ def _owner_allows(user, exam) -> bool:
     return exam.owner_id is None or exam.owner_id == user.id
 
 
-def _expired(submission: Submission, exam: Exam) -> bool:
-    """Has this candidate's own clock run out, independent of the exam's window?"""
+def _paper_deadline(submission: Submission, exam: Exam) -> datetime:
+    """
+    When this paper is over: whichever comes first between the candidate's own
+    clock and the exam's window closing.
+
+    Candidates do not all start together, so the personal clock alone let a
+    late starter keep answering well past the announced end of the sitting.
+    Practice carries a window years out, so only real exams are bounded by it.
+    """
+    end = exam.end_time
+    if end.tzinfo is None:
+        end = end.replace(tzinfo=timezone.utc)
     if exam.duration_minutes <= 0:
-        return False
+        return end
     started = submission.started_at
     if started.tzinfo is None:
         started = started.replace(tzinfo=timezone.utc)
-    deadline = started + timedelta(minutes=exam.duration_minutes)
-    return datetime.now(timezone.utc) > deadline
+    return min(started + timedelta(minutes=exam.duration_minutes), end)
+
+
+def _expired(submission: Submission, exam: Exam) -> bool:
+    """Is this paper past its deadline, personal clock or window, whichever first?"""
+    return datetime.now(timezone.utc) > _paper_deadline(submission, exam)
 
 
 def _module_allows(user, exam) -> bool:
