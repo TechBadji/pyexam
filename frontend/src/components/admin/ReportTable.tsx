@@ -23,6 +23,14 @@ interface ReportTableProps {
   examId: string;
 }
 
+// A cell starting with one of these is a formula to Excel and LibreOffice.
+// Candidate-controlled names reach this export, so quoting alone is not enough:
+// the spreadsheet strips the quotes and evaluates what is left.
+function csvSafe(value: unknown): string {
+  const text = value === null || value === undefined ? "" : String(value);
+  return /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+}
+
 export default function ReportTable({ rows, examId }: ReportTableProps) {
   const { t, i18n } = useTranslation("admin");
   const lang = i18n.language.startsWith("fr") ? "fr" : "en";
@@ -78,7 +86,7 @@ export default function ReportTable({ rows, examId }: ReportTableProps) {
         r.tab_switch_count,
         r.submitted_at ?? "",
       ]
-        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .map((v) => `"${csvSafe(v).replace(/"/g, '""')}"`)
         .join(",")
     );
     const csv = [headers.join(","), ...lines].join("\n");

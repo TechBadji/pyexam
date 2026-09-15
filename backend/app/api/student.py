@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +14,7 @@ from sqlalchemy.orm import selectinload
 from pydantic import BaseModel as _BaseModel
 
 from app.database import get_db
+from app.limiter import limiter
 from app.middleware.auth_middleware import require_role
 from app.models.answer import Answer
 from app.models.banner import Banner
@@ -386,7 +387,10 @@ class PracticeRequest(_BaseModel):
 
 
 @router.post("/student/practice/review", response_model=dict)
-async def start_review(body: PracticeRequest, current_user: _StudentUser, db: _DB) -> dict:
+@limiter.limit("5/minute")
+async def start_review(
+    request: Request, body: PracticeRequest, current_user: _StudentUser, db: _DB
+) -> dict:
     """Build a revision set from this student's own mistakes."""
     if current_user.module is None:
         raise HTTPException(status_code=400, detail="Choose your certification module first")
@@ -398,7 +402,8 @@ async def start_review(body: PracticeRequest, current_user: _StudentUser, db: _D
 
 
 @router.post("/student/practice/mock", response_model=dict)
-async def start_mock(current_user: _StudentUser, db: _DB) -> dict:
+@limiter.limit("5/minute")
+async def start_mock(request: Request, current_user: _StudentUser, db: _DB) -> dict:
     """Build a mock sitting at the real certification format."""
     if current_user.module is None:
         raise HTTPException(status_code=400, detail="Choose your certification module first")

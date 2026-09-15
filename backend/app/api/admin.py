@@ -69,6 +69,18 @@ class GenerateRequest(_BaseModel):
     replace: bool = True
 
 
+
+# A cell starting with one of these is a formula to Excel and LibreOffice.
+# Candidate-controlled fields (full_name, student_number) land in exports, so
+# the spreadsheet the admin opens must not be able to execute anything.
+_CSV_TRIGGERS = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe(value: object) -> str:
+    text = "" if value is None else str(value)
+    return "'" + text if text.startswith(_CSV_TRIGGERS) else text
+
+
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
@@ -1161,9 +1173,9 @@ async def export_results_csv(
         pct = round(score / max_score * 100, 1) if max_score > 0 else 0.0
         passed = pct >= threshold if max_score > 0 else None
         row = [
-            s.student.full_name,
-            s.student.student_number or "",
-            s.student.email,
+            _csv_safe(s.student.full_name),
+            _csv_safe(s.student.student_number or ""),
+            _csv_safe(s.student.email),
             f"{score:.2f}",
             f"{max_score:.2f}",
             f"{pct:.1f}%",

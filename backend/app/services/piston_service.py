@@ -5,6 +5,9 @@ import httpx
 from app.config import settings
 
 _TIMEOUT = 10.0
+# Without a per-job cap, one runaway allocation eats the whole container budget
+# and starves every other candidate's code during a sitting.
+_MEMORY_LIMIT = 256 * 1024 * 1024
 
 _VERSIONS: dict[str, str] = {
     "python": "3.10.0",
@@ -29,6 +32,8 @@ async def run_code(code: str, stdin: str = "", language: str = "python") -> Pist
         "stdin": stdin,
         "run_timeout": int(_TIMEOUT * 1000),
         "compile_timeout": int(_TIMEOUT * 1000),
+        "run_memory_limit": _MEMORY_LIMIT,
+        "compile_memory_limit": _MEMORY_LIMIT,
     }
 
     # PISTON_API_URL peut être self-hosted (http://piston:2000)

@@ -47,6 +47,9 @@ export const useAuthStore = create<AuthState>()(
         }
         localStorage.removeItem("pyexam_access_token");
         localStorage.removeItem("pyexam_refresh_token");
+        // Queued answers are exam content: on a shared machine they must not
+        // outlive the candidate who wrote them.
+        localStorage.removeItem("pyexam_offline_queue");
         Object.keys(localStorage)
           .filter((k) => k.startsWith("draft_") || k.startsWith("pyexam_token_"))
           .forEach((k) => localStorage.removeItem(k));

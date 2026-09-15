@@ -199,10 +199,18 @@ async def register(
         )
         return RegisterResponse(message="Verification email sent")
     except Exception as exc:
-        logger.warning("Email send failed for %s: %s", body.email, exc)
-        # Email failed — auto-verify so the student isn't blocked
-        user.is_verified = True
-        return RegisterResponse(message="Account created", dev_code=code)
+        logger.error("Email send failed for %s: %s", body.email, exc)
+        # A failed email is not proof the address belongs to whoever registered.
+        # Auto-verifying here turned the check off whenever the mail provider
+        # hiccuped. The account stays unverified; "resend" is the way back, and
+        # an admin can still create or import the account already verified.
+        if settings.ENV != "production":
+            user.is_verified = True
+            return RegisterResponse(message="Account created", dev_code=code)
+        return RegisterResponse(
+            message="Account created, but the verification email could not be sent. "
+                    "Use « resend » in a moment, or contact your administrator."
+        )
 
 
 @router.post("/verify-email")
@@ -252,8 +260,12 @@ async def resend_verification(
         )
         return ResendResponse(message="Verification code resent")
     except Exception as exc:
-        logger.warning("Resend email failed for %s: %s", body.email, exc)
-        return ResendResponse(message="Email unavailable", dev_code=code)
+        logger.error("Resend email failed for %s: %s", body.email, exc)
+        # Never hand the code back over the API in production — that would let
+        # anyone verify an address they do not own.
+        if settings.ENV != "production":
+            return ResendResponse(message="Email unavailable", dev_code=code)
+        return ResendResponse(message="Email unavailable, try again shortly")
 
 
 @router.post("/logout")

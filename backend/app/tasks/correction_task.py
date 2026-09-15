@@ -4,12 +4,14 @@ from datetime import datetime, timedelta, timezone
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlalchemy import select
+from sqlalchemy import delete, func as sqlfunc, select
 
 from app.tasks.celery_app import celery
 from app.database import task_db_session
 from app.models.exam import Exam, ExamStatus
 from app.models.answer import Answer
+from app.models.audit_log import AuditLog
+from app.models.question import MCQOption
 from app.models.question import Question
 from app.models.submission import Submission, SubmissionStatus
 from app.models.track import ExamKind
@@ -213,3 +215,99 @@ def close_expired_submissions_task() -> dict:
         for submission_id in closed:
             correct_submission_task.delay(submission_id)
     return {"closed": closed}
+
+
+# Practice a candidate opened and never answered leaves a full copy of the
+# paper behind — for a mock that is one exam, eighty questions and over three
+# hundred options. Kept long enough that nobody loses work they came back to.
+_EMPTY_PRACTICE_AGE = timedelta(hours=24)
+# Invigilation evidence: long enough to settle any contested result.
+_AUDIT_RETENTION = timedelta(days=365)
+
+
+@celery.task(name="app.tasks.correction_task.prune_unused_practice_task")
+def prune_unused_practice_task() -> dict:
+    """
+    Beat task — drops personal practice nobody ever answered.
+
+    Only sets where every submission is empty are removed, and never the most
+    recent one of its kind for a student. Anything a candidate actually
+    answered stays: it feeds their history, their per-theme mastery and the
+    revision set built from their mistakes.
+    """
+
+    async def _prune():
+        cutoff = datetime.now(timezone.utc) - _EMPTY_PRACTICE_AGE
+        async with task_db_session() as db:
+            rows = await db.execute(
+                select(Exam.id, Exam.owner_id, Exam.purpose, Exam.created_at)
+                .where(Exam.owner_id.is_not(None), Exam.created_at < cutoff)
+                .order_by(Exam.owner_id, Exam.purpose, Exam.created_at.desc())
+            )
+            candidates = rows.all()
+
+            # Never touch the newest set of each kind for a student.
+            newest: set = set()
+            for exam_id, owner_id, purpose, _created in candidates:
+                key = (owner_id, purpose)
+                if key not in newest:
+                    newest.add(key)
+                    newest.add(("keep", exam_id))
+
+            removed: list[str] = []
+            for exam_id, owner_id, purpose, _created in candidates:
+                if ("keep", exam_id) in newest:
+                    continue
+                answered = await db.execute(
+                    select(sqlfunc.count())
+                    .select_from(Answer)
+                    .join(Submission, Submission.id == Answer.submission_id)
+                    .where(
+                        Submission.exam_id == exam_id,
+                        (Answer.selected_option_id.is_not(None))
+                        | (Answer.code_written.is_not(None)),
+                    )
+                )
+                if (answered.scalar() or 0) > 0:
+                    continue  # real work — keep it
+
+                q_ids = (await db.execute(
+                    select(Question.id).where(Question.exam_id == exam_id)
+                )).scalars().all()
+                s_ids = (await db.execute(
+                    select(Submission.id).where(Submission.exam_id == exam_id)
+                )).scalars().all()
+                if s_ids:
+                    await db.execute(delete(Answer).where(Answer.submission_id.in_(s_ids)))
+                    await db.execute(delete(Submission).where(Submission.id.in_(s_ids)))
+                if q_ids:
+                    await db.execute(delete(MCQOption).where(MCQOption.question_id.in_(q_ids)))
+                    await db.execute(delete(Question).where(Question.id.in_(q_ids)))
+                await db.execute(delete(Exam).where(Exam.id == exam_id))
+                removed.append(str(exam_id))
+            await db.commit()
+        return removed
+
+    removed = _run(_prune())
+    if removed:
+        logger.info("Pruned %d unused practice set(s)", len(removed))
+    return {"pruned": len(removed)}
+
+
+@celery.task(name="app.tasks.correction_task.prune_audit_logs_task")
+def prune_audit_logs_task() -> dict:
+    """Beat task — caps the audit trail, which grows a row per answer saved."""
+
+    async def _prune():
+        cutoff = datetime.now(timezone.utc) - _AUDIT_RETENTION
+        async with task_db_session() as db:
+            result = await db.execute(
+                delete(AuditLog).where(AuditLog.created_at < cutoff)
+            )
+            await db.commit()
+            return result.rowcount or 0
+
+    deleted = _run(_prune())
+    if deleted:
+        logger.info("Pruned %d audit log row(s) older than %s", deleted, _AUDIT_RETENTION)
+    return {"pruned": deleted}

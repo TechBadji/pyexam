@@ -33,5 +33,13 @@ celery.conf.update(
             "task": "app.tasks.correction_task.close_expired_submissions_task",
             "schedule": 120.0,
         },
+        "prune-unused-practice": {
+            "task": "app.tasks.correction_task.prune_unused_practice_task",
+            "schedule": 3600.0,
+        },
+        "prune-audit-logs": {
+            "task": "app.tasks.correction_task.prune_audit_logs_task",
+            "schedule": 86400.0,
+        },
     },
 )
