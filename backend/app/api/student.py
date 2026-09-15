@@ -818,9 +818,13 @@ async def start_exam(
         if now > exam_end:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exam window has closed")
 
+    # Read the id before the insert: a rollback below expires every object in
+    # the session, and touching current_user.id afterwards would try to reload
+    # it from the database outside async context.
+    student_id = current_user.id
     try:
         submission = Submission(
-            student_id=current_user.id,
+            student_id=student_id,
             exam_id=exam_id,
             submission_token=body.submission_token,
             status=SubmissionStatus.in_progress,
@@ -836,7 +840,7 @@ async def start_exam(
             select(Submission)
             .options(selectinload(Submission.answers))
             .where(
-                Submission.student_id == current_user.id,
+                Submission.student_id == student_id,
                 Submission.exam_id == exam_id,
                 Submission.status == SubmissionStatus.in_progress,
             )
